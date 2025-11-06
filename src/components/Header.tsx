@@ -27,7 +27,7 @@ export function Header() {
     { key: 'deals', label: t('header.deals'), href: '/deals' },
     { key: 'stores', label: t('header.stores'), href: '/stores' },
     { key: 'categories', label: t('header.categories'), href: '/#categories' },
-    { key: 'blog', label: t('header.blog'), href: '/#blog' }
+    { key: 'blog', label: t('header.blog'), href: '/blog' }
   ];
 
   return (

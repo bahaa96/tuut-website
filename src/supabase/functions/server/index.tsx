@@ -259,6 +259,114 @@ app.get("/make-server-4f34ef25/deals", async (c) => {
   }
 });
 
+// Fetch articles/blog posts with optional country filter
+app.get("/make-server-4f34ef25/articles", async (c) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    const countryValue = c.req.query('country');
+    const limit = c.req.query('limit') ? parseInt(c.req.query('limit') as string) : undefined;
+    const offset = c.req.query('offset') ? parseInt(c.req.query('offset') as string) : undefined;
+    
+    console.log('Fetching articles for country:', countryValue);
+
+    let query = supabase
+      .from('articles')
+      .select('*', { count: 'exact' });
+
+    // If country is provided, filter by it
+    if (countryValue) {
+      const { data: countryData } = await supabase
+        .from('countries')
+        .select('id')
+        .eq('value', countryValue)
+        .single();
+
+      if (countryData) {
+        query = query.eq('country_id', countryData.id);
+      }
+    }
+
+    // Order by featured first, then by date
+    query = query.order('is_featured', { ascending: false })
+                 .order('published_at', { ascending: false });
+
+    // Pagination
+    if (offset !== undefined) {
+      query = query.range(offset, offset + (limit || 20) - 1);
+    } else if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching articles:', error);
+      return c.json({ 
+        error: error.message,
+        details: error,
+      }, 500);
+    }
+
+    console.log(`Fetched ${data?.length || 0} articles`);
+
+    return c.json({
+      success: true,
+      articles: data || [],
+      total: count,
+      country: countryValue,
+    });
+  } catch (err) {
+    console.error('Error in articles endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Fetch a single article by slug
+app.get("/make-server-4f34ef25/articles/:slug", async (c) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    const slug = c.req.param('slug');
+    
+    console.log('Fetching article with slug:', slug);
+
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error('Error fetching article:', error);
+      return c.json({ 
+        error: error.message,
+        details: error,
+      }, 404);
+    }
+
+    console.log(`Fetched article: ${data?.title || data?.title_ar}`);
+
+    return c.json({
+      success: true,
+      article: data,
+    });
+  } catch (err) {
+    console.error('Error in article endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
 // Fetch featured deals schema and data
 app.get("/make-server-4f34ef25/featured-deals/inspect", async (c) => {
   try {
