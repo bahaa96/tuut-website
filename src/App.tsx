@@ -10,6 +10,9 @@ import { DealsPage } from "./pages/DealsPage";
 import { StoresPage } from "./pages/StoresPage";
 import { StoreDetailsPage } from "./pages/StoreDetailsPage";
 import { BlogPage } from "./pages/BlogPage";
+import { ArticleDetailPage } from "./pages/ArticleDetailPage";
+import { ProductsPage } from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 
 function AppContent() {
   const { currentPath } = useRouter();
@@ -20,10 +23,12 @@ function AppContent() {
     if (currentPath.startsWith("/store/")) {
       return <StoreDetailsPage />;
     }
-    if (currentPath.startsWith("/blog/")) {
-      // Individual blog article page would go here
-      // For now, redirect to blog list
-      return <BlogPage />;
+    if (currentPath.startsWith("/product/")) {
+      return <ProductDetailPage />;
+    }
+    if (currentPath.startsWith("/blog/") && currentPath !== "/blog") {
+      // Individual blog article page
+      return <ArticleDetailPage />;
     }
     
     switch (currentPath) {
@@ -31,6 +36,8 @@ function AppContent() {
         return <DealsPage />;
       case "/stores":
         return <StoresPage />;
+      case "/products":
+        return <ProductsPage />;
       case "/blog":
         return <BlogPage />;
       case "/schema_inspector":

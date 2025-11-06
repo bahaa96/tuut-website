@@ -26,7 +26,7 @@ export function Header() {
   const navItems = [
     { key: 'deals', label: t('header.deals'), href: '/deals' },
     { key: 'stores', label: t('header.stores'), href: '/stores' },
-    { key: 'categories', label: t('header.categories'), href: '/#categories' },
+    { key: 'products', label: t('header.products'), href: '/products' },
     { key: 'blog', label: t('header.blog'), href: '/blog' }
   ];
 
@@ -46,25 +46,14 @@ export function Header() {
             {/* Desktop Navigation */}
             <nav className={`hidden md:flex items-center gap-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
               {navItems.map((item) => (
-                item.href.startsWith('/#') ? (
-                  <a
-                    key={item.key}
-                    href={item.href}
-                    className="text-[#111827] transition-colors hover:opacity-60"
-                    style={{ fontWeight: 500 }}
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.key}
-                    to={item.href}
-                    className="text-[#111827] transition-colors hover:opacity-60"
-                    style={{ fontWeight: 500 }}
-                  >
-                    {item.label}
-                  </Link>
-                )
+                <Link
+                  key={item.key}
+                  to={item.href}
+                  className="text-[#111827] transition-colors hover:opacity-60"
+                  style={{ fontWeight: 500 }}
+                >
+                  {item.label}
+                </Link>
               ))}
             </nav>
           </div>
@@ -148,25 +137,14 @@ export function Header() {
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-8">
                   {navItems.map((item) => (
-                    item.href.startsWith('/#') ? (
-                      <a
-                        key={item.key}
-                        href={item.href}
-                        className="text-[#111827] py-2 transition-colors hover:opacity-60"
-                        style={{ fontWeight: 500 }}
-                      >
-                        {item.label}
-                      </a>
-                    ) : (
-                      <Link
-                        key={item.key}
-                        to={item.href}
-                        className="text-[#111827] py-2 transition-colors hover:opacity-60"
-                        style={{ fontWeight: 500 }}
-                      >
-                        {item.label}
-                      </Link>
-                    )
+                    <Link
+                      key={item.key}
+                      to={item.href}
+                      className="text-[#111827] py-2 transition-colors hover:opacity-60"
+                      style={{ fontWeight: 500 }}
+                    >
+                      {item.label}
+                    </Link>
                   ))}
                   
                   {/* Mobile Country Selector */}

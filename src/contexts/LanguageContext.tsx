@@ -67,7 +67,7 @@ const translations = {
     header: {
       deals: 'Deals',
       stores: 'Stores',
-      categories: 'Categories',
+      products: 'Products',
       blog: 'Blog',
       searchPlaceholder: 'Search for deals, stores, or products...',
     },
@@ -179,7 +179,7 @@ const translations = {
     header: {
       deals: 'العروض',
       stores: 'المتاجر',
-      categories: 'الفئات',
+      products: 'المنتجات',
       blog: 'المدونة',
       searchPlaceholder: 'ابحث عن العروض أو المتاجر أو المنتجات...',
     },

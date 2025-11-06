@@ -392,6 +392,144 @@ app.get("/make-server-4f34ef25/articles/:slug", async (c) => {
   }
 });
 
+// Fetch products with optional country and filters
+app.get("/make-server-4f34ef25/products", async (c) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    const countryValue = c.req.query('country');
+    const limit = c.req.query('limit') ? parseInt(c.req.query('limit') as string) : undefined;
+    const offset = c.req.query('offset') ? parseInt(c.req.query('offset') as string) : undefined;
+    const search = c.req.query('search');
+    const category = c.req.query('category');
+    
+    console.log('Fetching products for country:', countryValue, 'search:', search, 'category:', category);
+
+    let query = supabase
+      .from('products')
+      .select('*', { count: 'exact' });
+
+    // If country is provided, filter by it
+    if (countryValue) {
+      const { data: countryData } = await supabase
+        .from('countries')
+        .select('id')
+        .eq('value', countryValue)
+        .single();
+
+      if (countryData) {
+        console.log(`Filtering products by country_id: ${countryData.id}`);
+        query = query.eq('country_id', countryData.id);
+      }
+    }
+
+    // Search filter
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,name_ar.ilike.%${search}%,description.ilike.%${search}%,description_ar.ilike.%${search}%`);
+    }
+
+    // Category filter
+    if (category && category !== 'all') {
+      query = query.or(`category.eq.${category},category_ar.eq.${category}`);
+    }
+
+    // Order by created date (most recent first)
+    query = query.order('created_at', { ascending: false });
+
+    // Pagination
+    if (offset !== undefined) {
+      query = query.range(offset, offset + (limit || 20) - 1);
+    } else if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching products:', error);
+      return c.json({ 
+        error: error.message,
+        details: error,
+      }, 500);
+    }
+
+    console.log(`Fetched ${data?.length || 0} products for country: ${countryValue}`);
+
+    return c.json({
+      success: true,
+      products: data || [],
+      total: count,
+      country: countryValue,
+    });
+  } catch (err) {
+    console.error('Error in products endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Fetch a single product by ID or slug
+app.get("/make-server-4f34ef25/product/:identifier", async (c) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    const identifier = c.req.param('identifier');
+    
+    console.log('Fetching product with identifier:', identifier);
+
+    // Try to fetch by ID first (if identifier is a number), then by slug
+    let query;
+    if (!isNaN(Number(identifier))) {
+      query = supabase
+        .from('products')
+        .select('*')
+        .eq('id', identifier)
+        .single();
+    } else {
+      query = supabase
+        .from('products')
+        .select('*')
+        .eq('slug', identifier)
+        .single();
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching product:', error);
+      return c.json({ 
+        error: error.message,
+        details: error,
+      }, 404);
+    }
+
+    if (!data) {
+      return c.json({ 
+        error: 'Product not found',
+      }, 404);
+    }
+
+    console.log('Product fetched successfully:', data.id);
+
+    return c.json({
+      success: true,
+      product: data,
+    });
+  } catch (err) {
+    console.error('Error in product detail endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
 // Fetch featured deals schema and data
 app.get("/make-server-4f34ef25/featured-deals/inspect", async (c) => {
   try {
