@@ -259,7 +259,7 @@ app.get("/make-server-4f34ef25/deals", async (c) => {
   }
 });
 
-// Fetch articles/blog posts with optional country filter
+// Fetch articles/blog posts with country filter
 app.get("/make-server-4f34ef25/articles", async (c) => {
   try {
     const supabase = createClient(
@@ -277,17 +277,42 @@ app.get("/make-server-4f34ef25/articles", async (c) => {
       .from('articles')
       .select('*', { count: 'exact' });
 
-    // If country is provided, filter by it
+    // ALWAYS filter by country - if country is provided, filter by it
+    // This ensures articles are only shown for the selected country
     if (countryValue) {
-      const { data: countryData } = await supabase
+      const { data: countryData, error: countryError } = await supabase
         .from('countries')
         .select('id')
         .eq('value', countryValue)
         .single();
 
+      if (countryError) {
+        console.error('Error fetching country:', countryError);
+        // If country not found, return empty array
+        return c.json({
+          success: true,
+          articles: [],
+          total: 0,
+          country: countryValue,
+          message: 'Country not found'
+        });
+      }
+
       if (countryData) {
+        console.log(`Filtering articles by country_id: ${countryData.id}`);
+        // Filter by country_id - only show articles for this specific country
         query = query.eq('country_id', countryData.id);
       }
+    } else {
+      // If no country is selected, return empty array to enforce country selection
+      console.log('No country selected, returning empty articles list');
+      return c.json({
+        success: true,
+        articles: [],
+        total: 0,
+        country: null,
+        message: 'No country selected'
+      });
     }
 
     // Order by featured first, then by date
@@ -311,7 +336,7 @@ app.get("/make-server-4f34ef25/articles", async (c) => {
       }, 500);
     }
 
-    console.log(`Fetched ${data?.length || 0} articles`);
+    console.log(`Fetched ${data?.length || 0} articles for country: ${countryValue}`);
 
     return c.json({
       success: true,
