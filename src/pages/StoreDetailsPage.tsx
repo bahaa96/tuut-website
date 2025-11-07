@@ -30,9 +30,11 @@ interface Store {
   store_name: string;
   store_name_ar?: string;
   logo_url?: string;
+  profile_picture_url?: string;
   description?: string;
   description_ar?: string;
   website_url?: string;
+  redirect_url?: string;
   category?: string;
 }
 
@@ -154,9 +156,11 @@ export function StoreDetailsPage() {
         store_name: storeName,
         store_name_ar: storeData.store_name_ar || storeData.name_ar,
         logo_url: storeData.logo_url,
+        profile_picture_url: storeData.profile_picture_url,
         description: storeData.description,
         description_ar: storeData.description_ar,
         website_url: storeData.website_url,
+        redirect_url: storeData.redirect_url,
         category: storeData.category,
       });
 
@@ -189,7 +193,7 @@ export function StoreDetailsPage() {
         store_id: deal.store_id,
         store_slug: computedStoreSlug,
         store_name: storeName,
-        store_logo: storeData.logo_url,
+        store_logo: storeData.profile_picture_url || storeData.logo_url,
         category_name: deal.category_name,
         expires_at: deal.expires_at,
         is_verified: deal.is_verified,
@@ -280,9 +284,9 @@ export function StoreDetailsPage() {
         <div className="bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] p-8 mb-8">
           <div className={`flex flex-col md:flex-row items-start gap-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
             {/* Store Logo */}
-            {store.logo_url ? (
+            {(store.profile_picture_url || store.logo_url) ? (
               <img
-                src={store.logo_url}
+                src={store.profile_picture_url || store.logo_url}
                 alt={storeName}
                 className="h-24 w-24 object-contain rounded-xl bg-[#F9FAFB] p-4 border-2 border-[#E5E7EB]"
               />
@@ -311,15 +315,15 @@ export function StoreDetailsPage() {
                   </span>
                 )}
 
-                {store.website_url && (
+                {(store.redirect_url || store.website_url) && (
                   <a
-                    href={store.website_url}
+                    href={store.redirect_url || store.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-3 py-1 rounded-lg bg-white text-[#5FB57A] text-sm border-2 border-[#5FB57A] hover:bg-[#E8F3E8] transition-colors"
+                    className="inline-flex items-center px-4 py-2 rounded-lg bg-[#5FB57A] text-white border-2 border-[#111827] shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
                   >
                     <ExternalLink className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {isRTL ? 'زيارة الموقع' : 'Visit Website'}
+                    {isRTL ? 'زيارة المتجر' : 'Visit Store'}
                   </a>
                 )}
               </div>

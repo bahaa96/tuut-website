@@ -1,0 +1,4 @@
+Line 452:   const copyCode = (code: string) => {
+Line 453:     navigator.clipboard.writeText(code);
+Line 454:     toast.success(isRTL ? `تم نسخ الكود \"${code}\"!` : `Code \"${code}\" copied to clipboard!`);
+Line 455:   };

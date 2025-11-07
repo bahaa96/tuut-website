@@ -13,6 +13,7 @@ import { BlogPage } from "./pages/BlogPage";
 import { ArticleDetailPage } from "./pages/ArticleDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import { DealDetailPage } from "./pages/DealDetailPage";
 
 function AppContent() {
   const { currentPath } = useRouter();
@@ -25,6 +26,9 @@ function AppContent() {
     }
     if (currentPath.startsWith("/product/")) {
       return <ProductDetailPage />;
+    }
+    if (currentPath.startsWith("/deal/")) {
+      return <DealDetailPage />;
     }
     if (currentPath.startsWith("/guides/") && currentPath !== "/guides") {
       // Individual guide/article page

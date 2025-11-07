@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Heart, Copy } from "lucide-react";
 import { Button } from "./ui/button";
 import { toast } from "sonner@2.0.3";
-import { Link } from "../router";
+import { useRouter } from "../router";
+import { copyToClipboard } from "../utils/clipboard";
 
 interface DealCardProps {
   deal: {
@@ -31,12 +32,21 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) {
+  const { navigate } = useRouter();
   const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
   const description = isRTL && deal.description_ar ? deal.description_ar : deal.description;
 
-  const copyCouponCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success(isRTL ? "تم نسخ كود الخصم" : "Coupon code copied!");
+  const copyCouponCode = async (code: string) => {
+    const success = await copyToClipboard(code);
+    if (success) {
+      toast.success(isRTL ? "تم نسخ كود الخصم" : "Coupon code copied!");
+    } else {
+      toast.error(isRTL ? "فشل نسخ الكود" : "Failed to copy code");
+    }
+  };
+
+  const handleCardClick = () => {
+    navigate(`/deal/${deal.id}`);
   };
 
   // Assign color based on deal ID for variety
@@ -44,12 +54,15 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
   const color = colors[deal.id % colors.length];
 
   return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all">
-      {/* Left/Right Discount Bar with Perforated Edge */}
-      <div 
-        className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-[100px] flex items-center justify-center`} 
-        style={{ backgroundColor: color }}
-      >
+    <div 
+      onClick={handleCardClick}
+      className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all cursor-pointer"
+    >
+        {/* Left/Right Discount Bar with Perforated Edge */}
+        <div 
+          className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-[100px] flex items-center justify-center`} 
+          style={{ backgroundColor: color }}
+        >
         {/* Perforated circles on edge */}
         <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-0 bottom-0 w-2 flex flex-col justify-around`}>
           {[...Array(12)].map((_, i) => (
@@ -76,8 +89,11 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
       <div className={`${isRTL ? 'mr-[100px]' : 'ml-[100px]'} p-6 relative`}>
         {/* Heart Icon */}
         <button
-          onClick={() => onToggleSave(deal.id)}
-          className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} p-2 rounded-full hover:bg-[#F0F7F0] transition-colors`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSave(deal.id);
+          }}
+          className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} p-2 rounded-full hover:bg-[#F0F7F0] transition-colors z-10`}
         >
           <Heart
             className={`h-5 w-5 transition-colors ${
@@ -133,12 +149,15 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
           {(deal.store_name || deal.category_name) && (
             <div className="text-sm inline-block mb-6">
               {deal.store_name && deal.store_slug && (
-                <Link 
-                  to={`/store/${deal.store_slug}`}
-                  className="text-[#5FB57A] hover:underline"
+                <span 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/store/${deal.store_slug}`);
+                  }}
+                  className="text-[#5FB57A] hover:underline cursor-pointer"
                 >
                   {deal.store_name}
-                </Link>
+                </span>
               )}
               {deal.store_name && !deal.store_slug && (
                 <span className="text-[#5FB57A]">{deal.store_name}</span>
@@ -149,16 +168,21 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
           )}
         </div>
 
-        {/* Apply Code Button - Always show */}
+        {/* View Deal Button */}
         <Button
-          onClick={() => deal.code && copyCouponCode(deal.code)}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (deal.code) {
+              copyCouponCode(deal.code);
+            }
+          }}
           className="w-full bg-white text-[#111827] border-2 border-[#111827] hover:bg-[#F0F7F0] rounded-xl"
           style={{ fontWeight: 600 }}
         >
           <Copy className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
           {deal.code 
             ? (isRTL ? 'نسخ الكود' : 'Copy Code')
-            : (isRTL ? 'الحصول على العرض' : 'Get Deal')
+            : (isRTL ? 'عرض التفاصيل' : 'View Details')
           }
         </Button>
       </div>

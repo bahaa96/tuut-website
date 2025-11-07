@@ -19,11 +19,13 @@ interface Store {
   image_url?: string;
   profile_image?: string;
   profile_image_url?: string;
+  profile_picture_url?: string;
   banner_image?: string;
   cover_image?: string;
   slug?: string;
   deals_count?: number;
   active_deals_count?: number;
+  total_offers?: number;
 }
 
 export function PopularStores() {
@@ -77,7 +79,7 @@ export function PopularStores() {
   }
 
   function getStoreLogo(store: Store): string {
-    return store.logo || store.logo_url || store.image_url || '';
+    return store.profile_picture_url || store.logo || store.logo_url || store.image_url || '';
   }
 
   function getStoreSlug(store: Store): string {
@@ -86,7 +88,7 @@ export function PopularStores() {
   }
 
   function getDealsCount(store: Store): number {
-    return store.active_deals_count || store.deals_count || 0;
+    return store.total_offers || store.active_deals_count || store.deals_count || 0;
   }
 
   return (
@@ -137,46 +139,29 @@ export function PopularStores() {
               {stores.map((store) => {
                 const name = getStoreName(store);
                 const logo = getStoreLogo(store);
-                const profileImage = store.profile_image || store.profile_image_url || store.banner_image || store.cover_image || '';
                 const slug = getStoreSlug(store);
                 const dealsCount = getDealsCount(store);
 
                 return (
                   <Link key={store.id} to={`/store/${slug}`}>
-                    <div className="group bg-white rounded-xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all text-center overflow-hidden">
-                      {/* Profile Image Banner */}
-                      {profileImage && (
-                        <div className="relative h-20 w-full overflow-hidden">
+                    <div className="group bg-white rounded-xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-6 text-center">
+                      <div className="h-16 w-16 mx-auto mb-4 rounded-lg border-2 border-[#E5E7EB] bg-white overflow-hidden flex items-center justify-center p-2">
+                        {logo ? (
                           <ImageWithFallback
-                            src={profileImage}
+                            src={logo}
                             alt={name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-contain"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
-                        </div>
-                      )}
-                      
-                      <div className={`p-6 ${profileImage ? '-mt-6 relative' : ''}`}>
-                        <div className={`h-16 w-16 mx-auto mb-4 rounded-lg border-2 overflow-hidden flex items-center justify-center p-2 ${
-                          profileImage ? 'border-white bg-white shadow-lg' : 'border-[#E5E7EB] bg-white'
-                        }`}>
-                          {logo ? (
-                            <ImageWithFallback
-                              src={logo}
-                              alt={name}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <StoreIcon className="h-8 w-8 text-[#9CA3AF]" />
-                          )}
-                        </div>
-                        <div style={{ fontSize: '16px', fontWeight: 600 }} className="text-[#111827] mb-2 line-clamp-1">
-                          {name}
-                        </div>
-                        <div className="text-xs text-[#5FB57A] flex items-center justify-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          {dealsCount} {language === 'en' ? 'deals' : 'عروض'}
-                        </div>
+                        ) : (
+                          <StoreIcon className="h-8 w-8 text-[#9CA3AF]" />
+                        )}
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: 600 }} className="text-[#111827] mb-2 line-clamp-1">
+                        {name}
+                      </div>
+                      <div className="text-xs text-[#5FB57A] flex items-center justify-center gap-1">
+                        <Tag className="h-3 w-3" />
+                        {dealsCount} {language === 'en' ? 'deals' : 'عروض'}
                       </div>
                     </div>
                   </Link>

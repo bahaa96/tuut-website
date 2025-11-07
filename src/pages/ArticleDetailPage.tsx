@@ -18,6 +18,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
+import { copyToClipboard } from "../utils/clipboard";
 import { Skeleton } from "../components/ui/skeleton";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
@@ -150,7 +151,7 @@ export function ArticleDetailPage() {
     }
   };
 
-  const handleShare = (platform: string) => {
+  const handleShare = async (platform: string) => {
     const url = window.location.href;
     const title = getArticleTitle();
     
@@ -167,10 +168,14 @@ export function ArticleDetailPage() {
         shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
         break;
       case 'copy':
-        navigator.clipboard.writeText(url);
-        setCopied(true);
-        toast.success(language === 'en' ? 'Link copied!' : 'تم نسخ الرابط!');
-        setTimeout(() => setCopied(false), 2000);
+        const success = await copyToClipboard(url);
+        if (success) {
+          setCopied(true);
+          toast.success(language === 'en' ? 'Link copied!' : 'تم نسخ الرابط!');
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          toast.error(language === 'en' ? 'Failed to copy link' : 'فشل نسخ الرابط');
+        }
         return;
     }
     

@@ -7,6 +7,7 @@ import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import { fetchFeaturedDeals } from "../utils/api";
 import { Link } from "../router";
+import { copyToClipboard } from "../utils/clipboard";
 
 // Import translations directly for deals content
 const translations = {

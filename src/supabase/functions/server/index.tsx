@@ -73,31 +73,9 @@ app.get("/make-server-4f34ef25/featured-deals", async (c) => {
     
     console.log('Fetching featured deals for country:', countryValue);
 
-    // Build the query with proper joins
-    // The featured_deals table has a deal_id foreign key
-    let query = supabase
-      .from('featured_deals')
-      .select(`
-        *,
-        deals:deal_id (
-          *,
-          stores:store_id (*)
-        )
-      `)
-      .eq('is_active', true);
-
-    query = query.order('sort_order', { ascending: true });
-
-    const { data, error } = await query;
-    
-    if (data && data.length > 0) {
-      console.log('First featured deal item:', JSON.stringify(data[0], null, 2));
-    }
-    
-    // If country is provided, filter the results after fetching
-    let filteredData = data;
-    if (countryValue && data) {
-      // First, get the country ID from the value
+    // First, get the country ID if country is provided
+    let countryId = null;
+    if (countryValue) {
       const { data: countryData, error: countryError } = await supabase
         .from('countries')
         .select('id')
@@ -107,38 +85,98 @@ app.get("/make-server-4f34ef25/featured-deals", async (c) => {
       if (countryError) {
         console.error('Error fetching country:', countryError);
       } else if (countryData) {
-        console.log('Country ID:', countryData.id);
-        // Filter deals by country in memory
-        filteredData = data.filter((item: any) => {
-          const deal = item.deals;
-          // Check if deal has country_id or store has country_id
-          return deal?.country_id === countryData.id || 
-                 deal?.stores?.country_id === countryData.id ||
-                 !deal?.country_id; // Include deals without country restriction
-        });
-        console.log(`Filtered from ${data.length} to ${filteredData.length} deals for country ${countryValue}`);
+        countryId = countryData.id;
+        console.log(`Country ID for ${countryValue}: ${countryId}`);
       }
     }
 
-    if (error) {
-      console.error('Error fetching featured deals:', error);
+    // First, get the list of featured deal IDs
+    const { data: featuredDealsData, error: featuredError } = await supabase
+      .from('featured_deals')
+      .select('deal_id, sort_order, id')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+
+    if (featuredError) {
+      console.error('Error fetching featured_deals:', featuredError);
       return c.json({ 
-        error: error.message,
-        details: error,
+        error: featuredError.message,
+        details: featuredError,
       }, 500);
     }
 
-    console.log(`Fetched ${data?.length || 0} featured deals, returning ${filteredData?.length || 0} after country filter`);
+    // If no featured deals, return empty array
+    if (!featuredDealsData || featuredDealsData.length === 0) {
+      console.log('No featured deals found');
+      return c.json({
+        success: true,
+        deals: [],
+        country: countryValue,
+      });
+    }
+
+    // Get the deal IDs from featured_deals
+    const featuredDealIds = featuredDealsData.map(fd => fd.deal_id);
+
+    // Query deals that are in the featured list
+    let dealsQuery = supabase
+      .from('deals')
+      .select('*, stores!deals_store_id_fkey(*)')
+      .in('id', featuredDealIds);
+
+    // Apply country filter at database level if country is specified
+    if (countryId) {
+      dealsQuery = dealsQuery.eq('country_id', countryId);
+      console.log(`Filtering deals by country_id: ${countryId}`);
+    }
+
+    const { data: dealsData, error: dealsError } = await dealsQuery;
+
+    if (dealsError) {
+      console.error('Error fetching deals:', dealsError);
+      console.error('Error details:', JSON.stringify(dealsError, null, 2));
+      return c.json({ 
+        error: dealsError.message,
+        details: dealsError,
+      }, 500);
+    }
+
+    // Create a map of deal_id to featured_deals entry for sorting
+    const featuredMap = new Map();
+    featuredDealsData.forEach(fd => {
+      featuredMap.set(fd.deal_id, fd);
+    });
+
+    // Transform and sort the data to match the expected structure
+    const featuredDeals = dealsData
+      ?.map(deal => {
+        const featuredInfo = featuredMap.get(deal.id);
+        return {
+          id: featuredInfo?.id || deal.id, // featured_deals table id
+          deal_id: deal.id,
+          sort_order: featuredInfo?.sort_order || 0,
+          deals: deal, // The actual deal with stores nested
+        };
+      })
+      .sort((a, b) => a.sort_order - b.sort_order) || [];
+    
+    if (featuredDeals && featuredDeals.length > 0) {
+      console.log('First featured deal item:', JSON.stringify(featuredDeals[0], null, 2));
+    }
+
+    console.log(`Fetched ${featuredDeals?.length || 0} featured deals for country: ${countryValue || 'all'}`);
 
     return c.json({
       success: true,
-      deals: filteredData,
+      deals: featuredDeals || [],
       country: countryValue,
     });
   } catch (err) {
     console.error('Error in featured-deals endpoint:', err);
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
     return c.json({ 
       error: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
     }, 500);
   }
 });
@@ -177,7 +215,7 @@ app.get("/make-server-4f34ef25/stores", async (c) => {
 
     // Search filter
     if (search) {
-      query = query.or(`name.ilike.%${search}%,store_name.ilike.%${search}%,title.ilike.%${search}%,description.ilike.%${search}%`);
+      query = query.or(`store_name.ilike.%${search}%,title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
     // Pagination
