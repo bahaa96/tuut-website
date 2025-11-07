@@ -77,6 +77,9 @@ export function FeaturedDeals() {
           country: countryValue || undefined 
         });
 
+        console.log('Featured deals API result:', result);
+        console.log('First deal structure:', result.deals?.[0]);
+
         if (result.error) {
           console.error('Error fetching featured deals:', result.error);
           setError(result.error);
@@ -146,28 +149,117 @@ export function FeaturedDeals() {
           ]);
         } else if (result.deals && result.deals.length > 0) {
           // Transform the nested data structure to match our Deal interface
-          const transformedDeals = result.deals.map((item: any, index: number) => {
-            const deal = item.deals;
-            const store = deal?.stores;
-            
-            return {
-              id: item.id || index,
-              title: deal?.title || '',
-              title_ar: deal?.title_ar || '',
-              store: store?.name || '',
-              store_ar: store?.name_ar || '',
-              discount: deal?.discount_percentage || '',
-              description: deal?.description || '',
-              description_ar: deal?.description_ar || '',
-              code: deal?.code || '',
-              type: deal?.code ? 'coupon' : 'sale',
-              color: ['#7EC89A', '#5FB57A', '#9DD9B3', '#BCF0CC'][index % 4],
-            };
-          });
+          const transformedDeals = result.deals
+            .map((item: any, index: number) => {
+              console.log(`Processing deal ${index}:`, item);
+              
+              const deal = item.deals;
+              const store = deal?.stores;
+              
+              // Skip deals with missing critical data
+              if (!deal) {
+                console.warn(`Skipping deal ${index} - no deal data`);
+                return null;
+              }
+              
+              if (!deal.title && !deal.title_ar) {
+                console.warn(`Skipping deal ${index} - no title`);
+                return null;
+              }
+              
+              return {
+                id: item.id || index,
+                title: deal?.title || deal?.title_ar || 'Special Deal',
+                title_ar: deal?.title_ar || deal?.title || 'عرض خاص',
+                store: store?.name || store?.name_ar || 'Store',
+                store_ar: store?.name_ar || store?.name || 'متجر',
+                discount: deal?.discount_percentage || deal?.discount_amount || '0%',
+                description: deal?.description || deal?.description_ar || '',
+                description_ar: deal?.description_ar || deal?.description || '',
+                code: deal?.code || '',
+                type: deal?.code ? 'coupon' : 'sale',
+                color: ['#7EC89A', '#5FB57A', '#9DD9B3', '#BCF0CC'][index % 4],
+              };
+            })
+            .filter(Boolean); // Remove null entries
           
-          setDeals(transformedDeals);
+          console.log('Transformed deals:', transformedDeals);
+          console.log(`Valid deals: ${transformedDeals.length} out of ${result.deals.length}`);
+          
+          // If we have valid transformed deals, use them
+          if (transformedDeals.length > 0) {
+            setDeals(transformedDeals);
+            setError(null);
+          } else {
+            // No valid deals after transformation, use fallback
+            console.log('No valid deals after transformation, using fallback');
+            const translatedDeals = translations[language].featuredDeals.deals;
+            setDeals([
+              {
+                id: 1,
+                title: translatedDeals[0].title,
+                store: translatedDeals[0].store,
+                discount: "40%",
+                description: translatedDeals[0].description,
+                code: "FASHION40",
+                type: "coupon",
+                color: "#7EC89A",
+              },
+              {
+                id: 2,
+                title: translatedDeals[1].title,
+                store: translatedDeals[1].store,
+                discount: "60%",
+                description: translatedDeals[1].description,
+                code: "TECH60",
+                type: "coupon",
+                color: "#5FB57A",
+              },
+              {
+                id: 3,
+                title: translatedDeals[2].title,
+                store: translatedDeals[2].store,
+                discount: "FREE",
+                description: translatedDeals[2].description,
+                code: "FREEBREW",
+                type: "coupon",
+                color: "#9DD9B3",
+              },
+              {
+                id: 4,
+                title: translatedDeals[3].title,
+                store: translatedDeals[3].store,
+                discount: "33%",
+                description: translatedDeals[3].description,
+                code: "BEAUTY3",
+                type: "coupon",
+                color: "#BCF0CC",
+              },
+              {
+                id: 5,
+                title: translatedDeals[4].title,
+                store: translatedDeals[4].store,
+                discount: "50%",
+                description: translatedDeals[4].description,
+                code: "AUDIO50",
+                type: "coupon",
+                color: "#7EC89A",
+              },
+              {
+                id: 6,
+                title: translatedDeals[5].title,
+                store: translatedDeals[5].store,
+                discount: "70%",
+                description: translatedDeals[5].description,
+                code: "SPORTS29",
+                type: "coupon",
+                color: "#5FB57A",
+              },
+            ]);
+          }
         } else {
           // No deals found, use fallback
+          console.log('No deals returned from API, using fallback deals');
           const translatedDeals = translations[language].featuredDeals.deals;
           setDeals([
             {
@@ -231,10 +323,76 @@ export function FeaturedDeals() {
               color: "#5FB57A",
             },
           ]);
+          setError(null);
         }
       } catch (err) {
         console.error('Error in fetchDeals:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
+        
+        // Load fallback deals on error
+        const translatedDeals = translations[language].featuredDeals.deals;
+        setDeals([
+          {
+            id: 1,
+            title: translatedDeals[0].title,
+            store: translatedDeals[0].store,
+            discount: "40%",
+            description: translatedDeals[0].description,
+            code: "FASHION40",
+            type: "coupon",
+            color: "#7EC89A",
+          },
+          {
+            id: 2,
+            title: translatedDeals[1].title,
+            store: translatedDeals[1].store,
+            discount: "60%",
+            description: translatedDeals[1].description,
+            code: "TECH60",
+            type: "coupon",
+            color: "#5FB57A",
+          },
+          {
+            id: 3,
+            title: translatedDeals[2].title,
+            store: translatedDeals[2].store,
+            discount: "FREE",
+            description: translatedDeals[2].description,
+            code: "FREEBREW",
+            type: "coupon",
+            color: "#9DD9B3",
+          },
+          {
+            id: 4,
+            title: translatedDeals[3].title,
+            store: translatedDeals[3].store,
+            discount: "33%",
+            description: translatedDeals[3].description,
+            code: "BEAUTY3",
+            type: "coupon",
+            color: "#BCF0CC",
+          },
+          {
+            id: 5,
+            title: translatedDeals[4].title,
+            store: translatedDeals[4].store,
+            discount: "50%",
+            description: translatedDeals[4].description,
+            code: "AUDIO50",
+            type: "coupon",
+            color: "#7EC89A",
+          },
+          {
+            id: 6,
+            title: translatedDeals[5].title,
+            store: translatedDeals[5].store,
+            discount: "70%",
+            description: translatedDeals[5].description,
+            code: "SPORTS29",
+            type: "coupon",
+            color: "#5FB57A",
+          },
+        ]);
       } finally {
         setLoading(false);
       }
@@ -326,17 +484,13 @@ export function FeaturedDeals() {
               />
             ))}
           </div>
-        ) : error ? (
+        ) : deals.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[#EF4444] mb-4">
-              {isRTL ? 'خطأ في تحميل العروض' : 'Error loading deals'}
-            </p>
-            <p className="text-[#6B7280] text-sm">
-              {isRTL ? 'يتم عرض العروض الافتراضية' : 'Showing default deals'}
+            <p className="text-[#6B7280] mb-4">
+              {isRTL ? 'لا توجد عروض متاحة حالياً' : 'No deals available at the moment'}
             </p>
           </div>
-        ) : null}
-
+        ) : (
         <div className="relative">
           {/* Left Arrow */}
           {canScrollLeft && (
@@ -465,6 +619,7 @@ export function FeaturedDeals() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       <style>{`

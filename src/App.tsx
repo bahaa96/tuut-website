@@ -26,8 +26,12 @@ function AppContent() {
     if (currentPath.startsWith("/product/")) {
       return <ProductDetailPage />;
     }
+    if (currentPath.startsWith("/guides/") && currentPath !== "/guides") {
+      // Individual guide/article page
+      return <ArticleDetailPage />;
+    }
+    // Legacy /blog/ routes redirect to /guides/
     if (currentPath.startsWith("/blog/") && currentPath !== "/blog") {
-      // Individual blog article page
       return <ArticleDetailPage />;
     }
     
@@ -38,6 +42,7 @@ function AppContent() {
         return <StoresPage />;
       case "/products":
         return <ProductsPage />;
+      case "/guides":
       case "/blog":
         return <BlogPage />;
       case "/schema_inspector":

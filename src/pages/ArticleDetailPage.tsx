@@ -66,6 +66,9 @@ export function ArticleDetailPage() {
     if (slug) {
       fetchArticle();
       fetchRelatedArticles();
+    } else {
+      console.error('No slug provided in URL');
+      setLoading(false);
     }
   }, [slug, language]);
 
@@ -73,6 +76,8 @@ export function ArticleDetailPage() {
     try {
       setLoading(true);
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      
+      console.log('Fetching article with slug:', slug);
       
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/articles/${slug}`,
@@ -83,18 +88,32 @@ export function ArticleDetailPage() {
         }
       );
 
+      console.log('Article response status:', response.status);
+
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Article fetch error:', errorData);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
+      console.log('Article API result:', result);
 
       if (result.article) {
         setArticle(result.article);
+      } else if (result.error) {
+        console.error('Article not found:', result.error);
+        // Set article to null to trigger "not found" view
+        setArticle(null);
+      } else {
+        console.warn('No article in response');
+        setArticle(null);
       }
     } catch (err) {
       console.error('Error fetching article:', err);
       toast.error(language === 'en' ? 'Failed to load article' : 'فشل تحميل المقال');
+      // Important: Set article to null to stop loading state
+      setArticle(null);
     } finally {
       setLoading(false);
     }

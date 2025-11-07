@@ -68,17 +68,23 @@ export function Link({
 }
 
 // Hook to extract URL parameters
-export function useParams() {
+export function useParams<T extends Record<string, string> = Record<string, string>>(): T {
   const { currentPath } = useRouter();
   
-  // Extract params from path like /store/amazon
+  // Extract params from path like /store/amazon or /blog/article-slug
   const pathParts = currentPath.split('/').filter(Boolean);
   const params: Record<string, string> = {};
   
-  // Simple pattern matching for /store/:slug
-  if (pathParts[0] === 'store' && pathParts[1]) {
-    params.slug = pathParts[1];
+  // Simple pattern matching for various routes with :slug parameter
+  // Supported patterns: /store/:slug, /blog/:slug, /guides/:slug, /product/:slug
+  if (pathParts.length >= 2) {
+    const firstPart = pathParts[0];
+    const secondPart = pathParts[1];
+    
+    if (['store', 'blog', 'guides', 'product'].includes(firstPart)) {
+      params.slug = secondPart;
+    }
   }
   
-  return params;
+  return params as T;
 }

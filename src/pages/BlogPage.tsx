@@ -237,12 +237,12 @@ export function BlogPage() {
         {/* Header */}
         <div className={`mb-8 ${isRTL ? 'text-right' : 'text-left'}`}>
           <h1 className="mb-3 text-[#111827]" style={{ fontSize: '48px', fontWeight: 700 }}>
-            {language === 'en' ? 'Blog' : 'المدونة'}
+            {language === 'en' ? 'Shopping Guides' : 'أدلة التسوق'}
           </h1>
           <p className="text-[#6B7280] text-lg">
             {language === 'en' 
-              ? 'Tips, tricks, and insights to help you save more'
-              : 'نصائح وحيل ورؤى لمساعدتك على توفير المزيد'
+              ? 'Expert tips, tricks, and insights to help you save more'
+              : 'نصائح الخبراء والحيل والرؤى لمساعدتك على توفير المزيد'
             }
           </p>
         </div>
@@ -384,7 +384,7 @@ function ArticleCardFeatured({
   };
 
   return (
-    <Link to={`/blog/${slug}`}>
+    <Link to={`/guides/${slug}`}>
       <div className={`group bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all overflow-hidden`}>
         <div className={`grid md:grid-cols-2 gap-0 ${isRTL ? 'md:grid-flow-dense' : ''}`}>
           {/* Image */}
@@ -472,7 +472,7 @@ function ArticleCard({
   };
 
   return (
-    <Link to={`/blog/${slug}`}>
+    <Link to={`/guides/${slug}`}>
       <div className="group bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all overflow-hidden h-full flex flex-col">
         {/* Image */}
         <div className="relative h-48 overflow-hidden">

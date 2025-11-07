@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { useRouter } from "../router";
@@ -26,7 +26,8 @@ import {
   ChevronRight,
   Grid3x3,
   List,
-  Tag as TagIcon
+  Tag as TagIcon,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
 
@@ -34,7 +35,10 @@ interface Product {
   id: number | string;
   asin?: string;
   title?: string;
+  name?: string;
+  name_ar?: string;
   description?: string;
+  description_ar?: string;
   price?: number;
   original_price?: number;
   currency?: string;
@@ -43,14 +47,18 @@ interface Product {
   available?: boolean;
   language?: string;
   store?: string;
+  store_name?: string;
   url?: string;
-  images?: string[];
+  images?: string[] | string;
+  image_url?: string;
   categories?: string[];
+  category?: string;
+  category_ar?: string;
   created_at?: string;
   updated_at?: string;
   country_id?: string;
   slug?: string;
-  feature_bullets?: string[];
+  feature_bullets?: string[]  ;
   specs?: Record<string, string>;
   metadata?: Record<string, any>;
   price_history?: Array<{ date: string; price: number }>;
@@ -62,29 +70,84 @@ export function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [categories, setCategories] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const itemsPerPage = 12;
+  const observerTarget = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+  const hasMoreRef = useRef(true);
+  const loadingRef = useRef(false);
+  const loadingMoreRef = useRef(false);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    offsetRef.current = offset;
+  }, [offset]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [country]);
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
 
   useEffect(() => {
-    filterAndSortProducts();
-  }, [products, searchQuery, sortBy, selectedCategory]);
+    loadingRef.current = loading;
+  }, [loading]);
 
-  const fetchProducts = async () => {
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Define fetchProducts function
+  const fetchProducts = async (reset = false) => {
     try {
-      setLoading(true);
+      const currentOffsetValue = reset ? 0 : offsetRef.current;
+      console.log(`fetchProducts called - reset: ${reset}, current offset: ${currentOffsetValue}`);
+      
+      if (reset) {
+        setLoading(true);
+        loadingRef.current = true; // Update ref immediately
+        setOffset(0);
+        offsetRef.current = 0;
+      } else {
+        // Prevent duplicate requests by checking and immediately setting the ref
+        if (loadingMoreRef.current) {
+          console.log('Already loading more, skipping duplicate request');
+          return;
+        }
+        setLoadingMore(true);
+        loadingMoreRef.current = true; // Update ref immediately to prevent race conditions
+      }
+
       const countryValue = getCountryValue(country);
       const { projectId, publicAnonKey } = await import('../utils/supabase/info');
       
-      const url = countryValue 
-        ? `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/products?country=${countryValue}`
-        : `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/products`;
+      const currentOffset = currentOffsetValue;
+      
+      // Build URL with pagination parameters
+      const params = new URLSearchParams();
+      if (countryValue) params.append('country', countryValue);
+      params.append('limit', itemsPerPage.toString());
+      params.append('offset', currentOffset.toString());
+      if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
+      if (selectedCategory && selectedCategory !== 'all') params.append('category', selectedCategory);
+      
+      const url = `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/products?${params.toString()}`;
+      console.log('Fetching products from:', url);
       
       const response = await fetch(url, {
         headers: {
@@ -97,72 +160,108 @@ export function ProductsPage() {
       }
 
       const result = await response.json();
+      console.log(`Received ${result.products?.length || 0} products`);
       
       if (result.products && result.products.length > 0) {
-        setProducts(result.products);
+        if (reset) {
+          setProducts(result.products);
+        } else {
+          // Filter out duplicates when appending new products
+          setProducts(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const newProducts = result.products.filter((p: Product) => !existingIds.has(p.id));
+            console.log(`Appending ${newProducts.length} new products (filtered ${result.products.length - newProducts.length} duplicates)`);
+            return [...prev, ...newProducts];
+          });
+        }
         
-        // Extract unique categories
+        // Check if there are more products to load
+        const hasMoreProducts = result.products.length === itemsPerPage;
+        const newOffset = currentOffset + result.products.length;
+        setHasMore(hasMoreProducts);
+        hasMoreRef.current = hasMoreProducts; // Update ref immediately
+        setOffset(newOffset);
+        offsetRef.current = newOffset; // Update ref immediately to prevent race conditions
+        console.log(`Updated offset to ${newOffset}, hasMore: ${hasMoreProducts}`);
+        
+        // Extract unique categories from all products
         const uniqueCategories = Array.from(
           new Set(
             result.products
-              .flatMap((p: Product) => p.categories || [])
+              .flatMap((p: Product) => {
+                if (p.categories && Array.isArray(p.categories)) {
+                  return p.categories;
+                }
+                if (language === 'ar' && p.category_ar) {
+                  return [p.category_ar];
+                }
+                if (p.category) {
+                  return [p.category];
+                }
+                return [];
+              })
               .filter(Boolean)
           )
         ) as string[];
-        setCategories(uniqueCategories);
+        setCategories(prev => {
+          const combined = [...prev, ...uniqueCategories];
+          return Array.from(new Set(combined));
+        });
       } else {
-        setProducts([]);
-        setCategories([]);
+        if (reset) {
+          setProducts([]);
+          setCategories([]);
+        }
+        setHasMore(false);
       }
     } catch (err) {
       console.error('Error fetching products:', err);
       toast.error(language === 'en' ? 'Failed to load products' : 'فشل تحميل المنتجات');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+      loadingRef.current = false; // Update ref immediately
+      loadingMoreRef.current = false; // Update ref immediately
     }
   };
 
+  // Define loadMore function with useCallback
+  const loadMore = useCallback(() => {
+    console.log('loadMore called', { 
+      loadingMore: loadingMoreRef.current, 
+      loading: loadingRef.current, 
+      hasMore: hasMoreRef.current, 
+      offset: offsetRef.current 
+    });
+    if (!loadingMoreRef.current && !loadingRef.current && hasMoreRef.current) {
+      console.log('Fetching more products with offset:', offsetRef.current);
+      fetchProducts(false);
+    } else {
+      console.log('Not fetching - conditions not met');
+    }
+  }, []);
+
+  // Define filterAndSortProducts function
   const filterAndSortProducts = () => {
-    let filtered = [...products];
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter((product) => {
-        const title = product.title || '';
-        const description = product.description || '';
-        const store = product.store || '';
-        
-        const searchLower = searchQuery.toLowerCase();
-        return (
-          title.toLowerCase().includes(searchLower) ||
-          description.toLowerCase().includes(searchLower) ||
-          store.toLowerCase().includes(searchLower)
-        );
-      });
-    }
-
-    // Filter by category
-    if (selectedCategory && selectedCategory !== "all") {
-      filtered = filtered.filter((product) => {
-        return product.categories?.includes(selectedCategory);
-      });
-    }
+    // Since search and category filtering are done server-side,
+    // we only need to do client-side sorting here
+    let sorted = [...products];
 
     // Sort
     switch (sortBy) {
       case "featured":
         // Sort by rating as "featured" since we don't have is_featured
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case "price-low":
-        filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+        sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
         break;
       case "price-high":
-        filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+        sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
         break;
       case "discount":
         // Calculate discount based on original_price and price
-        filtered.sort((a, b) => {
+        sorted.sort((a, b) => {
           const aDiscount = a.original_price && a.price 
             ? ((a.original_price - a.price) / a.original_price) * 100 
             : 0;
@@ -173,43 +272,107 @@ export function ProductsPage() {
         });
         break;
       case "rating":
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case "newest":
-        filtered.sort((a, b) => {
-          const dateA = new Date(a.created_at || 0).getTime();
-          const dateB = new Date(b.created_at || 0).getTime();
-          return dateB - dateA;
-        });
-        break;
       default:
-        // Default sorting by newest
-        filtered.sort((a, b) => {
+        // Default sorting by newest (already sorted by server, but we'll ensure it)
+        sorted.sort((a, b) => {
           const dateA = new Date(a.created_at || 0).getTime();
           const dateB = new Date(b.created_at || 0).getTime();
           return dateB - dateA;
         });
     }
 
-    setFilteredProducts(filtered);
+    setFilteredProducts(sorted);
   };
 
+  // Reset when filters change
+  useEffect(() => {
+    setProducts([]);
+    setOffset(0);
+    offsetRef.current = 0;
+    setHasMore(true);
+    hasMoreRef.current = true;
+    fetchProducts(true);
+  }, [country, debouncedSearchQuery, selectedCategory]);
+
+  // Filter and sort when products or sortBy changes
+  useEffect(() => {
+    filterAndSortProducts();
+  }, [products, sortBy]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    // Don't set up observer if there are no products yet
+    if (filteredProducts.length === 0) {
+      console.log('Skipping observer setup - no products loaded yet');
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        console.log('Observer triggered:', {
+          isIntersecting: entries[0].isIntersecting,
+          hasMore: hasMoreRef.current,
+          loading: loadingRef.current,
+          loadingMore: loadingMoreRef.current,
+          offset: offsetRef.current
+        });
+        
+        if (entries[0].isIntersecting && hasMoreRef.current && !loadingRef.current && !loadingMoreRef.current) {
+          console.log('Intersection detected! Loading more products...');
+          loadMore();
+        } else if (entries[0].isIntersecting) {
+          console.log('Intersection detected but conditions not met');
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+      console.log('Observer attached to target element');
+    } else {
+      console.log('Observer target not found!');
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [loadMore, filteredProducts.length]);
+
   const getProductName = (product: Product): string => {
-    return product.title || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم');
+    if (language === 'ar' && product.name_ar) {
+      return product.name_ar;
+    }
+    return product.title || product.name || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم');
   };
 
   const getProductDescription = (product: Product): string => {
+    if (language === 'ar' && product.description_ar) {
+      return product.description_ar;
+    }
     return product.description || '';
   };
 
   const getStoreName = (product: Product): string => {
-    const store = product.store || '';
+    const store = product.store || product.store_name || '';
     // Capitalize store name
     return store.charAt(0).toUpperCase() + store.slice(1);
   };
 
   const getCategoryName = (product: Product): string => {
-    return product.categories?.[0] || '';
+    if (product.categories && product.categories.length > 0) {
+      return product.categories[0];
+    }
+    if (language === 'ar' && product.category_ar) {
+      return product.category_ar;
+    }
+    return product.category || '';
   };
 
   const formatPrice = (price?: number, currency?: string): string => {
@@ -361,8 +524,8 @@ export function ProductsPage() {
             <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
               <p className="text-[#6B7280]">
                 {language === 'en' 
-                  ? `Showing ${filteredProducts.length} products`
-                  : `عرض ${filteredProducts.length} منتج`
+                  ? `Showing ${filteredProducts.length} products${hasMore ? ' (scroll for more)' : ''}`
+                  : `عرض ${filteredProducts.length} منتج${hasMore ? ' (مرر لرؤية المزيد)' : ''}`
                 }
               </p>
             </div>
@@ -380,6 +543,46 @@ export function ProductsPage() {
                 )
               ))}
             </div>
+
+            {/* Infinite Scroll Trigger */}
+            <div 
+              ref={observerTarget} 
+              className="h-20 mt-8 flex items-center justify-center border-2 border-dashed border-blue-300"
+              style={{ minHeight: '20px' }}
+            >
+              {hasMore && !loadingMore && (
+                <div className="text-xs text-[#9CA3AF]">
+                  🔄 Scroll trigger (hasMore: {String(hasMore)}, loading: {String(loading)}, loadingMore: {String(loadingMore)}, offset: {offset})
+                </div>
+              )}
+              {!hasMore && (
+                <div className="text-xs text-red-500">
+                  ❌ No more products (hasMore is false)
+                </div>
+              )}
+            </div>
+
+            {/* Loading More Indicator */}
+            {loadingMore && (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-[#5FB57A]" />
+                <span className={`text-[#6B7280] ${isRTL ? 'mr-3' : 'ml-3'}`}>
+                  {language === 'en' ? 'Loading more products...' : 'تحميل المزيد من المنتجات...'}
+                </span>
+              </div>
+            )}
+
+            {/* End of Results */}
+            {!hasMore && filteredProducts.length > 0 && (
+              <div className="text-center py-8">
+                <p className="text-[#6B7280]">
+                  {language === 'en' 
+                    ? `You've reached the end! ${filteredProducts.length} products shown.`
+                    : `لقد وصلت إلى النهاية! تم عرض ${filteredProducts.length} منتج.`
+                  }
+                </p>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -390,11 +593,11 @@ export function ProductsPage() {
 // Product Grid Card Component
 function ProductGridCard({ product, language, isRTL }: { product: Product; language: string; isRTL: boolean }) {
   const { navigate } = useRouter();
-  const name = product.title || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم');
-  const description = product.description || '';
-  const storeName = product.store ? product.store.charAt(0).toUpperCase() + product.store.slice(1) : '';
-  const category = product.categories?.[0] || '';
-  const imageUrl = product.images?.[0] || '';
+  const name = language === 'ar' && product.name_ar ? product.name_ar : (product.title || product.name || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم'));
+  const description = language === 'ar' && product.description_ar ? product.description_ar : (product.description || '');
+  const storeName = product.store || product.store_name || '';
+  const category = product.categories?.[0] || (language === 'ar' && product.category_ar) || product.category || '';
+  const imageUrl = Array.isArray(product.images) ? product.images[0] : (product.images || product.image_url || '');
   
   // Calculate discount percentage
   const discountPercentage = product.original_price && product.price 
@@ -540,11 +743,11 @@ function ProductGridCard({ product, language, isRTL }: { product: Product; langu
 // Product List Card Component
 function ProductListCard({ product, language, isRTL }: { product: Product; language: string; isRTL: boolean }) {
   const { navigate } = useRouter();
-  const name = product.title || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم');
-  const description = product.description || '';
-  const storeName = product.store ? product.store.charAt(0).toUpperCase() + product.store.slice(1) : '';
-  const category = product.categories?.[0] || '';
-  const imageUrl = product.images?.[0] || '';
+  const name = language === 'ar' && product.name_ar ? product.name_ar : (product.title || product.name || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم'));
+  const description = language === 'ar' && product.description_ar ? product.description_ar : (product.description || '');
+  const storeName = product.store || product.store_name || '';
+  const category = product.categories?.[0] || (language === 'ar' && product.category_ar) || product.category || '';
+  const imageUrl = Array.isArray(product.images) ? product.images[0] : (product.images || product.image_url || '');
   
   // Calculate discount percentage
   const discountPercentage = product.original_price && product.price 

@@ -68,7 +68,7 @@ const translations = {
       deals: 'Deals',
       stores: 'Stores',
       products: 'Products',
-      blog: 'Blog',
+      blog: 'Shopping Guides',
       searchPlaceholder: 'Search for deals, stores, or products...',
     },
     hero: {
@@ -180,7 +180,7 @@ const translations = {
       deals: 'العروض',
       stores: 'المتاجر',
       products: 'المنتجات',
-      blog: 'المدونة',
+      blog: 'أدلة التسوق',
       searchPlaceholder: 'ابحث عن العروض أو المتاجر أو المنتجات...',
     },
     hero: {

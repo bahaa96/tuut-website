@@ -74,13 +74,29 @@ app.get("/make-server-4f34ef25/featured-deals", async (c) => {
     console.log('Fetching featured deals for country:', countryValue);
 
     // Build the query with proper joins
+    // The featured_deals table has a deal_id foreign key
     let query = supabase
       .from('featured_deals')
-      .select('*, deals(*, stores!deals_store_id_fkey(*))')
+      .select(`
+        *,
+        deals:deal_id (
+          *,
+          stores:store_id (*)
+        )
+      `)
       .eq('is_active', true);
 
-    // If country is provided, filter by it
-    if (countryValue) {
+    query = query.order('sort_order', { ascending: true });
+
+    const { data, error } = await query;
+    
+    if (data && data.length > 0) {
+      console.log('First featured deal item:', JSON.stringify(data[0], null, 2));
+    }
+    
+    // If country is provided, filter the results after fetching
+    let filteredData = data;
+    if (countryValue && data) {
       // First, get the country ID from the value
       const { data: countryData, error: countryError } = await supabase
         .from('countries')
@@ -92,14 +108,17 @@ app.get("/make-server-4f34ef25/featured-deals", async (c) => {
         console.error('Error fetching country:', countryError);
       } else if (countryData) {
         console.log('Country ID:', countryData.id);
-        // Filter deals by country - assuming deals table has a country_id field
-        query = query.eq('deals.country_id', countryData.id);
+        // Filter deals by country in memory
+        filteredData = data.filter((item: any) => {
+          const deal = item.deals;
+          // Check if deal has country_id or store has country_id
+          return deal?.country_id === countryData.id || 
+                 deal?.stores?.country_id === countryData.id ||
+                 !deal?.country_id; // Include deals without country restriction
+        });
+        console.log(`Filtered from ${data.length} to ${filteredData.length} deals for country ${countryValue}`);
       }
     }
-
-    query = query.order('sort_order', { ascending: true });
-
-    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching featured deals:', error);
@@ -109,11 +128,11 @@ app.get("/make-server-4f34ef25/featured-deals", async (c) => {
       }, 500);
     }
 
-    console.log(`Fetched ${data?.length || 0} featured deals`);
+    console.log(`Fetched ${data?.length || 0} featured deals, returning ${filteredData?.length || 0} after country filter`);
 
     return c.json({
       success: true,
-      deals: data,
+      deals: filteredData,
       country: countryValue,
     });
   } catch (err) {
@@ -578,10 +597,16 @@ app.get("/make-server-4f34ef25/featured-deals/inspect", async (c) => {
     }
 
     // Fetch sample data from featured_deals table with full join
-    // Use deals_store_id_fkey to specify the correct relationship
+    // Use deal_id and store_id foreign keys
     const { data: featuredData, error: featuredError } = await supabase
       .from('featured_deals')
-      .select('*, deals(*, stores!deals_store_id_fkey(*))')
+      .select(`
+        *,
+        deals:deal_id (
+          *,
+          stores:store_id (*)
+        )
+      `)
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
       .limit(6);

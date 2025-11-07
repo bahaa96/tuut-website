@@ -5,7 +5,6 @@ import { useCountry } from '../contexts/CountryContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card } from '../components/ui/card';
 import { 
   ArrowLeft, 
@@ -395,7 +394,9 @@ export default function ProductDetailPage() {
                 disabled={!product.available}
               >
                 <ExternalLink className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {language === 'en' ? 'View on Store' : 'عرض في المتجر'}
+                {language === 'en' 
+                  ? (storeName ? `View on ${storeName}` : 'View on Store')
+                  : (storeName ? `عرض في ${storeName}` : 'عرض في المتجر')}
               </Button>
             </div>
 
@@ -417,100 +418,87 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Detailed Information Tabs */}
-        <Card className="border-2 border-[#E5E7EB] rounded-xl">
-          <Tabs defaultValue="description" className="w-full">
-            <TabsList className={`w-full justify-start border-b rounded-none bg-[#F9FAFB] ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <TabsTrigger value="description" className="rounded-t-lg">
-                {language === 'en' ? 'Description' : 'الوصف'}
-              </TabsTrigger>
-              {product.feature_bullets && product.feature_bullets.length > 0 && (
-                <TabsTrigger value="features" className="rounded-t-lg">
-                  {language === 'en' ? 'Features' : 'المميزات'}
-                </TabsTrigger>
-              )}
-              {product.specs && Object.keys(product.specs).length > 0 && (
-                <TabsTrigger value="specs" className="rounded-t-lg">
-                  {language === 'en' ? 'Specifications' : 'المواصفات'}
-                </TabsTrigger>
-              )}
-              {priceHistoryData.length > 1 && (
-                <TabsTrigger value="price-history" className="rounded-t-lg">
-                  {language === 'en' ? 'Price History' : 'سجل الأسعار'}
-                </TabsTrigger>
-              )}
-            </TabsList>
-
-            <TabsContent value="description" className="p-6">
-              <div className={isRTL ? 'text-right' : 'text-left'}>
-                <p className="text-[#4B5563] leading-relaxed whitespace-pre-line">
-                  {product.description || (language === 'en' ? 'No description available.' : 'لا يوجد وصف متاح.')}
-                </p>
-              </div>
-            </TabsContent>
-
-            {product.feature_bullets && product.feature_bullets.length > 0 && (
-              <TabsContent value="features" className="p-6">
-                <ul className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {product.feature_bullets.map((bullet, index) => (
-                    <li key={index} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <CheckCircle className="h-5 w-5 text-[#5FB57A] flex-shrink-0 mt-0.5" />
-                      <span className="text-[#4B5563]">{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-              </TabsContent>
-            )}
-
-            {product.specs && Object.keys(product.specs).length > 0 && (
-              <TabsContent value="specs" className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(product.specs).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className={`flex ${isRTL ? 'flex-row-reverse' : ''} p-3 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]`}
-                    >
-                      <span className={`text-[#6B7280] ${isRTL ? 'mr-auto' : 'mr-4'}`} style={{ fontWeight: 600 }}>
-                        {key}:
-                      </span>
-                      <span className="text-[#111827]">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-            )}
-
-            {priceHistoryData.length > 1 && (
-              <TabsContent value="price-history" className="p-6">
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <h3 className="text-xl mb-4" style={{ fontWeight: 600 }}>
-                    {language === 'en' ? 'Price Trend' : 'اتجاه السعر'}
-                  </h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={priceHistoryData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line
-                        type="monotone"
-                        dataKey="price"
-                        stroke="#5FB57A"
-                        strokeWidth={2}
-                        dot={{ fill: '#5FB57A' }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                  <p className="text-sm text-[#6B7280] mt-4">
-                    {language === 'en' 
-                      ? 'Price history shows how the product price has changed over time.'
-                      : 'يوضح سجل الأسعار كيف تغير سعر المنتج مع مرور الوقت.'}
-                  </p>
-                </div>
-              </TabsContent>
-            )}
-          </Tabs>
+        {/* Description Section */}
+        <Card className="border-2 border-[#E5E7EB] rounded-xl p-6 mb-6">
+          <h2 className={`text-2xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+            {language === 'en' ? 'Description' : 'الوصف'}
+          </h2>
+          <div className={isRTL ? 'text-right' : 'text-left'}>
+            <p className="text-[#4B5563] leading-relaxed whitespace-pre-line">
+              {product.description || (language === 'en' ? 'No description available.' : 'لا يوجد وصف متاح.')}
+            </p>
+          </div>
         </Card>
+
+        {/* Features Section */}
+        {product.feature_bullets && product.feature_bullets.length > 0 && (
+          <Card className="border-2 border-[#E5E7EB] rounded-xl p-6 mb-6">
+            <h2 className={`text-2xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+              {language === 'en' ? 'Features' : 'المميزات'}
+            </h2>
+            <ul className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {product.feature_bullets.map((bullet, index) => (
+                <li key={index} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <CheckCircle className="h-5 w-5 text-[#5FB57A] flex-shrink-0 mt-0.5" />
+                  <span className="text-[#4B5563]">{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+
+        {/* Specifications Section */}
+        {product.specs && Object.keys(product.specs).length > 0 && (
+          <Card className="border-2 border-[#E5E7EB] rounded-xl p-6 mb-6">
+            <h2 className={`text-2xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+              {language === 'en' ? 'Specifications' : 'المواصفات'}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(product.specs).map(([key, value]) => (
+                <div
+                  key={key}
+                  className={`flex ${isRTL ? 'flex-row-reverse' : ''} p-3 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]`}
+                >
+                  <span className={`text-[#6B7280] ${isRTL ? 'mr-auto' : 'mr-4'}`} style={{ fontWeight: 600 }}>
+                    {key}:
+                  </span>
+                  <span className="text-[#111827]">{value}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Price History Section */}
+        {priceHistoryData.length > 1 && (
+          <Card className="border-2 border-[#E5E7EB] rounded-xl p-6 mb-6">
+            <h2 className={`text-2xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+              {language === 'en' ? 'Price History' : 'سجل الأسعار'}
+            </h2>
+            <div className={isRTL ? 'text-right' : 'text-left'}>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={priceHistoryData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="price"
+                    stroke="#5FB57A"
+                    strokeWidth={2}
+                    dot={{ fill: '#5FB57A' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className="text-sm text-[#6B7280] mt-4">
+                {language === 'en' 
+                  ? 'Price history shows how the product price has changed over time.'
+                  : 'يوضح سجل الأسعار كيف تغير سعر المنتج مع مرور الوقت.'}
+              </p>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

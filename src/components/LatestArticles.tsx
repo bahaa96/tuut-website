@@ -112,7 +112,7 @@ export function LatestArticles() {
               }
             </p>
           </div>
-          <Link to="/blog">
+          <Link to="/guides">
             <Button 
               variant="outline" 
               className={`hidden md:flex border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-white rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
@@ -151,7 +151,7 @@ export function LatestArticles() {
                 const readingTime = article.reading_time || 5;
 
                 return (
-                  <Link key={article.id} to={`/blog/${slug}`}>
+                  <Link key={article.id} to={`/guides/${slug}`}>
                     <div className="group bg-white rounded-2xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all overflow-hidden h-full flex flex-col">
                       {/* Image */}
                       <div className="relative h-48 overflow-hidden">
@@ -200,7 +200,7 @@ export function LatestArticles() {
 
             {/* Mobile View All Button */}
             <div className="mt-8 flex justify-center md:hidden">
-              <Link to="/blog">
+              <Link to="/guides">
                 <Button 
                   variant="outline" 
                   className={`border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-white rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
