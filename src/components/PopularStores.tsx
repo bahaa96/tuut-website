@@ -145,12 +145,12 @@ export function PopularStores() {
                 return (
                   <Link key={store.id} to={`/store/${slug}`}>
                     <div className="group bg-white rounded-xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-6 text-center">
-                      <div className="h-16 w-16 mx-auto mb-4 rounded-lg border-2 border-[#E5E7EB] bg-white overflow-hidden flex items-center justify-center p-2">
+                      <div className="h-16 w-16 mx-auto mb-4 rounded-lg border-2 border-[#E5E7EB] bg-white overflow-hidden flex items-center justify-center">
                         {logo ? (
                           <ImageWithFallback
                             src={logo}
                             alt={name}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <StoreIcon className="h-8 w-8 text-[#9CA3AF]" />

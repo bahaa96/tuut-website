@@ -587,6 +587,124 @@ app.get("/make-server-4f34ef25/product/:identifier", async (c) => {
   }
 });
 
+// Global search endpoint - search across stores, deals, products, and articles
+app.get("/make-server-4f34ef25/search", async (c) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    const query = c.req.query('q');
+    const countryValue = c.req.query('country');
+    
+    if (!query || query.trim() === '') {
+      return c.json({
+        success: true,
+        stores: [],
+        deals: [],
+        products: [],
+        articles: [],
+        message: 'No search query provided'
+      });
+    }
+
+    console.log('Global search for:', query, 'country:', countryValue);
+
+    // Get country ID if country is provided
+    let countryId = null;
+    if (countryValue) {
+      const { data: countryData } = await supabase
+        .from('countries')
+        .select('id')
+        .eq('value', countryValue)
+        .single();
+
+      if (countryData) {
+        countryId = countryData.id;
+      }
+    }
+
+    // Search stores
+    let storesQuery = supabase
+      .from('stores')
+      .select('*')
+      .or(`store_name.ilike.%${query}%,title.ilike.%${query}%,description.ilike.%${query}%`)
+      .limit(10);
+
+    if (countryId) {
+      storesQuery = storesQuery.eq('country_id', countryId);
+    }
+
+    const { data: storesData, error: storesError } = await storesQuery;
+
+    // Search deals
+    let dealsQuery = supabase
+      .from('deals')
+      .select('*, stores!deals_store_id_fkey(*)')
+      .or(`title.ilike.%${query}%,description.ilike.%${query}%,coupon_code.ilike.%${query}%`)
+      .limit(10);
+
+    if (countryId) {
+      dealsQuery = dealsQuery.eq('country_id', countryId);
+    }
+
+    const { data: dealsData, error: dealsError } = await dealsQuery;
+
+    // Search products
+    let productsQuery = supabase
+      .from('products')
+      .select('*')
+      .or(`name.ilike.%${query}%,name_ar.ilike.%${query}%,description.ilike.%${query}%,description_ar.ilike.%${query}%`)
+      .limit(10);
+
+    if (countryId) {
+      productsQuery = productsQuery.eq('country_id', countryId);
+    }
+
+    const { data: productsData, error: productsError } = await productsQuery;
+
+    // Search articles (shopping guides)
+    let articlesQuery = supabase
+      .from('articles')
+      .select('*')
+      .or(`title.ilike.%${query}%,title_ar.ilike.%${query}%,excerpt.ilike.%${query}%,excerpt_ar.ilike.%${query}%`)
+      .limit(10);
+
+    if (countryId) {
+      articlesQuery = articlesQuery.eq('country_id', countryId);
+    }
+
+    const { data: articlesData, error: articlesError } = await articlesQuery;
+
+    if (storesError) console.error('Error searching stores:', storesError);
+    if (dealsError) console.error('Error searching deals:', dealsError);
+    if (productsError) console.error('Error searching products:', productsError);
+    if (articlesError) console.error('Error searching articles:', articlesError);
+
+    const totalResults = (storesData?.length || 0) + (dealsData?.length || 0) + 
+                        (productsData?.length || 0) + (articlesData?.length || 0);
+
+    console.log(`Found ${totalResults} total results for query: ${query}`);
+
+    return c.json({
+      success: true,
+      query,
+      stores: storesData || [],
+      deals: dealsData || [],
+      products: productsData || [],
+      articles: articlesData || [],
+      totalResults,
+      country: countryValue,
+    });
+  } catch (err) {
+    console.error('Error in search endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
 // Fetch featured deals schema and data
 app.get("/make-server-4f34ef25/featured-deals/inspect", async (c) => {
   try {

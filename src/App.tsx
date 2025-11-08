@@ -14,6 +14,7 @@ import { ArticleDetailPage } from "./pages/ArticleDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import { DealDetailPage } from "./pages/DealDetailPage";
+import { SearchPage } from "./pages/SearchPage";
 
 function AppContent() {
   const { currentPath } = useRouter();
@@ -37,6 +38,11 @@ function AppContent() {
     // Legacy /blog/ routes redirect to /guides/
     if (currentPath.startsWith("/blog/") && currentPath !== "/blog") {
       return <ArticleDetailPage />;
+    }
+    
+    // Check for search route (including query params)
+    if (currentPath.startsWith("/search")) {
+      return <SearchPage />;
     }
     
     switch (currentPath) {

@@ -90,3 +90,10 @@ export function useParams<T extends Record<string, string> = Record<string, stri
   
   return params as T;
 }
+
+// Hook to extract URL search parameters
+export function useSearchParams(): URLSearchParams {
+  const { currentPath } = useRouter();
+  const [, search] = currentPath.split('?');
+  return new URLSearchParams(search || '');
+}

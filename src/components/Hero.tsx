@@ -1,9 +1,21 @@
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useRouter } from "../router";
+import { useState, FormEvent } from "react";
 
 export function Hero() {
   const { t, isRTL } = useLanguage();
+  const { navigate } = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
     <section className="relative bg-background pt-8 pb-4 md:pt-12 md:pb-6 overflow-hidden flex items-center">
@@ -25,14 +37,24 @@ export function Hero() {
 
           {/* Search Bar */}
           <div className="max-w-3xl mx-auto">
-            <div className="relative">
-              <Search className={`absolute top-1/2 -translate-y-1/2 h-6 w-6 text-[#6B7280] ${isRTL ? 'right-6' : 'left-6'}`} />
-              <Input
-                type="text"
-                placeholder={isRTL ? 'ابحث عن المتاجر أو العروض أو الفئات...' : 'Search for stores, deals, or categories...'}
-                className={`h-16 ${isRTL ? 'pr-16 text-right' : 'pl-16'} text-lg border-2 border-[#111827] rounded-2xl shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] focus-visible:outline-none transition-all`}
-              />
-            </div>
+            <form onSubmit={handleSearch} className="relative flex gap-2">
+              <div className="relative flex-1">
+                <Search className={`absolute top-1/2 -translate-y-1/2 h-6 w-6 text-[#6B7280] ${isRTL ? 'right-6' : 'left-6'}`} />
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={isRTL ? 'ابحث عن المتاجر أو العروض أو الفئات...' : 'Search for stores, deals, or categories...'}
+                  className={`h-16 ${isRTL ? 'pr-16 text-right' : 'pl-16'} text-lg border-2 border-[#111827] rounded-2xl shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] focus-visible:outline-none transition-all`}
+                />
+              </div>
+              <Button
+                type="submit"
+                className="h-16 px-8 bg-[#5FB57A] hover:bg-[#4FA468] text-white rounded-xl border-2 border-[#111827] shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] hover:shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
+              >
+                {isRTL ? 'بحث' : 'Search'}
+              </Button>
+            </form>
           </div>
 
           {/* Quick Links */}
