@@ -1137,6 +1137,10 @@
     width: 320px;
   }
 
+  .w-auto {
+    width: auto;
+  }
+
   .w-fit {
     width: fit-content;
   }

@@ -1,4 +1,4 @@
-import { Menu, Tag, ArrowDown, Languages, Globe } from "lucide-react";
+import { Menu, ArrowDown, Languages, Globe } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import {
@@ -19,6 +19,7 @@ import { useCountry } from "../contexts/CountryContext";
 import { getCountryName, getCountryImage, getCountryId } from "../utils/countryHelpers";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Link } from "../router";
+import logo from "figma:asset/99ddf867e496e64b163df3f4ea56b3e1b8cd8d73.png";
 
 export function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
@@ -36,11 +37,12 @@ export function Header() {
         <div className="flex h-20 items-center justify-between gap-4">
           {/* Logo */}
           <div className={`flex items-center gap-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <a href="/" className="flex items-center gap-2">
-              <Tag className="h-6 w-6 text-[#111827]" />
-              <span className="text-[#111827]" style={{ fontWeight: 700, fontSize: '24px' }}>
-                Tuut
-              </span>
+            <a href="/" className="flex items-center">
+              <img 
+                src={logo} 
+                alt="Tuut" 
+                className="h-12 w-auto"
+              />
             </a>
 
             {/* Desktop Navigation */}
