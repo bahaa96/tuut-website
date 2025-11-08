@@ -128,6 +128,15 @@ export function DealDetailPage() {
         return;
       }
 
+      console.log('=== DEAL DATA ===');
+      console.log('Full deal object:', dealData);
+      console.log('Deal ID:', dealData.id);
+      console.log('Deal Title:', dealData.title);
+      console.log('Deal store_id:', dealData.store_id);
+      console.log('Deal store_name:', dealData.store_name);
+      console.log('Deal store_name_ar:', dealData.store_name_ar);
+      console.log('Deal store_slug:', dealData.store_slug);
+
       // Fetch store details
       if (dealData.store_id) {
         const { data: storeData } = await supabase
@@ -136,7 +145,16 @@ export function DealDetailPage() {
           .eq('id', dealData.store_id)
           .single();
 
+        console.log('=== STORE DATA ===');
+        console.log('Full store object:', storeData);
         if (storeData) {
+          console.log('Store ID:', storeData.id);
+          console.log('Store title:', storeData.title);
+          console.log('Store title_ar:', storeData.title_ar);
+          console.log('Store slug:', storeData.slug);
+          console.log('Store profile_picture_url:', storeData.profile_picture_url);
+          console.log('Store redirect_url:', storeData.redirect_url);
+          
           setStore(storeData);
           
           // Fetch related deals from the same store
@@ -150,9 +168,9 @@ export function DealDetailPage() {
           if (relatedData) {
             setRelatedDeals(relatedData.map(d => ({
               ...d,
-              store_name: storeData.name || storeData.store_name || storeData.title,
-              store_name_ar: storeData.name_ar || storeData.store_name_ar || storeData.title_ar,
-              store_logo: storeData.logo || storeData.logo_url || storeData.profile_picture_url,
+              store_name: storeData.title,
+              store_name_ar: storeData.title_ar,
+              store_logo: storeData.profile_picture_url,
             })));
           }
         }
@@ -276,13 +294,14 @@ export function DealDetailPage() {
   const dealTitle = isRTL && deal.title_ar ? deal.title_ar : deal.title;
   const dealDescription = isRTL && deal.description_ar ? deal.description_ar : deal.description;
   
-  // Get store name with proper fallbacks
+  // Get store name with proper fallbacks (using 'title' field from stores table)
   const getStoreName = (): string => {
     if (store) {
+      // The stores table uses 'title' field, not 'name' or 'store_name'
       if (isRTL) {
-        return store.name_ar || store.store_name_ar || store.name || store.store_name || 'Store';
+        return store.title_ar || store.title || 'Store';
       }
-      return store.name || store.store_name || 'Store';
+      return store.title || 'Store';
     }
     // Fallback to deal's store name if store object not available
     if (isRTL) {
@@ -294,18 +313,23 @@ export function DealDetailPage() {
   const storeName = getStoreName();
   const termsConditions = isRTL && deal.terms_conditions_ar ? deal.terms_conditions_ar : deal.terms_conditions;
   
-  // Generate store slug for navigation
+  // Get store slug for navigation - use actual slug or generate from store name
   const getStoreSlug = (): string => {
-    if (store?.slug && !store.slug.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      // Use database slug if it exists and is not a UUID
-      return store.slug;
-    }
-    // Generate slug from store name
-    const name = store?.name || store?.store_name || deal.store_name || '';
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || deal.store_id || '';
+    if (store?.slug) return store.slug;
+    if (deal.store_slug) return deal.store_slug;
+    
+    // Generate slug from store name if not available
+    const fallbackName = storeName || store?.title || '';
+    return fallbackName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   };
   
   const storeSlug = getStoreSlug();
+  
+  console.log('=== NAVIGATION DATA ===');
+  console.log('Store Name:', storeName);
+  console.log('Store Slug:', storeSlug);
+  console.log('Store Object Slug:', store?.slug);
+  console.log('Navigation URL:', `/store/${storeSlug}`);
 
   return (
     <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
@@ -323,12 +347,12 @@ export function DealDetailPage() {
             <div className="bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] p-8 mb-8">
               {/* Store Header */}
               <Link 
-                to={`/stores/${storeSlug}`}
+                to={`/store/${storeSlug}`}
                 className={`flex items-center gap-4 mb-6 pb-6 border-b-2 border-[#E5E7EB] ${isRTL ? 'flex-row-reverse' : ''} group cursor-pointer hover:bg-[#F9FAFB] -mx-8 -mt-8 px-8 pt-8 rounded-t-2xl transition-colors`}
               >
-                {store && (store.logo || store.logo_url || store.profile_picture_url) ? (
+                {store && store.profile_picture_url ? (
                   <ImageWithFallback
-                    src={store.logo || store.logo_url || store.profile_picture_url || ''}
+                    src={store.profile_picture_url}
                     alt={storeName || ''}
                     className="h-16 w-16 object-contain rounded-lg border-2 border-[#E5E7EB] p-2 group-hover:border-[#5FB57A] transition-colors"
                   />

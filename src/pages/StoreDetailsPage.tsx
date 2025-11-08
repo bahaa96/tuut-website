@@ -27,7 +27,9 @@ function isUUID(str: string): boolean {
 interface Store {
   id: string;
   slug?: string;
-  store_name: string;
+  title?: string;
+  title_ar?: string;
+  store_name?: string;
   store_name_ar?: string;
   logo_url?: string;
   profile_picture_url?: string;
@@ -79,59 +81,84 @@ export function StoreDetailsPage() {
       setLoading(true);
       const supabase = createClient();
 
-      // Check if the slug is actually a UUID (which would be wrong)
-      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (uuidPattern.test(storeSlug)) {
-        console.error('Detected UUID instead of slug:', storeSlug);
-        console.error('This means a store_id was used in a link instead of store_slug');
-        toast.error(isRTL ? 'رابط المتجر غير صحيح - يرجى استخدام الرابط الصحيح' : 'Invalid store link - please use the correct link');
-        setLoading(false);
-        return;
-      }
-
-      // Try to fetch store details by slug first
+      // Try to fetch store details
       let storeData = null;
       let storeError = null;
 
-      // Attempt 1: Try by slug column
-      const slugResult = await supabase
-        .from('stores')
-        .select('*')
-        .eq('slug', storeSlug)
-        .maybeSingle();
-
-      if (slugResult.data) {
-        storeData = slugResult.data;
-        console.log('Found store by slug column:', storeData.store_name || storeData.name);
-      } else {
-        // Attempt 2: Try by store_name (case-insensitive match)
-        const searchName = storeSlug.replace(/-/g, ' ');
-        const nameResult = await supabase
+      // Check if the slug is actually a UUID (store ID)
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      if (uuidPattern.test(storeSlug)) {
+        // Attempt 1: Try by ID (UUID)
+        console.log('Detected UUID, looking up by store ID:', storeSlug);
+        const idResult = await supabase
           .from('stores')
           .select('*')
-          .ilike('store_name', searchName)
+          .eq('id', storeSlug)
           .maybeSingle();
 
-        if (nameResult.data) {
-          storeData = nameResult.data;
-          console.log('Found store by store_name column:', storeData.store_name);
+        if (idResult.data) {
+          storeData = idResult.data;
+          console.log('Found store by ID:', storeData.name || storeData.store_name);
         } else {
-          // Attempt 3: Try by name column (case-insensitive match)
-          const nameAltResult = await supabase
+          console.error('Store not found with ID:', storeSlug);
+          toast.error(isRTL ? 'المتجر غير موجود' : 'Store not found');
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Attempt 2: Try by slug column
+        const slugResult = await supabase
+          .from('stores')
+          .select('*')
+          .eq('slug', storeSlug)
+          .maybeSingle();
+
+        if (slugResult.data) {
+          storeData = slugResult.data;
+          console.log('Found store by slug column:', storeData.title || storeData.store_name || storeData.name);
+        } else {
+          // Attempt 3: Try by title (case-insensitive match) - primary field in stores table
+          const searchName = storeSlug.replace(/-/g, ' ');
+          const titleResult = await supabase
             .from('stores')
             .select('*')
-            .ilike('name', searchName)
+            .ilike('title', searchName)
             .maybeSingle();
 
-          if (nameAltResult.data) {
-            storeData = nameAltResult.data;
-            console.log('Found store by name column:', storeData.name);
+          if (titleResult.data) {
+            storeData = titleResult.data;
+            console.log('Found store by title column:', titleResult.data.title);
           } else {
-            console.error('Store not found with slug:', storeSlug);
-            console.log('Tried:', { slug: storeSlug, searchName });
-            toast.error(isRTL ? 'المتجر غير موجود' : 'Store not found');
-            setLoading(false);
-            return;
+            // Attempt 4: Try by store_name (case-insensitive match)
+            const nameResult = await supabase
+              .from('stores')
+              .select('*')
+              .ilike('store_name', searchName)
+              .maybeSingle();
+
+            if (nameResult.data) {
+              storeData = nameResult.data;
+              console.log('Found store by store_name column:', storeData.store_name);
+            } else {
+              // Attempt 5: Try by name column (case-insensitive match)
+              const nameAltResult = await supabase
+                .from('stores')
+                .select('*')
+                .ilike('name', searchName)
+                .maybeSingle();
+
+              if (nameAltResult.data) {
+                storeData = nameAltResult.data;
+                console.log('Found store by name column:', storeData.name);
+              } else {
+                console.error('Store not found with slug:', storeSlug);
+                console.log('Tried:', { slug: storeSlug, searchName });
+                toast.error(isRTL ? 'المتجر غير موجود' : 'Store not found');
+                setLoading(false);
+                return;
+              }
+            }
           }
         }
       }
@@ -143,7 +170,7 @@ export function StoreDetailsPage() {
         return;
       }
 
-      const storeName = storeData.store_name || storeData.name || storeData.title;
+      const storeName = storeData.title || storeData.store_name || storeData.name;
       
       // Compute proper slug: use database slug only if it's not a UUID
       const computedStoreSlug = (storeData.slug && !isUUID(storeData.slug)) 
@@ -268,7 +295,9 @@ export function StoreDetailsPage() {
     );
   }
 
-  const storeName = isRTL && store.store_name_ar ? store.store_name_ar : store.store_name;
+  const storeName = isRTL 
+    ? (store.title_ar || store.store_name_ar || store.title || store.store_name) 
+    : (store.title || store.store_name);
   const storeDescription = isRTL && store.description_ar ? store.description_ar : store.description;
 
   return (
