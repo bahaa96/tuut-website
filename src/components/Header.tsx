@@ -19,7 +19,6 @@ import { useCountry } from "../contexts/CountryContext";
 import { getCountryName, getCountryImage, getCountryId } from "../utils/countryHelpers";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Link } from "../router";
-import logo from "figma:asset/99ddf867e496e64b163df3f4ea56b3e1b8cd8d73.png";
 
 export function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
@@ -39,7 +38,7 @@ export function Header() {
           <div className={`flex items-center gap-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <a href="/" className="flex items-center">
               <img 
-                src={logo} 
+                src="https://i.ibb.co/XZV7bXh3/Tuut.png" 
                 alt="Tuut" 
                 className="h-12 w-auto"
               />

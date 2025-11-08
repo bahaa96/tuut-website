@@ -1,6 +1,6 @@
 import { Hero } from "../components/Hero";
-import { CategoryGrid } from "../components/CategoryGrid";
 import { FeaturedDeals } from "../components/FeaturedDeals";
+import { CategoryGrid } from "../components/CategoryGrid";
 import { CommunityActivity } from "../components/CommunityActivity";
 import { PopularStores } from "../components/PopularStores";
 import { WhyDifferent } from "../components/WhyDifferent";
@@ -11,8 +11,8 @@ export function HomePage() {
   return (
     <>
       <Hero />
-      <CategoryGrid />
       <FeaturedDeals />
+      <CategoryGrid />
       <CommunityActivity />
       <PopularStores />
       <WhyDifferent />
