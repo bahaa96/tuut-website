@@ -17,12 +17,14 @@ import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import { Button } from "./ui/button";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useRouter } from "../router";
 
 interface Category {
   id: number;
   name?: string;
   label?: string;
   title?: string;
+  slug?: string;
   icon?: string;
   icon_name?: string;
   color?: string;
@@ -222,6 +224,7 @@ function getCategoryIcon(categoryName: string): LucideIcon {
 
 export function CategoryGrid() {
   const { t, isRTL } = useLanguage();
+  const { navigate } = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -396,10 +399,14 @@ export function CategoryGrid() {
                   }
                 }
                 
+                // Determine the link URL - use slug if available, otherwise use id
+                const categoryUrl = `/category/${category.slug || category.id}`;
+                
                 return (
                   <button
                     key={category.id}
-                    className="group bg-white rounded-xl p-6 border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all text-center w-[160px] md:w-[180px]"
+                    onClick={() => navigate(categoryUrl)}
+                    className="group bg-white rounded-xl p-6 border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all text-center w-[160px] md:w-[180px] cursor-pointer"
                   >
                     <div
                       className="inline-flex h-16 w-16 items-center justify-center rounded-full mb-4 transition-transform group-hover:scale-110"

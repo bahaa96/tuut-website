@@ -49,6 +49,7 @@ interface Deal {
   code?: string;
   type: "coupon" | "sale";
   color: string;
+  slug?: string;
 }
 
 export function FeaturedDeals() {
@@ -180,6 +181,7 @@ export function FeaturedDeals() {
                 code: deal?.code || '',
                 type: deal?.code ? 'coupon' : 'sale',
                 color: ['#7EC89A', '#5FB57A', '#9DD9B3', '#BCF0CC'][index % 4],
+                slug: deal?.slug || `deal-${item.id || index}`,
               };
             })
             .filter(Boolean); // Remove null entries
@@ -449,9 +451,19 @@ export function FeaturedDeals() {
     });
   };
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success(isRTL ? `تم نسخ الكود "${code}"!` : `Code "${code}" copied to clipboard!`);
+  const copyCode = async (code: string, event?: React.MouseEvent) => {
+    // Prevent card click navigation when clicking the copy button
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    const success = await copyToClipboard(code);
+    if (success) {
+      toast.success(isRTL ? `تم نسخ الكود "${code}"!` : `Code "${code}" copied!`);
+    } else {
+      toast.error(isRTL ? `فشل نسخ الكود` : `Failed to copy code`);
+    }
   };
 
   return (
@@ -532,9 +544,10 @@ export function FeaturedDeals() {
             {/* Two-row grid */}
             <div className="grid grid-rows-2 grid-flow-col gap-6 pb-2">
               {deals.map((deal) => (
-            <div
+            <Link
               key={deal.id}
-              className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all w-[320px] md:w-[360px]"
+              to={`/deal/${deal.slug || deal.id}`}
+              className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all w-[320px] md:w-[360px] block"
             >
               {/* Left/Right Discount Bar with Perforated Edge */}
               <div className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-[100px] flex items-center justify-center`} style={{ backgroundColor: deal.color }}>
@@ -564,8 +577,12 @@ export function FeaturedDeals() {
               <div className={`${isRTL ? 'mr-[100px]' : 'ml-[100px]'} p-6 relative`}>
                 {/* Heart Icon */}
                 <button
-                  onClick={() => toggleSave(deal.id)}
-                  className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} p-2 rounded-full hover:bg-[#F0F7F0] transition-colors`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSave(deal.id);
+                  }}
+                  className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} p-2 rounded-full hover:bg-[#F0F7F0] transition-colors z-10`}
                 >
                   <Heart
                     className={`h-5 w-5 transition-colors ${
@@ -605,9 +622,9 @@ export function FeaturedDeals() {
                   </a>
                 </div>
 
-                {/* Apply Code Button */}
+                {/* Copy Code Button */}
                 <Button
-                  onClick={() => deal.code && copyCode(deal.code)}
+                  onClick={(e) => deal.code && copyCode(deal.code, e)}
                   className="w-full bg-white text-[#111827] border-2 border-[#111827] hover:bg-[#F0F7F0] rounded-xl"
                   style={{ fontWeight: 600 }}
                 >
@@ -615,7 +632,7 @@ export function FeaturedDeals() {
                   {t('featuredDeals.applyCode')}
                 </Button>
               </div>
-            </div>
+            </Link>
               ))}
             </div>
           </div>

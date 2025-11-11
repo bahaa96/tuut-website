@@ -214,7 +214,7 @@ export function StoresPage() {
   }
 
   function getStoreLogo(store: Store): string {
-    return store.logo || store.logo_url || store.image_url || '';
+    return store.profile_picture_url || store.logo || store.logo_url || store.image_url || '';
   }
 
   function getStoreProfileImage(store: Store): string {
@@ -410,7 +410,7 @@ function StoreCard({
 }) {
   const name = language === 'ar' && store.name_ar ? store.name_ar : (store.name || store.store_name || store.title || 'Store');
   const description = language === 'ar' && store.description_ar ? store.description_ar : (store.description || '');
-  const logo = store.logo || store.logo_url || store.image_url || '';
+  const logo = store.profile_picture_url || store.logo || store.logo_url || store.image_url || '';
   const profileImage = store.profile_image || store.profile_image_url || store.banner_image || store.cover_image || '';
   const dealsCount = store.active_deals_count || store.deals_count || 0;
   const isFeatured = store.featured || store.is_featured;
@@ -523,14 +523,14 @@ function StoreCard({
 
         <div className={`p-6 ${profileImage ? '-mt-8 relative' : ''}`}>
           {/* Logo */}
-          <div className={`h-24 w-24 mx-auto mb-4 rounded-xl border-2 overflow-hidden flex items-center justify-center p-3 ${
-            profileImage ? 'border-white bg-white shadow-lg' : 'border-[#E5E7EB] bg-white'
+          <div className={`h-24 w-24 mx-auto mb-4 rounded-xl border-2 overflow-hidden flex items-center justify-center ${
+            profileImage ? 'border-white bg-white shadow-lg p-0' : 'border-[#E5E7EB] bg-white p-3'
           }`}>
             {logo ? (
               <ImageWithFallback
                 src={logo}
                 alt={name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             ) : (
               <StoreIcon className="h-12 w-12 text-[#9CA3AF]" />

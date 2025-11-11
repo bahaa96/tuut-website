@@ -15,6 +15,9 @@ import { ProductsPage } from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import { DealDetailPage } from "./pages/DealDetailPage";
 import { SearchPage } from "./pages/SearchPage";
+import { StoreSearchTestPage } from "./pages/StoreSearchTestPage";
+import { CategoryPage } from "./pages/CategoryPage";
+import TranslationsInspectorPage from "./pages/TranslationsInspectorPage";
 
 function AppContent() {
   const { currentPath } = useRouter();
@@ -22,6 +25,9 @@ function AppContent() {
   // Route matching
   const renderPage = () => {
     // Check for dynamic routes first
+    if (currentPath.startsWith("/category/")) {
+      return <CategoryPage />;
+    }
     if (currentPath.startsWith("/store/")) {
       return <StoreDetailsPage />;
     }
@@ -57,6 +63,10 @@ function AppContent() {
         return <BlogPage />;
       case "/schema_inspector":
         return <SchemaInspectorPage />;
+      case "/translations_inspector":
+        return <TranslationsInspectorPage />;
+      case "/store_search_test":
+        return <StoreSearchTestPage />;
       case "/":
       default:
         return <HomePage />;

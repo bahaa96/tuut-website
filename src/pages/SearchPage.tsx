@@ -7,6 +7,9 @@ import { getCountryValue } from "../utils/countryHelpers";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { directSearch } from "../utils/directSearch";
+import { checkDatabaseContent } from "../utils/databaseDiagnostic";
+import { diagnoseStoreSearch } from "../utils/storeSearchDiagnostic";
 
 interface Store {
   id: string;
@@ -92,40 +95,107 @@ export function SearchPage() {
     }
   }, [query, country]);
 
+  // Log when component mounts to help debug
+  useEffect(() => {
+    console.log('SearchPage mounted with query:', query, 'country:', country);
+    // Run database diagnostic on first load to check if tables have data
+    checkDatabaseContent();
+  }, []);
+
   const fetchSearchResults = async () => {
     try {
       setLoading(true);
       const countryValue = getCountryValue(country);
       
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+      console.log('Search query:', query, 'Country:', countryValue);
       
-      const url = countryValue 
-        ? `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/search?q=${encodeURIComponent(query)}&country=${countryValue}`
-        : `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/search?q=${encodeURIComponent(query)}`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Run diagnostic for debugging (helps identify field issues)
+      if (query.toLowerCase().includes('noon') || query.toLowerCase().includes('نون')) {
+        console.log('🔍 Running store search diagnostic for:', query);
+        
+        // Get country ID for diagnostic
+        let diagnosticCountryId = null;
+        if (countryValue) {
+          const supabase = (await import('../utils/supabase/client')).createClient();
+          const { data: countryData } = await supabase
+            .from('countries')
+            .select('id')
+            .eq('value', countryValue)
+            .single();
+          diagnosticCountryId = countryData?.id || null;
+        }
+        
+        await diagnoseStoreSearch(query, diagnosticCountryId);
       }
+      
+      // Try edge function first, fallback to direct search if it fails
+      try {
+        const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+        
+        const url = countryValue 
+          ? `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/search?q=${encodeURIComponent(query)}&country=${countryValue}`
+          : `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/search?q=${encodeURIComponent(query)}`;
+        
+        console.log('Trying edge function search with URL:', url);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        });
 
-      const result = await response.json();
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn('Edge function search failed:', response.status, errorText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-      if (result.success) {
-        setResults({
+        const result = await response.json();
+        console.log('Edge function search response:', result);
+
+        if (result.success) {
+          const searchResults = {
+            stores: result.stores || [],
+            deals: result.deals || [],
+            products: result.products || [],
+            articles: result.articles || [],
+            totalResults: result.totalResults || 0,
+          };
+          console.log('Setting search results from edge function:', searchResults);
+          setResults(searchResults);
+          return;
+        }
+      } catch (edgeFunctionError) {
+        console.warn('Edge function search failed, falling back to direct search:', edgeFunctionError);
+        
+        // Fallback to direct search
+        console.log('Using direct Supabase search...');
+        const result = await directSearch({
+          query,
+          countryValue: countryValue || undefined,
+        });
+        
+        console.log('Direct search response:', result);
+        
+        const searchResults = {
           stores: result.stores || [],
           deals: result.deals || [],
           products: result.products || [],
           articles: result.articles || [],
           totalResults: result.totalResults || 0,
-        });
+        };
+        console.log('Setting search results from direct search:', searchResults);
+        setResults(searchResults);
       }
     } catch (err) {
       console.error('Error fetching search results:', err);
+      setResults({
+        stores: [],
+        deals: [],
+        products: [],
+        articles: [],
+        totalResults: 0,
+      });
     } finally {
       setLoading(false);
     }

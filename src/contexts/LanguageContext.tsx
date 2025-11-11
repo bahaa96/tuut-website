@@ -91,7 +91,7 @@ const translations = {
       expiresIn: 'Expires in',
       days: 'days',
       discount: 'DISCOUNT',
-      applyCode: 'Apply Code',
+      applyCode: 'Copy Code',
       terms: '*Terms & conditions',
       deals: [
         {
@@ -173,6 +173,10 @@ const translations = {
       privacy: 'Privacy Policy',
       followUs: 'Follow Us',
       copyright: '© 2024 Tuut. All rights reserved.',
+      featuredDeals: 'Featured Deals',
+      viewAll: 'View All',
+      shoppingGuides: 'Shopping Guides',
+      topStores: 'Top Stores',
     },
   },
   ar: {
@@ -203,7 +207,7 @@ const translations = {
       expiresIn: 'ينتهي خلال',
       days: 'أيام',
       discount: 'خصم',
-      applyCode: 'تطبيق الكود',
+      applyCode: 'نسخ الكود',
       terms: '*الشروط والأحكام',
       deals: [
         {
@@ -285,6 +289,10 @@ const translations = {
       privacy: 'سياسة الخصوصية',
       followUs: 'تابعنا',
       copyright: '© 2024 Tuut. جميع الحقوق محفوظة.',
+      featuredDeals: 'عروض مميزة',
+      viewAll: 'عرض الكل ←',
+      shoppingGuides: 'أدلة التسوق',
+      topStores: 'أفضل المتاجر',
     },
   },
 };

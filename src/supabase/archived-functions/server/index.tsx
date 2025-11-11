@@ -629,85 +629,126 @@ app.get("/make-server-4f34ef25/search", async (c) => {
       }
     }
 
-    // Search stores ONLY in translations table
-    const { data: storeTranslations, error: storeTransError } = await supabase
-      .from('translations')
-      .select('entity_id')
-      .eq('entity_type', 'store')
-      .ilike('translated_value', `%${query}%`)
-      .limit(50);
+    // Search stores - First get a sample to check which fields exist
+    const { data: sampleStore } = await supabase
+      .from('stores')
+      .select('*')
+      .limit(1)
+      .single();
+    
+    // Determine which searchable text fields exist in the actual database
+    const potentialSearchFields = [
+      'store_name',
+      'name', 
+      'title',
+      'description',
+      'store_name_ar',
+      'name_ar',
+      'title_ar',
+      'description_ar'
+    ];
+    
+    const existingSearchFields = sampleStore 
+      ? potentialSearchFields.filter(field => field in sampleStore)
+      : ['name', 'description']; // fallback to most common fields
+    
+    console.log('Available store search fields:', existingSearchFields);
+    
+    const storeOrCondition = existingSearchFields
+      .map(field => `${field}.ilike.%${query}%`)
+      .join(',');
 
-    console.log(`Store translations search result: ${storeTranslations?.length || 0} results`, storeTransError ? `Error: ${storeTransError.message}` : '');
+    let storesQuery = supabase
+      .from('stores')
+      .select('*')
+      .or(storeOrCondition)
+      .limit(10);
 
-    let storesData = [];
-    let storesError = storeTransError;
-
-    if (storeTranslations && storeTranslations.length > 0) {
-      const storeIds = [...new Set(storeTranslations.map(t => t.entity_id))];
-      console.log(`Found ${storeIds.length} unique store IDs from translations`);
-      
-      let storesQuery = supabase
-        .from('stores')
-        .select('*')
-        .in('id', storeIds)
-        .limit(10);
-
-      if (countryId) {
-        storesQuery = storesQuery.eq('country_id', countryId);
-        console.log(`Filtering stores by country_id: ${countryId}`);
-      }
-
-      const result = await storesQuery;
-      storesData = result.data || [];
-      storesError = result.error;
+    if (countryId) {
+      storesQuery = storesQuery.eq('country_id', countryId);
+      console.log(`Searching stores with country_id: ${countryId}`);
     }
 
-    console.log(`Final stores result: ${storesData?.length || 0} stores`, storesError ? `Error: ${storesError.message}` : '');
+    const { data: storesData, error: storesError } = await storesQuery;
+    console.log(`Stores search result: ${storesData?.length || 0} results`, storesError ? `Error: ${storesError.message}` : '');
 
-    // Search deals ONLY in translations table
-    const { data: dealTranslations, error: dealTransError } = await supabase
-      .from('translations')
-      .select('entity_id')
-      .eq('entity_type', 'deal')
-      .ilike('translated_value', `%${query}%`)
-      .limit(50);
+    // Search deals - check which fields exist first
+    const { data: sampleDeal } = await supabase
+      .from('deals')
+      .select('*')
+      .limit(1)
+      .single();
+    
+    const dealPotentialFields = ['title', 'description', 'coupon_code', 'title_ar', 'description_ar', 'code', 'promo_code'];
+    const dealFields = sampleDeal 
+      ? dealPotentialFields.filter(field => field in sampleDeal)
+      : ['title', 'description'];
+    
+    console.log('Available deal search fields:', dealFields);
+    const dealOrCondition = dealFields.map(field => `${field}.ilike.%${query}%`).join(',');
+    
+    let dealsQuery = supabase
+      .from('deals')
+      .select('*, stores!deals_store_id_fkey(*)')
+      .or(dealOrCondition)
+      .limit(10);
 
-    console.log(`Deal translations search result: ${dealTranslations?.length || 0} results`, dealTransError ? `Error: ${dealTransError.message}` : '');
-
-    let dealsData = [];
-    let dealsError = dealTransError;
-
-    if (dealTranslations && dealTranslations.length > 0) {
-      const dealIds = [...new Set(dealTranslations.map(t => t.entity_id))];
-      console.log(`Found ${dealIds.length} unique deal IDs from translations`);
-      
-      let dealsQuery = supabase
-        .from('deals')
-        .select('*, stores!deals_store_id_fkey(*)')
-        .in('id', dealIds)
-        .limit(10);
-
-      if (countryId) {
-        dealsQuery = dealsQuery.eq('country_id', countryId);
-        console.log(`Filtering deals by country_id: ${countryId}`);
-      }
-
-      const result = await dealsQuery;
-      dealsData = result.data || [];
-      dealsError = result.error;
+    if (countryId) {
+      dealsQuery = dealsQuery.eq('country_id', countryId);
+      console.log(`Searching deals with country_id: ${countryId}`);
     }
 
-    console.log(`Final deals result: ${dealsData?.length || 0} deals`, dealsError ? `Error: ${dealsError.message}` : '');
+    const { data: dealsData, error: dealsError } = await dealsQuery;
+    console.log(`Deals search result: ${dealsData?.length || 0} results`, dealsError ? `Error: ${dealsError.message}` : '');
 
-    // Products search removed - not searching products anymore
-    const productsData = [];
-    const productsError = null;
+    // Search products - check which fields exist first
+    const { data: sampleProduct } = await supabase
+      .from('products')
+      .select('*')
+      .limit(1)
+      .single();
+    
+    const productPotentialFields = ['name', 'name_ar', 'title', 'title_ar', 'description', 'description_ar', 'product_name', 'product_name_ar'];
+    const productFields = sampleProduct 
+      ? productPotentialFields.filter(field => field in sampleProduct)
+      : ['title', 'description'];
+    
+    console.log('Available product search fields:', productFields);
+    const productOrCondition = productFields.map(field => `${field}.ilike.%${query}%`).join(',');
+    
+    let productsQuery = supabase
+      .from('products')
+      .select('*')
+      .or(productOrCondition)
+      .limit(10);
 
-    // Search articles (shopping guides) - use only columns that exist
+    if (countryId) {
+      productsQuery = productsQuery.eq('country_id', countryId);
+      console.log(`Searching products with country_id: ${countryId}`);
+    }
+
+    const { data: productsData, error: productsError } = await productsQuery;
+    console.log(`Products search result: ${productsData?.length || 0} results`, productsError ? `Error: ${productsError.message}` : '');
+
+    // Search articles - check which fields exist first
+    const { data: sampleArticle } = await supabase
+      .from('articles')
+      .select('*')
+      .limit(1)
+      .single();
+    
+    const articlePotentialFields = ['title', 'title_ar', 'excerpt', 'excerpt_ar', 'content', 'content_ar', 'description', 'description_ar'];
+    const articleFields = sampleArticle 
+      ? articlePotentialFields.filter(field => field in sampleArticle)
+      : ['title', 'excerpt'];
+    
+    console.log('Available article search fields:', articleFields);
+    const articleOrCondition = articleFields.map(field => `${field}.ilike.%${query}%`).join(',');
+    
     let articlesQuery = supabase
       .from('articles')
       .select('*')
-      .or(`title.ilike.%${query}%,excerpt.ilike.%${query}%,content.ilike.%${query}%`)
+      .or(articleOrCondition)
       .limit(10);
 
     if (countryId) {
@@ -743,48 +784,6 @@ app.get("/make-server-4f34ef25/search", async (c) => {
     return c.json({ 
       error: err instanceof Error ? err.message : 'Unknown error',
       success: false,
-    }, 500);
-  }
-});
-
-// Diagnostic endpoint to check translations table schema
-app.get("/make-server-4f34ef25/translations/inspect", async (c) => {
-  try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
-
-    // Fetch sample data from translations table
-    const { data: translationsData, error: translationsError } = await supabase
-      .from('translations')
-      .select('*')
-      .limit(20);
-
-    console.log('Translations table query result:', { 
-      rowCount: translationsData?.length || 0,
-      error: translationsError 
-    });
-
-    if (translationsData && translationsData.length > 0) {
-      console.log('Sample translation record:', translationsData[0]);
-      console.log('Columns:', Object.keys(translationsData[0]));
-    }
-
-    return c.json({
-      success: !translationsError,
-      rowCount: translationsData?.length || 0,
-      columns: translationsData && translationsData.length > 0 ? Object.keys(translationsData[0]) : [],
-      sampleData: translationsData,
-      error: translationsError?.message,
-      errorDetails: translationsError
-    });
-  } catch (err) {
-    console.error('Error inspecting translations table:', err);
-    return c.json({ 
-      success: false, 
-      error: err instanceof Error ? err.message : 'Unknown error',
-      stack: err instanceof Error ? err.stack : undefined
     }, 500);
   }
 });
@@ -836,16 +835,6 @@ app.get("/make-server-4f34ef25/featured-deals/inspect", async (c) => {
       console.error('Error fetching countries table:', countriesError);
     }
 
-    // Fetch sample data from translations table
-    const { data: translationsData, error: translationsError } = await supabase
-      .from('translations')
-      .select('*')
-      .limit(10);
-
-    if (translationsError) {
-      console.error('Error fetching translations table:', translationsError);
-    }
-
     // Fetch sample data from featured_deals table with full join
     // Use deal_id and store_id foreign keys
     const { data: featuredData, error: featuredError } = await supabase
@@ -888,12 +877,6 @@ app.get("/make-server-4f34ef25/featured-deals/inspect", async (c) => {
         sampleData: countriesData,
         rowCount: countriesData?.length || 0,
         error: countriesError?.message,
-      },
-      translationsTable: {
-        columns: translationsData && translationsData.length > 0 ? Object.keys(translationsData[0]) : [],
-        sampleData: translationsData,
-        rowCount: translationsData?.length || 0,
-        error: translationsError?.message,
       },
       featuredDealsJoined: {
         rowCount: featuredData?.length || 0,

@@ -170,6 +170,36 @@ export function SchemaInspector() {
         )}
       </div>
 
+      {/* Translations Table */}
+      <div className="bg-white p-4 rounded-lg border border-blue-300">
+        <h3 className="text-xl font-semibold text-blue-800 mb-3">Translations Table</h3>
+        {schemaInfo?.translationsTable?.error ? (
+          <p className="text-red-600">{schemaInfo.translationsTable.error}</p>
+        ) : (
+          <>
+            <div className="mb-3">
+              <p className="font-semibold text-blue-700 mb-2">
+                Sample Rows: {schemaInfo?.translationsTable?.rowCount || 0}
+              </p>
+              <p className="font-semibold text-blue-700 mb-2">Columns:</p>
+              <div className="flex flex-wrap gap-2">
+                {schemaInfo?.translationsTable?.columns?.map((col: string) => (
+                  <span key={col} className="bg-yellow-100 text-yellow-900 px-3 py-1 rounded text-sm">
+                    {col}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="font-semibold text-blue-700 mb-2">Sample Translations Data:</p>
+              <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-96">
+                {JSON.stringify(schemaInfo?.translationsTable?.sampleData, null, 2)}
+              </pre>
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Featured Deals with Join */}
       <div className="bg-white p-4 rounded-lg border border-blue-300">
         <h3 className="text-xl font-semibold text-blue-800 mb-3">
