@@ -8,6 +8,7 @@ import { copyToClipboard } from "../utils/clipboard";
 interface DealCardProps {
   deal: {
     id: number;
+    slug?: string;
     title?: string;
     title_ar?: string;
     description?: string;
@@ -46,7 +47,7 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
   };
 
   const handleCardClick = () => {
-    navigate(`/deal/${deal.id}`);
+    navigate(`/deal/${deal.slug || deal.id}`);
   };
 
   // Assign color based on deal ID for variety

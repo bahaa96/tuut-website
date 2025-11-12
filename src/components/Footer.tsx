@@ -20,6 +20,7 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 
 interface Deal {
   id: string;
+  slug?: string;
   title: string;
   title_ar?: string;
   discount_value?: string;
@@ -43,10 +44,12 @@ interface Article {
 
 interface Category {
   id: number;
+  category_name?: string;
   name?: string;
   label?: string;
   title?: string;
   slug?: string;
+  [key: string]: any; // Allow any other fields from the database
 }
 
 export function Footer() {
@@ -81,50 +84,108 @@ export function Footer() {
         console.error('Error fetching featured deals:', dealsResponse.status);
       }
 
-      // Fetch stores from Supabase with limit
-      const storesResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/stores?limit=20${selectedCountry ? `&country=${selectedCountry}` : ''}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      // Fetch top stores from Supabase based on selected country
+      const supabaseClient = createClient();
       
-      if (storesResponse.ok) {
-        const storesData = await storesResponse.json();
-        console.log('Footer stores fetched:', storesData.stores?.length || 0);
-        // Shuffle and take 5 random stores
-        const allStores = storesData.stores || [];
-        const shuffled = [...allStores].sort(() => 0.5 - Math.random());
-        setTopStores(shuffled.slice(0, 5));
+      // Apply country filter if a country is selected
+      if (selectedCountry) {
+        // First get the country ID
+        const { data: countryData } = await supabaseClient
+          .from('countries')
+          .select('id')
+          .eq('value', selectedCountry)
+          .single();
+        
+        if (countryData) {
+          // Build query for top stores with country filter
+          const { data: storesData, error: storesError } = await supabaseClient
+            .from('stores')
+            .select('*')
+            .eq('country_id', countryData.id)
+            .order('featured', { ascending: false })
+            .order('active_deals_count', { ascending: false })
+            .limit(5);
+          
+          if (!storesError && storesData) {
+            console.log('Footer top stores fetched:', storesData.length, 'for country:', selectedCountry);
+            setTopStores(storesData.map(store => ({
+              id: store.id,
+              name: store.name || store.store_name || store.title || 'Store',
+              slug: store.slug || store.id,
+            })));
+          } else {
+            console.error('Error fetching stores:', storesError);
+            setTopStores([]);
+          }
+        } else {
+          console.error('Country not found:', selectedCountry);
+          setTopStores([]);
+        }
       } else {
-        console.error('Error fetching stores:', storesResponse.status);
+        // No country selected, fetch all stores
+        const { data: storesData, error: storesError } = await supabaseClient
+          .from('stores')
+          .select('*')
+          .order('featured', { ascending: false })
+          .order('active_deals_count', { ascending: false })
+          .limit(5);
+        
+        if (!storesError && storesData) {
+          console.log('Footer top stores fetched:', storesData.length, '(all countries)');
+          setTopStores(storesData.map(store => ({
+            id: store.id,
+            name: store.name || store.store_name || store.title || 'Store',
+            slug: store.slug || store.id,
+          })));
+        } else {
+          console.error('Error fetching stores:', storesError);
+          setTopStores([]);
+        }
       }
 
-      // Fetch shopping guides (articles) from Supabase
-      const guidesResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/articles?limit=6${selectedCountry ? `&country=${selectedCountry}` : ''}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
+      // Fetch shopping guides (articles) from Supabase based on selected country
+      if (selectedCountry) {
+        const articlesResponse = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/articles?limit=6&country=${selectedCountry}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${publicAnonKey}`,
+            },
+          }
+        );
+        
+        if (articlesResponse.ok) {
+          const articlesData = await articlesResponse.json();
+          console.log('Footer guides fetched:', articlesData.articles?.length || 0, 'for country:', selectedCountry);
+          setGuides((articlesData.articles || []).slice(0, 4));
+        } else {
+          console.error('Error fetching articles:', articlesResponse.status);
+          setGuides([]);
         }
-      );
-      
-      if (guidesResponse.ok) {
-        const guidesData = await guidesResponse.json();
-        console.log('Footer guides fetched:', guidesData.articles?.length || 0);
-        setGuides((guidesData.articles || []).slice(0, 4));
       } else {
-        console.error('Error fetching articles:', guidesResponse.status);
+        // If no country is selected, fetch all articles
+        const supabaseClient = createClient();
+        const { data: articlesData, error: articlesError } = await supabaseClient
+          .from('articles')
+          .select('id, title, slug')
+          .order('is_featured', { ascending: false })
+          .order('published_at', { ascending: false })
+          .limit(6);
+        
+        if (!articlesError && articlesData) {
+          console.log('Footer guides fetched:', articlesData.length, '(all countries)');
+          setGuides(articlesData.slice(0, 4));
+        } else {
+          console.error('Error fetching articles:', articlesError);
+          setGuides([]);
+        }
       }
 
       // Fetch categories from Supabase
       const supabase = createClient();
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
-        .select('id, name, label, title, slug')
+        .select('*')
         .order('id', { ascending: true })
         .limit(5);
       
@@ -132,6 +193,7 @@ export function Footer() {
         console.error('Error fetching categories:', categoriesError);
       } else if (categoriesData) {
         console.log('Footer categories fetched:', categoriesData.length);
+        console.log('First category:', categoriesData[0]);
         setCategories(categoriesData);
       }
     } catch (error) {
@@ -257,7 +319,7 @@ export function Footer() {
                 featuredDeals.slice(0, 5).map((deal) => (
                   <li key={deal.id}>
                     <Link
-                      to={`/deal/${deal.id}`}
+                      to={`/deal/${deal.slug || deal.id}`}
                       className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1"
                     >
                       {isRTL && deal.title_ar ? deal.title_ar : deal.title}
@@ -335,7 +397,7 @@ export function Footer() {
             <ul className="space-y-2">
               {categories.length > 0 ? (
                 categories.map((category) => {
-                  const categoryName = category.name || category.label || category.title || 'Category';
+                  const categoryName = category.category_name || category.name || category.label || category.title || 'Category';
                   const categoryUrl = `/category/${category.slug || category.id}`;
                   return (
                     <li key={category.id}>

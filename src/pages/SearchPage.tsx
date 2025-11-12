@@ -350,7 +350,7 @@ export function SearchPage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {results.deals.slice(0, 4).map((deal) => (
-                      <Link key={deal.id} to={`/deal/${deal.id}`}>
+                      <Link key={deal.id} to={`/deal/${deal.slug || deal.id}`}>
                         <div className="group bg-white rounded-xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden">
                           {deal.image_url && (
                             <div className="aspect-video overflow-hidden border-b-2 border-[#111827]">
@@ -502,7 +502,7 @@ export function SearchPage() {
               {results.deals.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {results.deals.map((deal) => (
-                    <Link key={deal.id} to={`/deal/${deal.id}`}>
+                    <Link key={deal.id} to={`/deal/${deal.slug || deal.id}`}>
                       <div className="group bg-white rounded-xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden">
                         {deal.image_url && (
                           <div className="aspect-video overflow-hidden border-b-2 border-[#111827]">

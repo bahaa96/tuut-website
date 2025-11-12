@@ -35,6 +35,7 @@ function isUUID(str: string): boolean {
 
 interface Deal {
   id: number;
+  slug?: string;
   title: string;
   title_ar?: string;
   description?: string;
@@ -151,6 +152,7 @@ export function DealsPage() {
         
         return {
           id: deal.id,
+          slug: deal.slug,
           title: deal.title,
           title_ar: deal.title_ar,
           description: deal.description,

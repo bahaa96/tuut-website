@@ -467,7 +467,7 @@ export function FeaturedDeals() {
   };
 
   return (
-    <section className="py-12 md:py-16 bg-background">
+    <section id="featured-deals" className="py-12 md:py-16 bg-background">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         <div className={`flex items-center justify-between mb-10 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div>
@@ -500,7 +500,7 @@ export function FeaturedDeals() {
         ) : deals.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[#6B7280] mb-4">
-              {isRTL ? 'لا توجد عروض متاحة حالياً' : 'No deals available at the moment'}
+              {isRTL ? 'لا توجد عروض متا��ة حالياً' : 'No deals available at the moment'}
             </p>
           </div>
         ) : (

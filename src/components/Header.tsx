@@ -18,17 +18,31 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryName, getCountryImage, getCountryId } from "../utils/countryHelpers";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { Link } from "../router";
+import { Link, useRouter } from "../router";
 
 export function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
   const { country, countries, setCountry } = useCountry();
+  const { navigate, currentPath } = useRouter();
   const navItems = [
     { key: 'deals', label: t('header.deals'), href: '/deals' },
     { key: 'stores', label: t('header.stores'), href: '/stores' },
     { key: 'products', label: t('header.products'), href: '/products' },
     { key: 'guides', label: t('header.blog'), href: '/guides' }
   ];
+
+  const handleStartSaving = () => {
+    // If we're on the home page, scroll to featured deals
+    if (currentPath === '/' || currentPath === '') {
+      const featuredDealsSection = document.getElementById('featured-deals');
+      if (featuredDealsSection) {
+        featuredDealsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      // If we're on another page, navigate to home page with hash
+      navigate('/#featured-deals');
+    }
+  };
 
   return (
     <header className="w-full border-b-2 border-[#111827] bg-background">
@@ -118,6 +132,7 @@ export function Header() {
             </Button>
 
             <Button 
+              onClick={handleStartSaving}
               className="hidden md:flex bg-[#5FB57A] hover:bg-[#4FA569] text-[#111827] border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all h-11 px-6"
               style={{ fontWeight: 600 }}
             >
@@ -186,6 +201,7 @@ export function Header() {
                   </Button>
 
                   <Button 
+                    onClick={handleStartSaving}
                     className="mt-4 bg-[#5FB57A] hover:bg-[#4FA569] text-[#111827] border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
                     style={{ fontWeight: 600 }}
                   >

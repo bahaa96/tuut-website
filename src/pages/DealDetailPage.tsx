@@ -29,6 +29,7 @@ import { copyToClipboard } from "../utils/clipboard";
 
 interface Deal {
   id: number;
+  slug?: string;
   title: string;
   title_ar?: string;
   description?: string;
@@ -62,7 +63,7 @@ interface Store {
 }
 
 export function DealDetailPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const { t, isRTL, language } = useLanguage();
   const [deal, setDeal] = useState<Deal | null>(null);
   const [store, setStore] = useState<Store | null>(null);
@@ -75,10 +76,10 @@ export function DealDetailPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (id) {
-      fetchDealDetails(id);
+    if (slug) {
+      fetchDealDetails(slug);
     }
-  }, [id, language]);
+  }, [slug, language]);
 
   useEffect(() => {
     if (deal?.expires_at) {
@@ -109,16 +110,16 @@ export function DealDetailPage() {
     }
   }, [deal, language]);
 
-  const fetchDealDetails = async (dealId: string) => {
+  const fetchDealDetails = async (dealSlug: string) => {
     try {
       setLoading(true);
       const supabase = createClient();
 
-      // Fetch deal details
+      // Fetch deal details by slug
       const { data: dealData, error: dealError } = await supabase
         .from('deals')
         .select('*')
-        .eq('id', dealId)
+        .eq('slug', dealSlug)
         .single();
 
       if (dealError || !dealData) {
@@ -162,7 +163,7 @@ export function DealDetailPage() {
             .from('deals')
             .select('*')
             .eq('store_id', dealData.store_id)
-            .neq('id', dealId)
+            .neq('slug', dealSlug)
             .limit(4);
 
           if (relatedData) {

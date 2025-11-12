@@ -75,16 +75,14 @@ export function useParams<T extends Record<string, string> = Record<string, stri
   const pathParts = currentPath.split('/').filter(Boolean);
   const params: Record<string, string> = {};
   
-  // Simple pattern matching for various routes with :slug or :id parameter
-  // Supported patterns: /store/:slug, /blog/:slug, /guides/:slug, /product/:slug, /deal/:id, /category/:slug
+  // Simple pattern matching for various routes with :slug parameter
+  // Supported patterns: /store/:slug, /blog/:slug, /guides/:slug, /product/:slug, /deal/:slug, /category/:slug
   if (pathParts.length >= 2) {
     const firstPart = pathParts[0];
     const secondPart = pathParts[1];
     
-    if (['store', 'blog', 'guides', 'product', 'category'].includes(firstPart)) {
+    if (['store', 'blog', 'guides', 'product', 'category', 'deal'].includes(firstPart)) {
       params.slug = secondPart;
-    } else if (firstPart === 'deal') {
-      params.id = secondPart;
     }
   }
   
