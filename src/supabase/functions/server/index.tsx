@@ -910,4 +910,570 @@ app.get("/make-server-4f34ef25/featured-deals/inspect", async (c) => {
   }
 });
 
+// Authentication Routes using D7 Network SMS OTP
+
+// Simplified Authentication - Phone Number Only
+
+// Sign in with phone number - save to customers table
+app.post("/make-server-4f34ef25/auth/signin", async (c) => {
+  console.log('🔵 /auth/signin endpoint hit');
+  try {
+    const body = await c.req.json();
+    console.log('📦 Request body:', body);
+    
+    const { phone } = body;
+    
+    if (!phone) {
+      console.log('❌ No phone number provided');
+      return c.json({ error: 'Phone number is required' }, 400);
+    }
+
+    console.log('📞 Sign in request for phone:', phone);
+
+    // Check if customer already exists in Supabase
+    const { data: existingCustomer, error: fetchError } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('phone', phone)
+      .single();
+
+    let customer;
+
+    if (existingCustomer) {
+      console.log('✅ Existing customer found:', existingCustomer.id);
+      customer = existingCustomer;
+    } else {
+      // Create new customer in Supabase
+      const { data: newCustomer, error: insertError } = await supabase
+        .from('customers')
+        .insert([{ phone }])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Error creating customer:', insertError);
+        return c.json({ error: 'Failed to save customer' }, 500);
+      }
+
+      console.log('✅ New customer created:', newCustomer.id);
+      customer = newCustomer;
+    }
+
+    // Create session token
+    const sessionToken = crypto.randomUUID();
+    const sessionKey = `session:${sessionToken}`;
+    const sessionData = {
+      user_id: customer.id,
+      phone: customer.phone,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+    };
+    
+    await kv.set(sessionKey, sessionData);
+    console.log('🎟️ Session created:', sessionToken);
+
+    const response = { 
+      success: true,
+      access_token: sessionToken,
+      user: {
+        id: customer.id,
+        phone: customer.phone,
+      }
+    };
+    
+    console.log('✅ Returning success response');
+    return c.json(response);
+  } catch (err) {
+    console.error('❌ Error in signin endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Legacy OTP endpoints - removed, no longer in use
+
+// Get user from session token
+app.get("/make-server-4f34ef25/auth/user", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session) {
+      return c.json({ error: 'Invalid session' }, 401);
+    }
+
+    // Check if session is expired
+    if (new Date(session.expires_at) < new Date()) {
+      await kv.del(sessionKey);
+      return c.json({ error: 'Session expired' }, 401);
+    }
+
+    const userKey = `user:${session.phone}`;
+    const user = await kv.get(userKey);
+
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    return c.json({ 
+      success: true,
+      user: {
+        id: user.id,
+        phone: user.phone,
+      }
+    });
+  } catch (err) {
+    console.error('Error in get user endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Sign out
+app.post("/make-server-4f34ef25/auth/signout", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ success: true }); // Already signed out
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    await kv.del(sessionKey);
+    console.log('Session deleted:', accessToken);
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Error in signout endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Tracked Products Routes
+
+// Get all tracked products for authenticated user
+app.get("/make-server-4f34ef25/tracked-products", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify session
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session) {
+      return c.json({ error: 'Invalid session' }, 401);
+    }
+
+    if (new Date(session.expires_at) < new Date()) {
+      await kv.del(sessionKey);
+      return c.json({ error: 'Session expired' }, 401);
+    }
+
+    // Get all tracked products for this user from KV store
+    const productsPrefix = `tracked_product:${session.user_id}:`;
+    const products = await kv.getByPrefix(productsPrefix);
+
+    // Sort by created_at descending
+    const sortedProducts = products.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return c.json({ success: true, products: sortedProducts });
+  } catch (err) {
+    console.error('Error in tracked-products GET endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Add a new tracked product
+app.post("/make-server-4f34ef25/tracked-products", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify session
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session) {
+      return c.json({ error: 'Invalid session' }, 401);
+    }
+
+    if (new Date(session.expires_at) < new Date()) {
+      await kv.del(sessionKey);
+      return c.json({ error: 'Session expired' }, 401);
+    }
+
+    const body = await c.req.json();
+    const {
+      product_url,
+      product_title,
+      current_price,
+      currency,
+      thumbnail_url,
+      availability,
+      price_drop_alert,
+      restock_alert,
+    } = body;
+
+    // Check if product is already tracked
+    const productsPrefix = `tracked_product:${session.user_id}:`;
+    const existingProducts = await kv.getByPrefix(productsPrefix);
+    const alreadyTracked = existingProducts.find(p => p.product_url === product_url);
+
+    if (alreadyTracked) {
+      return c.json({ error: 'Product already tracked' }, 400);
+    }
+
+    // Create new tracked product
+    const productId = crypto.randomUUID();
+    const product = {
+      id: productId,
+      user_id: session.user_id,
+      product_url,
+      product_title,
+      current_price,
+      currency,
+      thumbnail_url,
+      availability,
+      price_drop_alert: price_drop_alert ?? false,
+      restock_alert: restock_alert ?? false,
+      created_at: new Date().toISOString(),
+      last_checked_at: new Date().toISOString(),
+    };
+
+    const productKey = `tracked_product:${session.user_id}:${productId}`;
+    await kv.set(productKey, product);
+
+    console.log('Tracked product added:', productId);
+
+    return c.json({ success: true, product });
+  } catch (err) {
+    console.error('Error in tracked-products POST endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Delete a tracked product
+app.delete("/make-server-4f34ef25/tracked-products/:id", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify session
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session) {
+      return c.json({ error: 'Invalid session' }, 401);
+    }
+
+    if (new Date(session.expires_at) < new Date()) {
+      await kv.del(sessionKey);
+      return c.json({ error: 'Session expired' }, 401);
+    }
+
+    const productId = c.req.param('id');
+    const productKey = `tracked_product:${session.user_id}:${productId}`;
+
+    // Check if product exists and belongs to user
+    const product = await kv.get(productKey);
+    if (!product) {
+      return c.json({ error: 'Product not found' }, 404);
+    }
+
+    await kv.del(productKey);
+    console.log('Tracked product deleted:', productId);
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Error in tracked-products DELETE endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }, 500);
+  }
+});
+
+// Saved Deals Routes
+
+// Get all saved deals for authenticated user
+app.get("/make-server-4f34ef25/saved-deals", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return c.json({ error: 'Invalid or expired session' }, 401);
+    }
+
+    const savedDeals = await kv.getByPrefix(`saved_deal:${session.user_id}:`);
+    return c.json({ success: true, saved_deals: savedDeals });
+  } catch (err) {
+    console.error('Error fetching saved deals:', err);
+    return c.json({ error: 'Failed to fetch saved deals' }, 500);
+  }
+});
+
+// Save a deal
+app.post("/make-server-4f34ef25/saved-deals", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return c.json({ error: 'Invalid or expired session' }, 401);
+    }
+
+    const { deal_id, deal_title, deal_image, deal_discount, deal_store, deal_url } = await c.req.json();
+
+    const savedDeal = {
+      id: crypto.randomUUID(),
+      user_id: session.user_id,
+      deal_id,
+      deal_title,
+      deal_image,
+      deal_discount,
+      deal_store,
+      deal_url,
+      created_at: new Date().toISOString(),
+    };
+
+    const dealKey = `saved_deal:${session.user_id}:${deal_id}`;
+    await kv.set(dealKey, savedDeal);
+
+    return c.json({ success: true, saved_deal: savedDeal });
+  } catch (err) {
+    console.error('Error saving deal:', err);
+    return c.json({ error: 'Failed to save deal' }, 500);
+  }
+});
+
+// Delete a saved deal
+app.delete("/make-server-4f34ef25/saved-deals/:id", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return c.json({ error: 'Invalid or expired session' }, 401);
+    }
+
+    const dealId = c.req.param('id');
+    const dealKey = `saved_deal:${session.user_id}:${dealId}`;
+
+    const deal = await kv.get(dealKey);
+    if (!deal) {
+      return c.json({ error: 'Deal not found' }, 404);
+    }
+
+    await kv.del(dealKey);
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting saved deal:', err);
+    return c.json({ error: 'Failed to delete saved deal' }, 500);
+  }
+});
+
+// Saved Stores Routes
+
+// Get all saved stores for authenticated user
+app.get("/make-server-4f34ef25/saved-stores", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return c.json({ error: 'Invalid or expired session' }, 401);
+    }
+
+    const savedStores = await kv.getByPrefix(`saved_store:${session.user_id}:`);
+    return c.json({ success: true, saved_stores: savedStores });
+  } catch (err) {
+    console.error('Error fetching saved stores:', err);
+    return c.json({ error: 'Failed to fetch saved stores' }, 500);
+  }
+});
+
+// Save a store
+app.post("/make-server-4f34ef25/saved-stores", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return c.json({ error: 'Invalid or expired session' }, 401);
+    }
+
+    const { store_id, store_name, store_logo } = await c.req.json();
+
+    const savedStore = {
+      id: crypto.randomUUID(),
+      user_id: session.user_id,
+      store_id,
+      store_name,
+      store_logo,
+      created_at: new Date().toISOString(),
+    };
+
+    const storeKey = `saved_store:${session.user_id}:${store_id}`;
+    await kv.set(storeKey, savedStore);
+
+    return c.json({ success: true, saved_store: savedStore });
+  } catch (err) {
+    console.error('Error saving store:', err);
+    return c.json({ error: 'Failed to save store' }, 500);
+  }
+});
+
+// Delete a saved store
+app.delete("/make-server-4f34ef25/saved-stores/:id", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return c.json({ error: 'Invalid or expired session' }, 401);
+    }
+
+    const storeId = c.req.param('id');
+    const storeKey = `saved_store:${session.user_id}:${storeId}`;
+
+    const store = await kv.get(storeKey);
+    if (!store) {
+      return c.json({ error: 'Store not found' }, 404);
+    }
+
+    await kv.del(storeKey);
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting saved store:', err);
+    return c.json({ error: 'Failed to delete saved store' }, 500);
+  }
+});
+
+// Scrape product data from URL
+app.post("/make-server-4f34ef25/scrape-product", async (c) => {
+  console.log('🔵 /scrape-product endpoint hit');
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify session
+    const sessionKey = `session:${accessToken}`;
+    const session = await kv.get(sessionKey);
+    if (!session) {
+      return c.json({ error: 'Invalid session' }, 401);
+    }
+
+    const body = await c.req.json();
+    const { url } = body;
+
+    if (!url) {
+      return c.json({ error: 'URL is required' }, 400);
+    }
+
+    console.log('📦 Scraping product from URL:', url);
+
+    // Use the scraping API
+    const scrapingApiUrl = Deno.env.get('EXPO_PUBLIC_SCRAPING_API_URL');
+    if (!scrapingApiUrl) {
+      console.error('❌ EXPO_PUBLIC_SCRAPING_API_URL not configured');
+      return c.json({ 
+        error: 'Product scraping service not configured',
+        success: false 
+      }, 500);
+    }
+
+    const scrapingResponse = await fetch(scrapingApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    });
+
+    if (!scrapingResponse.ok) {
+      console.error('❌ Scraping API error:', scrapingResponse.status);
+      const errorText = await scrapingResponse.text();
+      console.error('Error details:', errorText);
+      return c.json({ 
+        error: 'Failed to scrape product data',
+        success: false 
+      }, 400);
+    }
+
+    const scrapedData = await scrapingResponse.json();
+    console.log('✅ Product data scraped:', scrapedData);
+
+    // Extract and format the data
+    const productData = {
+      title: scrapedData.title || scrapedData.name || 'Unknown Product',
+      image: scrapedData.image || scrapedData.imageUrl || scrapedData.thumbnail || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+      price: parseFloat(scrapedData.price || scrapedData.currentPrice || 0),
+    };
+
+    return c.json({
+      success: true,
+      product: productData,
+    });
+  } catch (err) {
+    console.error('❌ Error in scrape-product endpoint:', err);
+    return c.json({ 
+      error: err instanceof Error ? err.message : 'Unknown error',
+      success: false 
+    }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

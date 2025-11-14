@@ -1,4 +1,4 @@
-import { Menu, ArrowDown, Languages, Globe } from "lucide-react";
+import { Menu, ArrowDown, Languages, Globe, LogOut, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import {
@@ -13,17 +13,23 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
+import { useAuth } from "../contexts/AuthContext";
 import { getCountryName, getCountryImage, getCountryId } from "../utils/countryHelpers";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Link, useRouter } from "../router";
+import { SignInModal } from "./SignInModal";
 
 export function Header() {
   const { language, setLanguage, t, isRTL } = useLanguage();
   const { country, countries, setCountry } = useCountry();
+  const { user, isAuthenticated, signOut } = useAuth();
   const { navigate, currentPath } = useRouter();
+  const [showSignIn, setShowSignIn] = useState(false);
+  
   const navItems = [
     { key: 'deals', label: t('header.deals'), href: '/deals' },
     { key: 'stores', label: t('header.stores'), href: '/stores' },
@@ -32,16 +38,11 @@ export function Header() {
   ];
 
   const handleStartSaving = () => {
-    // If we're on the home page, scroll to featured deals
-    if (currentPath === '/' || currentPath === '') {
-      const featuredDealsSection = document.getElementById('featured-deals');
-      if (featuredDealsSection) {
-        featuredDealsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    } else {
-      // If we're on another page, navigate to home page with hash
-      navigate('/#featured-deals');
-    }
+    setShowSignIn(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -131,14 +132,37 @@ export function Header() {
               {language === 'en' ? 'عربي' : 'English'}
             </Button>
 
-            <Button 
-              onClick={handleStartSaving}
-              className="hidden md:flex bg-[#5FB57A] hover:bg-[#4FA569] text-[#111827] border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all h-11 px-6"
-              style={{ fontWeight: 600 }}
-            >
-              {language === 'en' ? 'Start Saving' : 'ابدأ التوفير'}
-              <ArrowDown className={`h-4 w-4 ${isRTL ? 'mr-2' : 'ml-2'}`} />
-            </Button>
+            {/* User Menu or RADAR Button */}
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    className="hidden md:flex bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all h-11 px-6"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {language === 'en' ? 'RADAR' : 'الرادار'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/wishlist')}>
+                    {language === 'en' ? 'My Wishlist' : 'قائمتي'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                    <LogOut className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {language === 'en' ? 'Sign Out' : 'تسجيل الخروج'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                onClick={handleStartSaving}
+                className="hidden md:flex bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all h-11 px-6"
+                style={{ fontWeight: 600 }}
+              >
+                {language === 'en' ? 'Start Saving' : 'ابدأ التوفير'}
+              </Button>
+            )}
 
             {/* Mobile Menu */}
             <Sheet>
@@ -200,20 +224,43 @@ export function Header() {
                     {language === 'en' ? 'العربية' : 'English'}
                   </Button>
 
-                  <Button 
-                    onClick={handleStartSaving}
-                    className="mt-4 bg-[#5FB57A] hover:bg-[#4FA569] text-[#111827] border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
-                    style={{ fontWeight: 600 }}
-                  >
-                    {language === 'en' ? 'Start Saving' : 'ابدأ التوفير'}
-                    <ArrowDown className={`h-4 w-4 ${isRTL ? 'mr-2' : 'ml-2'}`} />
-                  </Button>
+                  {/* Mobile Start Saving / Account Button */}
+                  {isAuthenticated ? (
+                    <>
+                      <Button 
+                        onClick={() => navigate('/tracked-products')}
+                        variant="outline"
+                        className="mt-4 border-2 border-[#111827] rounded-xl"
+                      >
+                        {language === 'en' ? 'Tracked Products' : 'المنتجات المتتبعة'}
+                      </Button>
+                      <Button 
+                        onClick={handleSignOut}
+                        variant="outline"
+                        className="mt-2 border-2 border-red-500 text-red-600 rounded-xl"
+                      >
+                        <LogOut className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {language === 'en' ? 'Sign Out' : 'تسجيل الخروج'}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      onClick={handleStartSaving}
+                      className="mt-4 bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {language === 'en' ? 'Start Saving' : 'ابدأ التوفير'}
+                    </Button>
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>
           </div>
         </div>
       </div>
+
+      {/* Sign In Modal */}
+      <SignInModal open={showSignIn} onOpenChange={setShowSignIn} />
     </header>
   );
 }

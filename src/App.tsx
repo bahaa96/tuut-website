@@ -3,6 +3,7 @@ import { Footer } from "./components/Footer";
 import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { CountryProvider } from "./contexts/CountryContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { RouterProvider, useRouter } from "./router";
 import { HomePage } from "./pages/HomePage";
 import { SchemaInspectorPage } from "./pages/SchemaInspectorPage";
@@ -18,6 +19,9 @@ import { SearchPage } from "./pages/SearchPage";
 import { StoreSearchTestPage } from "./pages/StoreSearchTestPage";
 import { CategoryPage } from "./pages/CategoryPage";
 import TranslationsInspectorPage from "./pages/TranslationsInspectorPage";
+import { TrackedProductsPage } from "./pages/TrackedProductsPage";
+import WishlistPage from "./pages/WishlistPage";
+import AddProductPage from "./pages/AddProductPage";
 
 function AppContent() {
   const { currentPath } = useRouter();
@@ -36,6 +40,15 @@ function AppContent() {
     }
     if (currentPath.startsWith("/deal/")) {
       return <DealDetailPage />;
+    }
+    if (currentPath === "/tracked-products") {
+      return <TrackedProductsPage />;
+    }
+    if (currentPath === "/wishlist") {
+      return <WishlistPage />;
+    }
+    if (currentPath === "/add-product") {
+      return <AddProductPage />;
     }
     if (currentPath.startsWith("/guides/") && currentPath !== "/guides") {
       // Individual guide/article page
@@ -90,7 +103,9 @@ export default function App() {
     <RouterProvider>
       <LanguageProvider>
         <CountryProvider>
-          <AppContent />
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
         </CountryProvider>
       </LanguageProvider>
     </RouterProvider>

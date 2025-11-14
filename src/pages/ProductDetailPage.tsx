@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from '../router';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCountry } from '../contexts/CountryContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Card } from '../components/ui/card';
+import { SignInModal } from '../components/SignInModal';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -19,10 +21,14 @@ import {
   Tag as TagIcon,
   Calendar,
   CheckCircle,
-  XCircle
+  XCircle,
+  Bell,
+  RotateCcw
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { toast } from 'sonner@2.0.3';
+import { createClient } from '../utils/supabase/client';
 
 interface Product {
   id: number | string;
@@ -54,12 +60,15 @@ export default function ProductDetailPage() {
   const { currentPath, navigate } = useRouter();
   const { language } = useLanguage();
   const { selectedCountry } = useCountry();
+  const { user, isAuthenticated } = useAuth();
   const isRTL = language === 'ar';
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [tracking, setTracking] = useState(false);
 
   // Extract product ID/slug from URL
   const pathParts = currentPath.split('/').filter(Boolean);
@@ -126,6 +135,56 @@ export default function ProductDetailPage() {
       }),
       price: item.price
     }));
+  };
+
+  const handleTrackProduct = async (priceDropAlert: boolean, restockAlert: boolean) => {
+    if (!isAuthenticated) {
+      setShowSignIn(true);
+      return;
+    }
+
+    if (!product?.url) {
+      toast.error(language === 'en' ? 'Product URL not available' : 'رابط المنتج غير متاح');
+      return;
+    }
+
+    try {
+      setTracking(true);
+      const token = localStorage.getItem('auth_token');
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/tracked-products`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            product_url: product.url,
+            product_title: product.title || 'Untitled Product',
+            current_price: product.price || 0,
+            currency: product.currency || 'USD',
+            thumbnail_url: product.images?.[0] || '',
+            availability: product.available || false,
+            price_drop_alert: priceDropAlert,
+            restock_alert: restockAlert,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success(language === 'en' ? 'Product added to tracking!' : 'تمت إضافة المنتج للتتبع!');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || (language === 'en' ? 'Failed to track product' : 'فشل في تتبع المنتج'));
+      }
+    } catch (error) {
+      console.error('Error tracking product:', error);
+      toast.error(language === 'en' ? 'An error occurred' : 'حدث خطأ');
+    } finally {
+      setTracking(false);
+    }
   };
 
   if (loading) {
@@ -499,7 +558,60 @@ export default function ProductDetailPage() {
             </div>
           </Card>
         )}
+
+        {/* Product Tracking Section */}
+        {product?.url && (
+          <Card className="border-2 border-[#5FB57A] rounded-xl p-6 bg-gradient-to-br from-[#E8F3E8] to-white">
+            <div className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="bg-[#5FB57A] p-3 rounded-lg">
+                <Bell className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className={`text-2xl mb-2 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+                  {language === 'en' ? 'Track This Product' : 'تتبع هذا المنتج'}
+                </h2>
+                <p className={`text-[#6B7280] mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {language === 'en' 
+                    ? 'Get notified when the price drops or when this product is back in stock.' 
+                    : 'احصل على إشعار عندما ينخفض السعر أو عندما يتوفر المنتج مرة أخرى.'}
+                </p>
+                
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <Button
+                    onClick={() => handleTrackProduct(true, false)}
+                    disabled={tracking}
+                    className="bg-[#5FB57A] hover:bg-[#4FA56A] text-white rounded-lg border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all"
+                  >
+                    <TrendingDown className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {language === 'en' ? 'Price Drop Alert' : 'تنبيه انخفاض السعر'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleTrackProduct(false, true)}
+                    disabled={tracking}
+                    className="bg-[#5FB57A] hover:bg-[#4FA56A] text-white rounded-lg border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all"
+                  >
+                    <RotateCcw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {language === 'en' ? 'Restock Alert' : 'تنبيه إعادة التوفر'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleTrackProduct(true, true)}
+                    disabled={tracking}
+                    className="bg-[#111827] hover:bg-[#1F2937] text-white rounded-lg border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(95,181,122,1)] hover:shadow-[1px_1px_0px_0px_rgba(95,181,122,1)] transition-all"
+                  >
+                    <Bell className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {language === 'en' ? 'Track Both' : 'تتبع الاثنين'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
+
+      {/* Sign In Modal */}
+      <SignInModal open={showSignIn} onOpenChange={setShowSignIn} />
     </div>
   );
 }
