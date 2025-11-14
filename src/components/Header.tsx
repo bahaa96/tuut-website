@@ -1,4 +1,4 @@
-import { Menu, ArrowDown, Languages, Globe, LogOut, User } from "lucide-react";
+import { Menu, ArrowDown, Languages, Globe, LogOut, User, PiggyBank } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import {
@@ -155,11 +155,12 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button 
+              <Button
                 onClick={handleStartSaving}
                 className="hidden md:flex bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all h-11 px-6"
                 style={{ fontWeight: 600 }}
               >
+                <PiggyBank className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {language === 'en' ? 'Start Saving' : 'ابدأ التوفير'}
               </Button>
             )}
@@ -244,11 +245,12 @@ export function Header() {
                       </Button>
                     </>
                   ) : (
-                    <Button 
+                    <Button
                       onClick={handleStartSaving}
                       className="mt-4 bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
                       style={{ fontWeight: 600 }}
                     >
+                      <PiggyBank className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                       {language === 'en' ? 'Start Saving' : 'ابدأ التوفير'}
                     </Button>
                   )}

@@ -22,6 +22,8 @@ import TranslationsInspectorPage from "./pages/TranslationsInspectorPage";
 import { TrackedProductsPage } from "./pages/TrackedProductsPage";
 import WishlistPage from "./pages/WishlistPage";
 import AddProductPage from "./pages/AddProductPage";
+import { TermsPage } from "./pages/TermsPage";
+import { PrivacyPage } from "./pages/PrivacyPage";
 
 function AppContent() {
   const { currentPath } = useRouter();
@@ -71,6 +73,10 @@ function AppContent() {
         return <StoresPage />;
       case "/products":
         return <ProductsPage />;
+      case "/terms":
+        return <TermsPage />;
+      case "/privacy":
+        return <PrivacyPage />;
       case "/guides":
       case "/blog":
         return <BlogPage />;

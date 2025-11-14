@@ -19,15 +19,23 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 );
 
 interface Deal {
-  id: string;
+  id: string | number;
   slug?: string;
-  title: string;
+  title?: string;
   title_ar?: string;
+  description?: string;
+  description_ar?: string;
+  name?: string;
+  name_ar?: string;
   discount_value?: string;
-  stores?: {
-    name: string;
-    name_ar?: string;
-  };
+  discount_percentage?: number;
+  discount_amount?: number;
+  stores?: any; // Could be an object or array based on the API response
+  store_name?: string;
+  store_name_ar?: string;
+  code?: string;
+  original_price?: number;
+  discounted_price?: number;
 }
 
 interface Store {
@@ -52,23 +60,39 @@ interface Category {
   [key: string]: any; // Allow any other fields from the database
 }
 
+interface Product {
+  id: string | number;
+  name?: string;
+  name_ar?: string;
+  title?: string;
+  title_ar?: string;
+  slug?: string;
+  price?: number;
+  rating?: number;
+  ratings_count?: number;
+  image_url?: string;
+  store_name?: string;
+  store_name_ar?: string;
+}
+
 export function Footer() {
   const { t, isRTL } = useLanguage();
-  const { selectedCountry } = useCountry();
+  const { country } = useCountry();
   const [featuredDeals, setFeaturedDeals] = useState<Deal[]>([]);
   const [topStores, setTopStores] = useState<Store[]>([]);
   const [guides, setGuides] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [bestSellingProducts, setBestSellingProducts] = useState<Product[]>([]);
   
   useEffect(() => {
     fetchFooterData();
-  }, [selectedCountry]);
+  }, [country]);
 
   const fetchFooterData = async () => {
     try {
       // Fetch featured deals from Supabase
       const dealsResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/featured-deals${selectedCountry ? `?country=${selectedCountry}` : ''}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/featured-deals${country?.value ? `?country=${country.value}` : ''}`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -78,75 +102,68 @@ export function Footer() {
       
       if (dealsResponse.ok) {
         const dealsData = await dealsResponse.json();
-        console.log('Footer featured deals:', dealsData.deals?.length || 0);
-        setFeaturedDeals((dealsData.deals || []).slice(0, 4));
+
+        // Extract the actual deal data from the nested structure
+        const actualDeals = (dealsData.deals || []).map(item => item.deals).filter(Boolean);
+        setFeaturedDeals(actualDeals.slice(0, 5));
       } else {
         console.error('Error fetching featured deals:', dealsResponse.status);
       }
 
-      // Fetch top stores from Supabase based on selected country
+      // Fetch random 10 stores directly from Supabase
       const supabaseClient = createClient();
-      
-      // Apply country filter if a country is selected
-      if (selectedCountry) {
-        // First get the country ID
-        const { data: countryData } = await supabaseClient
-          .from('countries')
-          .select('id')
-          .eq('value', selectedCountry)
-          .single();
-        
-        if (countryData) {
-          // Build query for top stores with country filter
-          const { data: storesData, error: storesError } = await supabaseClient
-            .from('stores')
-            .select('*')
-            .eq('country_id', countryData.id)
-            .order('featured', { ascending: false })
-            .order('active_deals_count', { ascending: false })
-            .limit(5);
-          
-          if (!storesError && storesData) {
-            console.log('Footer top stores fetched:', storesData.length, 'for country:', selectedCountry);
-            setTopStores(storesData.map(store => ({
-              id: store.id,
-              name: store.name || store.store_name || store.title || 'Store',
-              slug: store.slug || store.id,
-            })));
-          } else {
-            console.error('Error fetching stores:', storesError);
-            setTopStores([]);
-          }
-        } else {
-          console.error('Country not found:', selectedCountry);
-          setTopStores([]);
-        }
-      } else {
-        // No country selected, fetch all stores
-        const { data: storesData, error: storesError } = await supabaseClient
+
+      try {
+        let storesQuery = supabaseClient
           .from('stores')
           .select('*')
-          .order('featured', { ascending: false })
-          .order('active_deals_count', { ascending: false })
-          .limit(5);
-        
-        if (!storesError && storesData) {
-          console.log('Footer top stores fetched:', storesData.length, '(all countries)');
-          setTopStores(storesData.map(store => ({
+          .limit(20); // Fetch more than we need so we can randomly select
+
+        // Apply country filter if a country is selected
+        if (country) {
+          // First get the country ID
+          const { data: countryData } = await supabaseClient
+            .from('countries')
+            .select('id')
+            .eq('value', country.value)
+            .single();
+
+          if (countryData) {
+            storesQuery = storesQuery.eq('country_id', countryData.id);
+            console.log('Filtering stores by country_id:', countryData.id);
+          }
+        }
+
+        const { data: storesData, error: storesError } = await storesQuery;
+
+        if (storesError) {
+          console.error('Error fetching stores:', storesError);
+          setTopStores([]);
+        } else if (storesData && storesData.length > 0) {
+          console.log('Fetched', storesData.length, 'stores, selecting 10 random ones');
+
+          // Randomly select 10 stores
+          const shuffled = [...storesData].sort(() => 0.5 - Math.random());
+          const selectedStores = shuffled.slice(0, 10);
+
+          setTopStores(selectedStores.map(store => ({
             id: store.id,
             name: store.name || store.store_name || store.title || 'Store',
             slug: store.slug || store.id,
           })));
         } else {
-          console.error('Error fetching stores:', storesError);
+          console.log('No stores found');
           setTopStores([]);
         }
+      } catch (error) {
+        console.error('Error in stores fetch:', error);
+        setTopStores([]);
       }
 
       // Fetch shopping guides (articles) from Supabase based on selected country
-      if (selectedCountry) {
+      if (country) {
         const articlesResponse = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/articles?limit=6&country=${selectedCountry}`,
+          `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/articles?limit=8&country=${country.value}`,
           {
             headers: {
               'Authorization': `Bearer ${publicAnonKey}`,
@@ -156,8 +173,7 @@ export function Footer() {
         
         if (articlesResponse.ok) {
           const articlesData = await articlesResponse.json();
-          console.log('Footer guides fetched:', articlesData.articles?.length || 0, 'for country:', selectedCountry);
-          setGuides((articlesData.articles || []).slice(0, 4));
+          setGuides((articlesData.articles || []).slice(0, 6));
         } else {
           console.error('Error fetching articles:', articlesResponse.status);
           setGuides([]);
@@ -170,11 +186,10 @@ export function Footer() {
           .select('id, title, slug')
           .order('is_featured', { ascending: false })
           .order('published_at', { ascending: false })
-          .limit(6);
-        
+          .limit(8);
+
         if (!articlesError && articlesData) {
-          console.log('Footer guides fetched:', articlesData.length, '(all countries)');
-          setGuides(articlesData.slice(0, 4));
+          setGuides(articlesData.slice(0, 6));
         } else {
           console.error('Error fetching articles:', articlesError);
           setGuides([]);
@@ -187,14 +202,47 @@ export function Footer() {
         .from('categories')
         .select('*')
         .order('id', { ascending: true })
-        .limit(5);
+        .limit(10);
       
       if (categoriesError) {
         console.error('Error fetching categories:', categoriesError);
       } else if (categoriesData) {
-        console.log('Footer categories fetched:', categoriesData.length);
-        console.log('First category:', categoriesData[0]);
         setCategories(categoriesData);
+      }
+
+      // Fetch best selling products (highest ratings_count)
+      const productsUrl = `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/products${country?.value ? `?country=${country.value}&sort=ratings_count&limit=10` : '?sort=ratings_count&limit=10'}`;
+
+      console.log('Fetching best selling products from:', productsUrl);
+
+      try {
+        const productsResponse = await fetch(productsUrl, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        });
+
+        console.log('Products response status:', productsResponse.status);
+
+        if (productsResponse.ok) {
+          const productsData = await productsResponse.json();
+          console.log('Products API response:', productsData);
+          console.log('Products data length:', productsData.products?.length || 0);
+
+          if (productsData.products && productsData.products.length > 0) {
+            console.log('Best selling products fetched:', productsData.products.length);
+            const productsToSet = productsData.products.slice(0, 10);
+            console.log('Setting bestSellingProducts to:', productsToSet);
+            setBestSellingProducts(productsToSet);
+          } else {
+            console.log('No products found in API response');
+            console.log('Full API response structure:', productsData);
+          }
+        } else {
+          console.error('Products API error:', productsResponse.status, productsResponse.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching best selling products:', error);
       }
     } catch (error) {
       console.error('Error fetching footer data:', error);
@@ -207,6 +255,8 @@ export function Footer() {
       { label: isRTL ? "كيف يعمل" : "How It Works", href: "#" },
       { label: t('footer.careers'), href: "#" },
       { label: isRTL ? "المدونة" : "Blog", href: "/guides" },
+      { label: isRTL ? "سياسة الخصوصية" : "Privacy Policy", href: "/privacy" },
+      { label: isRTL ? "الشروط والأحكام" : "Terms of Use", href: "/terms" },
     ],
     browse: [
       { label: isRTL ? "جميع الكوبونات" : "All Coupons", href: "/deals" },
@@ -234,186 +284,295 @@ export function Footer() {
     <footer className="bg-white border-t-2 border-[#111827]">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-8 mb-12 ${isRTL ? 'text-right' : ''}`}>
-          {/* Brand Column */}
-          <div className="lg:col-span-2">
-            <div className={`mb-4 ${isRTL ? 'flex justify-end' : ''}`}>
-              <img 
-                src="https://i.ibb.co/XZV7bXh3/Tuut.png" 
-                alt="Tuut" 
-                className="h-12 w-auto"
-              />
-            </div>
-            <p className="text-[#6B7280] mb-6 max-w-[280px]">
-              {t('footer.tagline')}
-            </p>
-            
-            {/* Contact Info */}
-            <div className="space-y-3 text-sm text-[#6B7280]">
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Mail className="h-4 w-4" />
-                <span>hello@tuut.com</span>
+        <div className={`mb-12 ${isRTL ? 'text-right' : ''}`}>
+          {/* Brand Section - Full Width */}
+          <div className="flex flex-col lg:flex-row gap-8 mb-12">
+            <div className="lg:w-1/4">
+              <div className={`mb-4 ${isRTL ? 'flex justify-end' : ''}`}>
+                <img
+                  src="https://i.ibb.co/XZV7bXh3/Tuut.png"
+                  alt="Tuut"
+                  className="h-12 w-auto"
+                />
+              </div>
+              <p className="text-[#6B7280] mb-6 max-w-[280px]">
+                {t('footer.tagline')}
+              </p>
+
+              {/* Contact Info */}
+              <div className="space-y-3 text-sm text-[#6B7280]">
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Mail className="h-4 w-4" />
+                  <span>support@tuut.com</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Company Links */}
-          <div>
-            <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>{t('footer.company')}</h3>
-            <ul className="space-y-2">
-              {footerLinks.company.map((link, index) => (
-                <li key={index}>
-                  {link.href.startsWith('#') ? (
-                    <a
-                      href={link.href}
-                      className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link
-                      to={link.href}
-                      className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm"
-                    >
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Browse Links */}
-          <div>
-            <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>{isRTL ? 'تصفح' : 'Browse'}</h3>
-            <ul className="space-y-2">
-              {footerLinks.browse.map((link, index) => (
-                <li key={index}>
-                  {link.href.startsWith('/#') ? (
-                    <a
-                      href={link.href}
-                      className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link
-                      to={link.href}
-                      className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm"
-                    >
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Featured Deals */}
-          <div>
-            <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
-              {t('footer.featuredDeals')}
-            </h3>
-            <ul className="space-y-2">
-              {featuredDeals.length > 0 ? (
-                featuredDeals.slice(0, 5).map((deal) => (
-                  <li key={deal.id}>
-                    <Link
-                      to={`/deal/${deal.slug || deal.id}`}
-                      className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1"
-                    >
-                      {isRTL && deal.title_ar ? deal.title_ar : deal.title}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
-              )}
-              {featuredDeals.length > 0 && (
-                <li className="pt-2">
-                  <Link
-                    to="/deals"
-                    className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors"
-                    style={{ fontWeight: 500 }}
-                  >
-                    {t('footer.viewAll')} {!isRTL && '→'}
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </div>
-
-          {/* Shopping Guides */}
-          <div>
-            <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
-              {t('footer.shoppingGuides')}
-            </h3>
-            <ul className="space-y-2">
-              {guides.length > 0 ? (
-                guides.map((guide) => (
-                  <li key={guide.id}>
-                    <Link
-                      to={`/guides/${guide.slug}`}
-                      className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1"
-                    >
-                      {guide.title}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
-              )}
-            </ul>
-          </div>
-
-          {/* Top Stores */}
-          <div>
-            <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
-              {t('footer.topStores')}
-            </h3>
-            <ul className="space-y-2">
-              {topStores.length > 0 ? (
-                topStores.map((store) => (
-                  <li key={store.id}>
-                    <Link
-                      to={`/store/${store.slug}`}
-                      className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm"
-                    >
-                      {store.name}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
-              )}
-            </ul>
-          </div>
-
-          {/* Browse by Category */}
-          <div>
-            <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
-              {isRTL ? 'تصفح حسب الفئة' : 'Browse by Category'}
-            </h3>
-            <ul className="space-y-2">
-              {categories.length > 0 ? (
-                categories.map((category) => {
-                  const categoryName = category.category_name || category.name || category.label || category.title || 'Category';
-                  const categoryUrl = `/category/${category.slug || category.id}`;
-                  return (
-                    <li key={category.id}>
-                      <Link
-                        to={categoryUrl}
-                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm"
+          {/* Links Grid - 4 Columns Per Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Row 1 - 4 Columns */}
+            {/* Company Links */}
+            <div>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>{t('footer.company')}</h3>
+              <ul className="space-y-2">
+                {footerLinks.company.map((link, index) => (
+                  <li key={index}>
+                    {link.href.startsWith('#') ? (
+                      <a
+                        href={link.href}
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                       >
-                        {categoryName}
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Browse Links */}
+            <div>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>{isRTL ? 'تصفح' : 'Browse'}</h3>
+              <ul className="space-y-2">
+                {footerLinks.browse.map((link, index) => (
+                  <li key={index}>
+                    {link.href.startsWith('/#') ? (
+                      <a
+                        href={link.href}
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Featured Deals */}
+            <div>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
+                {t('footer.featuredDeals')}
+              </h3>
+              <ul className="space-y-2">
+                {featuredDeals.length > 0 ? (
+                  featuredDeals.slice(0, 5).map((deal) => {
+                    // Get the title using multiple possible field names
+                    const getTitle = () => {
+                      // Try direct title fields first
+                      if (isRTL) {
+                        if (deal.title_ar) return deal.title_ar;
+                        if (deal.name_ar) return deal.name_ar;
+                        if (deal.title) return deal.title;
+                        if (deal.name) return deal.name;
+                      } else {
+                        if (deal.title) return deal.title;
+                        if (deal.name) return deal.name;
+                      }
+
+                      // Create a title from other available data
+                      const storeName = isRTL
+                        ? (deal.store_name_ar || deal.stores?.name_ar || deal.stores?.name || 'متجر')
+                        : (deal.store_name || deal.stores?.name || deal.stores?.name_ar || 'Store');
+
+                      const discount = deal.discount_percentage
+                        ? `${deal.discount_percentage}% off`
+                        : deal.discount_amount
+                        ? `$${deal.discount_amount} off`
+                        : deal.code
+                        ? `Code: ${deal.code}`
+                        : 'Special Offer';
+
+                      return isRTL
+                        ? `${discount} من ${storeName}`
+                        : `${discount} at ${storeName}`;
+                    };
+
+                    const title = getTitle();
+
+                    return (
+                      <li key={deal.id}>
+                        <Link
+                          to={`/deal/${deal.slug || deal.id}`}
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
+                        >
+                          {title}
+                        </Link>
+                      </li>
+                    );
+                  })
+                ) : (
+                  <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
+                )}
+                {featuredDeals.length > 0 && (
+                  <li className="pt-2">
+                    <Link
+                      to="/deals"
+                      className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                      style={{ fontWeight: 500 }}
+                    >
+                      {t('footer.viewAll')} {!isRTL && '→'}
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+
+            {/* Row 2 - 3 Columns */}
+            {/* Shopping Guides */}
+            <div>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
+                {t('footer.shoppingGuides')}
+              </h3>
+              <ul className="space-y-2">
+                {guides.length > 0 ? (
+                  <>
+                    {guides.map((guide) => (
+                      <li key={guide.id}>
+                        <Link
+                          to={`/guides/${guide.slug}`}
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1 underline underline-offset-2 hover:underline-offset-4"
+                        >
+                          {guide.title}
+                        </Link>
+                      </li>
+                    ))}
+                    <li className="pt-2">
+                      <Link
+                        to="/guides"
+                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                        style={{ fontWeight: 500 }}
+                      >
+                        {t('footer.viewAll')} {!isRTL && '→'}
                       </Link>
                     </li>
-                  );
-                })
-              ) : (
-                <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
-              )}
-            </ul>
+                  </>
+                ) : (
+                  <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Top Stores */}
+            <div>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
+                {t('footer.topStores')}
+              </h3>
+              <ul className="space-y-2">
+                {topStores.length > 0 ? (
+                  <>
+                    {topStores.map((store) => (
+                      <li key={store.id}>
+                        <Link
+                          to={`/store/${store.slug}`}
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
+                        >
+                          {store.name}
+                        </Link>
+                      </li>
+                    ))}
+                    <li className="pt-2">
+                      <Link
+                        to="/stores"
+                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                        style={{ fontWeight: 500 }}
+                      >
+                        {t('footer.viewAll')} {!isRTL && '→'}
+                      </Link>
+                    </li>
+                  </>
+                ) : (
+                  <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Browse by Category */}
+            <div>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
+                {isRTL ? 'تصفح حسب الفئة' : 'Browse by Category'}
+              </h3>
+              <ul className="space-y-2">
+                {categories.length > 0 ? (
+                  categories.map((category) => {
+                    const categoryName = category.category_name || category.name || category.label || category.title || 'Category';
+                    const categoryUrl = `/category/${category.slug || category.id}`;
+                    return (
+                      <li key={category.id}>
+                        <Link
+                          to={categoryUrl}
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
+                        >
+                          {categoryName}
+                        </Link>
+                      </li>
+                    );
+                  })
+                ) : (
+                  <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Best Selling Products */}
+            <div>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
+                {isRTL ? 'أفضل المنتجات مبيعًا' : 'Best Selling Products'}
+              </h3>
+              <ul className="space-y-2">
+                {bestSellingProducts.length > 0 ? (
+                  <>
+                    {bestSellingProducts.map((product) => {
+                      const getTitle = () => {
+                        if (isRTL) {
+                          return product.title_ar || product.name_ar || product.title || product.name || 'منتج';
+                        }
+                        return product.title || product.name || product.name_ar || product.title_ar || 'Product';
+                      };
+
+                      const title = getTitle();
+
+                      return (
+                        <li key={product.id}>
+                          <Link
+                            to={`/products/${product.slug || product.id}`}
+                            className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1 underline underline-offset-2 hover:underline-offset-4"
+                          >
+                            {title}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                    <li className="pt-2">
+                      <Link
+                        to="/products"
+                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                        style={{ fontWeight: 500 }}
+                      >
+                        {t('footer.viewAll')} {!isRTL && '→'}
+                      </Link>
+                    </li>
+                  </>
+                ) : (
+                  <li className="text-[#6B7280] text-sm">{isRTL ? 'قريباً...' : 'Coming soon...'}</li>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
 

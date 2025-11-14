@@ -462,6 +462,7 @@ app.get("/make-server-4f34ef25/products", async (c) => {
     const offset = c.req.query('offset') ? parseInt(c.req.query('offset') as string) : undefined;
     const search = c.req.query('search');
     const category = c.req.query('category');
+    const sort = c.req.query('sort'); // e.g., "ratings_count", "created_at", "price"
     
     console.log('Fetching products for country:', countryValue, 'search:', search, 'category:', category);
 
@@ -493,8 +494,25 @@ app.get("/make-server-4f34ef25/products", async (c) => {
       query = query.or(`category.eq.${category},category_ar.eq.${category}`);
     }
 
-    // Order by created date (most recent first)
-    query = query.order('created_at', { ascending: false });
+    // Order by different criteria based on sort parameter
+    switch (sort) {
+      case 'ratings_count':
+        query = query.order('ratings_count', { ascending: false });
+        break;
+      case 'price_low':
+        query = query.order('price', { ascending: true });
+        break;
+      case 'price_high':
+        query = query.order('price', { ascending: false });
+        break;
+      case 'rating':
+        query = query.order('rating', { ascending: false });
+        break;
+      case 'created_at':
+      default:
+        query = query.order('created_at', { ascending: false });
+        break;
+    }
 
     // Pagination
     if (offset !== undefined) {

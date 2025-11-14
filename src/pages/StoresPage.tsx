@@ -227,7 +227,7 @@ export function StoresPage() {
   }
 
   function getDealsCount(store: Store): number {
-    return store.active_deals_count || store.deals_count || 0;
+    return store.total_offers || store.active_deals_count || store.deals_count || 0;
   }
 
   return (
@@ -412,7 +412,7 @@ function StoreCard({
   const description = language === 'ar' && store.description_ar ? store.description_ar : (store.description || '');
   const logo = store.profile_picture_url || store.logo || store.logo_url || store.image_url || '';
   const profileImage = store.profile_image || store.profile_image_url || store.banner_image || store.cover_image || '';
-  const dealsCount = store.active_deals_count || store.deals_count || 0;
+  const dealsCount = store.total_offers || store.active_deals_count || store.deals_count || 0;
   const isFeatured = store.featured || store.is_featured;
   const storeName = store.name || store.store_name || store.title || '';
   const slug = store.slug || storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -524,13 +524,13 @@ function StoreCard({
         <div className={`p-6 ${profileImage ? '-mt-8 relative' : ''}`}>
           {/* Logo */}
           <div className={`h-24 w-24 mx-auto mb-4 rounded-xl border-2 overflow-hidden flex items-center justify-center ${
-            profileImage ? 'border-white bg-white shadow-lg p-0' : 'border-[#E5E7EB] bg-white p-3'
+            profileImage ? 'border-white bg-white shadow-lg p-0' : 'border-[#E5E7EB] bg-white p-0'
           }`}>
             {logo ? (
               <ImageWithFallback
                 src={logo}
                 alt={name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             ) : (
               <StoreIcon className="h-12 w-12 text-[#9CA3AF]" />
