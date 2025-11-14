@@ -5,7 +5,9 @@
   "installCommand": "npm install",
   "framework": null,
   "functions": {
-    "api/server.js": {}
+    "api/server.js": {
+      "maxDuration": 10
+    }
   },
   "rewrites": [
     {
