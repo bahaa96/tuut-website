@@ -1,9 +1,11 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
 
-  import { defineConfig } from 'vite';
-  import react from '@vitejs/plugin-react-swc';
-  import path from 'path';
+export default defineConfig(({ mode }) => {
+  const isSSR = mode === 'ssr';
 
-  export default defineConfig({
+  return {
     plugins: [react()],
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
@@ -54,9 +56,28 @@
     build: {
       target: 'esnext',
       outDir: 'build',
+      rollupOptions: isSSR ? {
+        input: './server.tsx',
+        external: ['@hono/node-server'],
+        output: {
+          entryFileNames: 'server.js',
+          chunkFileNames: 'chunks/[name].js',
+          assetFileNames: 'assets/[name].[ext]'
+        }
+      } : {
+        input: './index.html'
+      },
+      ssr: isSSR,
+      emptyOutDir: !isSSR // Don't empty the build directory for SSR builds
     },
     server: {
       port: 3000,
       open: true,
     },
-  });
+    define: {
+      ...isSSR && {
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+      }
+    }
+  };
+});
