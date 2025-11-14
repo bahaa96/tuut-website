@@ -4,6 +4,7 @@ import { createClient } from '../utils/supabase/client';
 import { DealCard } from '../components/DealCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCountry } from '../contexts/CountryContext';
+import { getCountryValue } from '../utils/countryHelpers';
 import { Skeleton } from '../components/ui/skeleton';
 import { Store, Tag, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Alert, AlertDescription } from '../components/ui/alert';
@@ -119,75 +120,137 @@ export function CategoryPage() {
 
       setCategory(categoryData);
 
-      // Fetch stores in this category from store_categories junction table
-      let storesQuery = supabase
-        .from('store_categories')
-        .select('stores!inner(*)')
-        .eq('category_id', categoryData.id);
+      // Try API approach first for stores
+      let storesArray: StoreType[] = [];
+      try {
+        const countryValue = getCountryValue(country);
+        const { projectId, publicAnonKey } = await import('../utils/supabase/info');
 
-      // Filter by country at database level if country is selected
-      if (countryId) {
-        storesQuery = storesQuery.eq('stores.country_id', countryId);
-        console.log('Applying country filter to stores query with country_id:', countryId);
-      }
+        const storesUrl = countryValue
+          ? `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/stores?country=${countryValue}&category=${categoryData.id}&limit=20`
+          : `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/stores?category=${categoryData.id}&limit=20`;
 
-      const { data: storeCategoriesData, error: storesError } = await storesQuery;
+        console.log('Fetching stores from API:', storesUrl);
 
-      if (storesError) {
-        console.error('Error fetching stores:', storesError);
-        setStores([]);
-      } else {
-        // Extract stores from junction table
-        let storesArray = storeCategoriesData
-          ?.map((sc: any) => sc.stores)
-          .filter(Boolean) || [];
-        
-        console.log('Total stores from store_categories (after database filter):', storesArray.length);
-        
-        // Sort by active deals count
-        storesArray.sort((a: any, b: any) => {
-          const aCount = a.active_deals_count ?? a.deals_count ?? 0;
-          const bCount = b.active_deals_count ?? b.deals_count ?? 0;
-          return bCount - aCount;
+        const storesResponse = await fetch(storesUrl, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
         });
-        
-        console.log('Final stores count after sorting:', storesArray.length);
-        setStores(storesArray);
+
+        if (storesResponse.ok) {
+          const storesResult = await storesResponse.json();
+          if (storesResult.stores && storesResult.stores.length > 0) {
+            storesArray = storesResult.stores;
+            console.log('Successfully fetched stores from API:', storesArray.length);
+          }
+        }
+      } catch (apiError) {
+        console.log('API approach failed, falling back to database:', apiError);
       }
 
-      // Fetch deals in this category from deal_categories junction table
-      let dealsQuery = supabase
-        .from('deal_categories')
-        .select('deals!inner(*, stores!deals_store_id_fkey(*))')
-        .eq('category_id', categoryData.id);
+      // Fallback to database approach if API didn't work
+      if (storesArray.length === 0) {
+        console.log('Using database fallback for stores');
+        let storesQuery = supabase
+          .from('store_categories')
+          .select('stores!inner(*)')
+          .eq('category_id', categoryData.id);
 
-      // Filter by country at database level if country is selected
-      if (countryId) {
-        dealsQuery = dealsQuery.eq('deals.country_id', countryId);
-        console.log('Applying country filter to deals query with country_id:', countryId);
+        // Filter by country at database level if country is selected
+        if (countryId) {
+          storesQuery = storesQuery.eq('stores.country_id', countryId);
+          console.log('Applying country filter to stores query with country_id:', countryId);
+        }
+
+        const { data: storeCategoriesData, error: storesError } = await storesQuery;
+
+        if (storesError) {
+          console.error('Error fetching stores from database:', storesError);
+        } else {
+          // Extract stores from junction table
+          storesArray = storeCategoriesData
+            ?.map((sc: any) => sc.stores)
+            .filter(Boolean) || [];
+
+          console.log('Total stores from database (after filter):', storesArray.length);
+        }
       }
 
-      const { data: dealCategoriesData, error: dealsError } = await dealsQuery;
+      // Sort stores by deal counts
+      storesArray.sort((a: any, b: any) => {
+        const aCount = a.active_deals_count ?? a.deals_count ?? a.total_offers ?? 0;
+        const bCount = b.active_deals_count ?? b.deals_count ?? a.total_offers ?? 0;
+        return bCount - aCount;
+      });
 
-      if (dealsError) {
-        console.error('Error fetching deals:', dealsError);
-        setDeals([]);
-      } else {
-        // Extract deals from junction table
-        let dealsArray = dealCategoriesData
-          ?.map((dc: any) => dc.deals)
-          .filter(Boolean) || [];
-        
-        console.log('Total deals from deal_categories (after database filter):', dealsArray.length);
-        
-        // Sort by created_at
-        dealsArray.sort((a: any, b: any) => {
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      console.log('Final stores count after sorting:', storesArray.length);
+      setStores(storesArray);
+
+      // Try API approach first for deals
+      let dealsArray: Deal[] = [];
+      try {
+        const countryValue = getCountryValue(country);
+        const { projectId, publicAnonKey } = await import('../utils/supabase/info');
+
+        const dealsUrl = countryValue
+          ? `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/deals?country=${countryValue}&category=${categoryData.id}&limit=50`
+          : `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/deals?category=${categoryData.id}&limit=50`;
+
+        console.log('Fetching deals from API:', dealsUrl);
+
+        const dealsResponse = await fetch(dealsUrl, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
         });
-        
-        console.log('Final deals count after sorting:', dealsArray.length);
-        setDeals(dealsArray);
+
+        if (dealsResponse.ok) {
+          const dealsResult = await dealsResponse.json();
+          if (dealsResult.deals && dealsResult.deals.length > 0) {
+            dealsArray = dealsResult.deals;
+            console.log('Successfully fetched deals from API:', dealsArray.length);
+          }
+        }
+      } catch (apiError) {
+        console.log('API approach failed for deals, falling back to database:', apiError);
       }
+
+      // Fallback to database approach if API didn't work
+      if (dealsArray.length === 0) {
+        console.log('Using database fallback for deals');
+        let dealsQuery = supabase
+          .from('deal_categories')
+          .select('deals!inner(*, stores!deals_store_id_fkey(*))')
+          .eq('category_id', categoryData.id);
+
+        // Filter by country at database level if country is selected
+        if (countryId) {
+          dealsQuery = dealsQuery.eq('deals.country_id', countryId);
+          console.log('Applying country filter to deals query with country_id:', countryId);
+        }
+
+        const { data: dealCategoriesData, error: dealsError } = await dealsQuery;
+
+        if (dealsError) {
+          console.error('Error fetching deals from database:', dealsError);
+        } else {
+          // Extract deals from junction table
+          dealsArray = dealCategoriesData
+            ?.map((dc: any) => dc.deals)
+            .filter(Boolean) || [];
+
+          console.log('Total deals from database (after filter):', dealsArray.length);
+        }
+      }
+
+      // Sort deals by created_at
+      dealsArray.sort((a: any, b: any) => {
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+
+      console.log('Final deals count after sorting:', dealsArray.length);
+      setDeals(dealsArray);
 
     } catch (err) {
       console.error('Error in fetchCategoryData:', err);
@@ -224,11 +287,26 @@ export function CategoryPage() {
   };
 
   const getStoreLogo = (store: StoreType) => {
-    return store.profile_image_url || store.profile_image || store.logo || store.logo_url || store.image_url || '';
+    // Prioritize logo images over profile images for better display in cards
+    const logo = store.logo_url || store.logo || store.profile_picture_url || store.profile_image || store.image_url || '';
+
+    // Log for debugging
+    if (store.name || store.store_name) {
+      console.log(`${store.name || store.store_name} logo fields:`, {
+        logo_url: store.logo_url,
+        logo: store.logo,
+        profile_picture_url: store.profile_picture_url,
+        profile_image: store.profile_image,
+        image_url: store.image_url,
+        final_logo: logo
+      });
+    }
+
+    return logo;
   };
 
   const getStoreDealsCount = (store: StoreType) => {
-    const count = store.active_deals_count ?? store.deals_count ?? 0;
+    const count = store.total_offers ?? store.active_deals_count ?? store.deals_count ?? 0;
     if (isRTL) {
       return `${count} ${count === 1 ? 'عرض' : 'عروض'}`;
     }
@@ -332,12 +410,13 @@ export function CategoryPage() {
                   >
                     <div className="flex-shrink-0 w-[200px] bg-white rounded-xl p-4 border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer">
                       {/* Logo */}
-                      <div className="h-16 w-16 mx-auto mb-3 rounded-lg border-2 border-[#E5E7EB] bg-white overflow-hidden flex items-center justify-center">
+                      <div className="h-16 w-16 mx-auto mb-3 rounded-lg border-2 border-[#E5E7EB] bg-white overflow-hidden flex items-center justify-center p-0">
                         {getStoreLogo(store) ? (
                           <ImageWithFallback
                             src={getStoreLogo(store)}
                             alt={getStoreName(store)}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
+                            fallbackSrc="https://via.placeholder.com/64x64?text=Store"
                           />
                         ) : (
                           <Store className="h-8 w-8 text-[#9CA3AF]" />
