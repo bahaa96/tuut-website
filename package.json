@@ -57,6 +57,8 @@
       },
       "scripts": {
           "dev": "vite",
-          "build": "vite build"
+          "build": "vite build --mode ssr",
+          "start": "NODE_ENV=production node build/api/server.js",
+          "ssr": "npm run build && npm run start"
       }
   }

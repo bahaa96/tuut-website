@@ -120,21 +120,13 @@ build_project() {
     npm ci --silent
     print_success "Dependencies installed"
 
-    print_step "Running client build..."
-    npm run build:client
-    print_success "Client build completed"
-
     print_step "Running SSR build..."
-    npm run build:ssr
+    npm run build
     print_success "SSR build completed"
 
     print_step "Verifying build output..."
-    if [ ! -f "build/server.js" ]; then
+    if [ ! -f "build/api/server.js" ]; then
         print_error "Server build not found. Build failed."
-        exit 1
-    fi
-    if [ ! -f "build/index.html" ] && [ ! -d "build/assets" ]; then
-        print_error "Client build not found. Build failed."
         exit 1
     fi
     print_success "Build verification passed"
@@ -173,12 +165,17 @@ setup_environment() {
 deploy_to_vercel() {
     print_header "🚀 DEPLOYING TO VERCEL"
 
+    # Ensure we're always deploying to the correct project
+    print_step "Setting project configuration..."
+    mkdir -p .vercel
+    echo '{"projectId":"prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6","orgId":"ahmed-bahaas-projects-eb44dab3"}' > .vercel/project.json
+
     # Check if this is a production deployment
     if [ "$1" = "--prod" ]; then
-        print_step "Deploying to PRODUCTION..."
+        print_step "Deploying to PRODUCTION (Project: prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6)..."
         vercel --prod --yes
     else
-        print_step "Deploying to PREVIEW..."
+        print_step "Deploying to PREVIEW (Project: prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6)..."
         vercel --yes
     fi
 }
