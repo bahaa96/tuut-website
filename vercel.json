@@ -4,6 +4,11 @@
   "outputDirectory": "build",
   "installCommand": "npm install",
   "framework": null,
+  "functions": {
+    "api/server.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",

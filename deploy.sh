@@ -166,16 +166,31 @@ deploy_to_vercel() {
     print_header "🚀 DEPLOYING TO VERCEL"
 
     # Ensure we're always deploying to the correct project
-    print_step "Setting project configuration..."
+    print_step "Setting project configuration for tuut project..."
     mkdir -p .vercel
-    echo '{"projectId":"prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6","orgId":"ahmed-bahaas-projects-eb44dab3"}' > .vercel/project.json
+
+    # Force set the project configuration
+    cat > .vercel/project.json << 'EOF'
+{"projectId":"prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6","orgId":"ahmed-bahaas-projects-eb44dab3"}
+EOF
+
+    print_success "Project configured: prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6"
+
+    # Verify the configuration
+    print_step "Verifying project configuration..."
+    if grep -q "prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6" .vercel/project.json; then
+        print_success "Project configuration verified"
+    else
+        print_error "Project configuration failed"
+        exit 1
+    fi
 
     # Check if this is a production deployment
     if [ "$1" = "--prod" ]; then
-        print_step "Deploying to PRODUCTION (Project: prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6)..."
+        print_step "Deploying to PRODUCTION (tuut project: prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6)..."
         vercel --prod --yes
     else
-        print_step "Deploying to PREVIEW (Project: prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6)..."
+        print_step "Deploying to PREVIEW (tuut project: prj_bawEECtdgrM5zCEtLDI2d5vs4Xf6)..."
         vercel --yes
     fi
 }
