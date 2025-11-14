@@ -5,9 +5,7 @@
   "installCommand": "npm install",
   "framework": null,
   "functions": {
-    "api/server.js": {
-      "runtime": "@vercel/node"
-    }
+    "api/server.js": {}
   },
   "rewrites": [
     {
