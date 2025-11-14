@@ -8,6 +8,7 @@ import { Skeleton } from "../components/ui/skeleton";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
+import { useSSRData } from "../contexts/SSRDataContext";
 import {
   Select,
   SelectContent,
@@ -67,9 +68,11 @@ interface Product {
 export function ProductsPage() {
   const { language, isRTL } = useLanguage();
   const { country } = useCountry();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: ssrData } = useSSRData();
+  const hasSSRData = ssrData && ssrData.products;
+  const [products, setProducts] = useState<Product[]>(hasSSRData ? ssrData.products || [] : []);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(hasSSRData ? ssrData.products || [] : []);
+  const [loading, setLoading] = useState(!hasSSRData);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -289,6 +292,10 @@ export function ProductsPage() {
 
   // Reset when filters change
   useEffect(() => {
+    // Don't fetch on initial load if we have SSR data
+    if (hasSSRData && !loading) {
+      return;
+    }
     setProducts([]);
     setOffset(0);
     offsetRef.current = 0;

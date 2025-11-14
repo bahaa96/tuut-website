@@ -5,6 +5,7 @@ import { Link } from "../router";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { useCountry } from "../contexts/CountryContext";
 import { createClient } from "../utils/supabase/client";
+import { useSSRData } from "../contexts/SSRDataContext";
 
 // TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -78,14 +79,26 @@ interface Product {
 export function Footer() {
   const { t, isRTL } = useLanguage();
   const { country } = useCountry();
-  const [featuredDeals, setFeaturedDeals] = useState<Deal[]>([]);
-  const [topStores, setTopStores] = useState<Store[]>([]);
-  const [guides, setGuides] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { data: ssrData } = useSSRData();
+
+  // Check if SSR footer data is available
+  const hasSSRData = ssrData && ssrData.footer;
+
+  // Initialize state with SSR data if available
+  const [featuredDeals, setFeaturedDeals] = useState<Deal[]>(hasSSRData ? ssrData.footer.featuredDeals || [] : []);
+  const [topStores, setTopStores] = useState<Store[]>(hasSSRData ? ssrData.footer.topStores || [] : []);
+  const [guides, setGuides] = useState<Article[]>(hasSSRData ? ssrData.footer.guides || [] : []);
+  const [categories, setCategories] = useState<Category[]>(hasSSRData ? ssrData.footer.categories || [] : []);
   const [bestSellingProducts, setBestSellingProducts] = useState<Product[]>([]);
-  
+
   useEffect(() => {
-    fetchFooterData();
+    // Only fetch on client side if we don't have SSR data
+    if (!hasSSRData) {
+      fetchFooterData();
+    } else {
+      // On client side, still fetch to get the most recent data
+      fetchFooterData();
+    }
   }, [country]);
 
   const fetchFooterData = async () => {

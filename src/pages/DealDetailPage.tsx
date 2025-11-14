@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "../router";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useSSRData, getGlobalSSRData } from "../contexts/SSRDataContext";
 import { createClient } from "../utils/supabase/client";
 import { 
   ArrowLeft, 
@@ -50,6 +51,7 @@ interface Deal {
   redirect_url?: string;
   terms_conditions?: string;
   terms_conditions_ar?: string;
+  website_url?: string;
 }
 
 interface Store {
@@ -58,17 +60,31 @@ interface Store {
   store_name_ar?: string;
   profile_picture_url?: string;
   logo_url?: string;
-  redirect_url?: string;
-  website_url?: string;
+}
+
+// Extend Window interface for SSR initial data
+declare global {
+  interface Window {
+    __INITIAL_DATA__?: {
+      product?: Deal;
+      store?: Store;
+      related_deals?: Deal[];
+    };
+  }
 }
 
 export function DealDetailPage() {
   const { slug } = useParams();
   const { t, isRTL, language } = useLanguage();
-  const [deal, setDeal] = useState<Deal | null>(null);
-  const [store, setStore] = useState<Store | null>(null);
-  const [relatedDeals, setRelatedDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: ssrData } = useSSRData();
+
+  // Check for SSR data immediately to prevent loading state in SSR
+  const hasSSRData = ssrData && ssrData.product && ssrData.product.slug === slug;
+
+  const [deal, setDeal] = useState<Deal | null>(hasSSRData ? ssrData.product : null);
+  const [store, setStore] = useState<Store | null>(hasSSRData && ssrData.store ? ssrData.store : null);
+  const [relatedDeals, setRelatedDeals] = useState<Deal[]>(hasSSRData && ssrData.related_deals ? ssrData.related_deals : []);
+  const [loading, setLoading] = useState(!hasSSRData);
   const [copied, setCopied] = useState(false);
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
   const [timeLeft, setTimeLeft] = useState<string>("");
@@ -77,9 +93,80 @@ export function DealDetailPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (slug) {
-      fetchDealDetails(slug);
+      // Check if deal data is available from SSR context (but not already set)
+      if (ssrData && ssrData.product && ssrData.product.slug === slug && !hasSSRData) {
+        console.log('🎉 Using deal data from SSR context');
+        const dealData = ssrData.product;
+
+        // Set deal data directly from SSR
+        setDeal(dealData);
+
+        // Set store data if available in the deal
+        if (ssrData.store) {
+          setStore(ssrData.store);
+        }
+
+        // Set related deals if available
+        if (ssrData.related_deals) {
+          setRelatedDeals(ssrData.related_deals);
+        }
+
+        setLoading(false);
+      }
+      // Fallback to window.__INITIAL_DATA__ for client-side hydration
+      else if (typeof window !== 'undefined' && window.__INITIAL_DATA__ && window.__INITIAL_DATA__.product && window.__INITIAL_DATA__.product.slug === slug) {
+        console.log('🎉 Using deal data from window.__INITIAL_DATA__');
+        const initialData = window.__INITIAL_DATA__;
+        const dealData = initialData.product;
+
+        // Set deal data directly from SSR
+        setDeal(dealData);
+
+        // Set store data if available in the deal
+        if (initialData.store) {
+          setStore(initialData.store);
+        }
+
+        // Set related deals if available
+        if (initialData.related_deals) {
+          setRelatedDeals(initialData.related_deals);
+        }
+
+        setLoading(false);
+
+        // Clear the initial data to prevent reuse on other pages
+        delete window.__INITIAL_DATA__;
+      }
+      // Server-side fallback to global data
+      else if (typeof window === 'undefined') {
+        const globalData = getGlobalSSRData();
+        if (globalData && globalData.product && globalData.product.slug === slug) {
+          console.log('🎉 Using deal data from global SSR data');
+          const dealData = globalData.product;
+
+          // Set deal data directly from SSR
+          setDeal(dealData);
+
+          // Set store data if available in the deal
+          if (globalData.store) {
+            setStore(globalData.store);
+          }
+
+          // Set related deals if available
+          if (globalData.related_deals) {
+            setRelatedDeals(globalData.related_deals);
+          }
+
+          setLoading(false);
+        } else {
+          fetchDealDetails(slug);
+        }
+      }
+      else {
+        fetchDealDetails(slug);
+      }
     }
-  }, [slug, language]);
+  }, [slug, language, ssrData]);
 
   useEffect(() => {
     if (deal?.expires_at) {
@@ -333,7 +420,7 @@ export function DealDetailPage() {
   console.log('Navigation URL:', `/store/${storeSlug}`);
 
   return (
-    <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
+    <section className="py-12 md:py-16 bg-[#E8F3E8]">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         {/* Back Button */}
         <Link to="/deals" className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-8 transition-colors">

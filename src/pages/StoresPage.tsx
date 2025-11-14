@@ -9,6 +9,7 @@ import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import { Link } from "../router";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { useSSRData } from "../contexts/SSRDataContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,11 +51,14 @@ type SortOption = 'name' | 'deals' | 'featured';
 export function StoresPage() {
   const { t, isRTL, language } = useLanguage();
   const { country } = useCountry();
-  const [stores, setStores] = useState<Store[]>([]);
-  const [displayedStores, setDisplayedStores] = useState<Store[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: ssrData } = useSSRData();
+  const hasSSRData = ssrData && ssrData.stores;
+
+  const [stores, setStores] = useState<Store[]>(hasSSRData ? ssrData.stores || [] : []);
+  const [displayedStores, setDisplayedStores] = useState<Store[]>(hasSSRData ? (ssrData.stores || []).slice(0, 20) : []);
+  const [loading, setLoading] = useState(!hasSSRData);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(hasSSRData ? (ssrData.stores || []).length > 20 : true);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('featured');
@@ -64,10 +68,12 @@ export function StoresPage() {
   
   const ITEMS_PER_PAGE = 20;
 
-  // Fetch stores from API
+  // Fetch stores from API only if no SSR data
   useEffect(() => {
-    fetchStores();
-  }, [country, language]);
+    if (!hasSSRData) {
+      fetchStores();
+    }
+  }, [country, language, hasSSRData]);
 
   const fetchStores = async () => {
     try {

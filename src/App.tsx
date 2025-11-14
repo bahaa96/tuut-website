@@ -4,99 +4,21 @@ import { Toaster } from "./components/ui/sonner";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { CountryProvider } from "./contexts/CountryContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { SSRDataProvider } from "./contexts/SSRDataContext";
 import { RouterProvider, useRouter } from "./router";
-import { HomePage } from "./pages/HomePage";
-import { SchemaInspectorPage } from "./pages/SchemaInspectorPage";
-import { DealsPage } from "./pages/DealsPage";
-import { StoresPage } from "./pages/StoresPage";
-import { StoreDetailsPage } from "./pages/StoreDetailsPage";
-import { BlogPage } from "./pages/BlogPage";
-import { ArticleDetailPage } from "./pages/ArticleDetailPage";
-import { ProductsPage } from "./pages/ProductsPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-import { DealDetailPage } from "./pages/DealDetailPage";
-import { SearchPage } from "./pages/SearchPage";
-import { StoreSearchTestPage } from "./pages/StoreSearchTestPage";
-import { CategoryPage } from "./pages/CategoryPage";
-import TranslationsInspectorPage from "./pages/TranslationsInspectorPage";
-import { TrackedProductsPage } from "./pages/TrackedProductsPage";
-import WishlistPage from "./pages/WishlistPage";
-import AddProductPage from "./pages/AddProductPage";
-import { TermsPage } from "./pages/TermsPage";
-import { PrivacyPage } from "./pages/PrivacyPage";
+import { getPageForPath } from "./utils/ssr-routing";
 
 function AppContent() {
   const { currentPath } = useRouter();
 
-  // Route matching
-  const renderPage = () => {
-    // Check for dynamic routes first
-    if (currentPath.startsWith("/category/")) {
-      return <CategoryPage />;
-    }
-    if (currentPath.startsWith("/store/")) {
-      return <StoreDetailsPage />;
-    }
-    if (currentPath.startsWith("/product/")) {
-      return <ProductDetailPage />;
-    }
-    if (currentPath.startsWith("/deal/")) {
-      return <DealDetailPage />;
-    }
-    if (currentPath === "/tracked-products") {
-      return <TrackedProductsPage />;
-    }
-    if (currentPath === "/wishlist") {
-      return <WishlistPage />;
-    }
-    if (currentPath === "/add-product") {
-      return <AddProductPage />;
-    }
-    if (currentPath.startsWith("/guides/") && currentPath !== "/guides") {
-      // Individual guide/article page
-      return <ArticleDetailPage />;
-    }
-    // Legacy /blog/ routes redirect to /guides/
-    if (currentPath.startsWith("/blog/") && currentPath !== "/blog") {
-      return <ArticleDetailPage />;
-    }
-    
-    // Check for search route (including query params)
-    if (currentPath.startsWith("/search")) {
-      return <SearchPage />;
-    }
-    
-    switch (currentPath) {
-      case "/deals":
-        return <DealsPage />;
-      case "/stores":
-        return <StoresPage />;
-      case "/products":
-        return <ProductsPage />;
-      case "/terms":
-        return <TermsPage />;
-      case "/privacy":
-        return <PrivacyPage />;
-      case "/guides":
-      case "/blog":
-        return <BlogPage />;
-      case "/schema_inspector":
-        return <SchemaInspectorPage />;
-      case "/translations_inspector":
-        return <TranslationsInspectorPage />;
-      case "/store_search_test":
-        return <StoreSearchTestPage />;
-      case "/":
-      default:
-        return <HomePage />;
-    }
-  };
+  // Get the page component for the current path using shared routing
+  const PageComponent = getPageForPath(currentPath);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        {renderPage()}
+        <PageComponent />
       </main>
       <Footer />
       <Toaster />
@@ -105,15 +27,28 @@ function AppContent() {
 }
 
 export default function App() {
+  // Get initial SSR data from window if available (for hydration)
+  const getInitialSSRData = () => {
+    if (typeof window !== 'undefined' && (window as any).__INITIAL_DATA__) {
+      const data = (window as any).__INITIAL_DATA__;
+      // Clear the initial data to prevent memory leaks
+      delete (window as any).__INITIAL_DATA__;
+      return data;
+    }
+    return {};
+  };
+
   return (
-    <RouterProvider>
-      <LanguageProvider>
-        <CountryProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </CountryProvider>
-      </LanguageProvider>
-    </RouterProvider>
+    <SSRDataProvider data={getInitialSSRData()}>
+      <RouterProvider>
+        <LanguageProvider>
+          <CountryProvider>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </CountryProvider>
+        </LanguageProvider>
+      </RouterProvider>
+    </SSRDataProvider>
   );
 }

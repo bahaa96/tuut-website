@@ -8,6 +8,7 @@ import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import { Link } from "../router";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { useSSRData } from "../contexts/SSRDataContext";
 
 interface Article {
   id: string;
@@ -39,9 +40,11 @@ interface Article {
 export function BlogPage() {
   const { t, isRTL, language } = useLanguage();
   const { country } = useCountry();
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [displayedArticles, setDisplayedArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: ssrData } = useSSRData();
+  const hasSSRData = ssrData && ssrData.articles;
+  const [articles, setArticles] = useState<Article[]>(hasSSRData ? ssrData.articles || [] : []);
+  const [displayedArticles, setDisplayedArticles] = useState<Article[]>(hasSSRData ? ssrData.articles?.slice(0, 12) || [] : []);
+  const [loading, setLoading] = useState(!hasSSRData);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,8 +54,19 @@ export function BlogPage() {
   
   const ITEMS_PER_PAGE = 12;
 
+  // Initialize hasMore state based on SSR data
+  useEffect(() => {
+    if (hasSSRData && ssrData.articles) {
+      setHasMore(ssrData.articles.length > ITEMS_PER_PAGE);
+    }
+  }, [hasSSRData, ssrData]);
+
   // Fetch articles from API
   useEffect(() => {
+    // Don't fetch on initial load if we have SSR data
+    if (hasSSRData && !loading) {
+      return;
+    }
     fetchArticles();
   }, [country, language]);
 

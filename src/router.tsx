@@ -7,10 +7,22 @@ interface RouterContextType {
 
 const RouterContext = createContext<RouterContextType | undefined>(undefined);
 
-export function RouterProvider({ children }: { children: ReactNode }) {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+export function RouterProvider({
+  children,
+  initialPath
+}: {
+  children: ReactNode;
+  initialPath?: string;
+}) {
+  // Use initialPath for SSR, fallback to window.location for client-side
+  const [currentPath, setCurrentPath] = useState(
+    typeof window !== 'undefined' ? window.location.pathname : (initialPath || '/')
+  );
 
   useEffect(() => {
+    // Only run client-side
+    if (typeof window === 'undefined') return;
+
     const handleNavigation = () => {
       setCurrentPath(window.location.pathname);
     };
@@ -23,8 +35,16 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Listen to path changes for client-side navigation
+  useEffect(() => {
+    // This effect will trigger whenever currentPath changes
+    // The App component will re-render with the new PageComponent
+  }, [currentPath]);
+
   const navigate = (path: string) => {
-    window.history.pushState({}, "", path);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, "", path);
+    }
     setCurrentPath(path);
   };
 

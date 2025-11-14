@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "../router";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useSSRData } from "../contexts/SSRDataContext";
 import { createClient } from "../utils/supabase/client";
 import { ArrowLeft, Store, ExternalLink } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -64,17 +65,20 @@ interface Deal {
 export function StoreDetailsPage() {
   const { slug } = useParams();
   const { t, isRTL, language } = useLanguage();
-  const [store, setStore] = useState<Store | null>(null);
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: ssrData } = useSSRData();
+  const hasSSRData = ssrData && ssrData.store;
+  const [store, setStore] = useState<Store | null>(hasSSRData ? ssrData.store : null);
+  const [deals, setDeals] = useState<Deal[]>(hasSSRData ? (ssrData.deals || []) : []);
+  const [loading, setLoading] = useState(!hasSSRData);
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (slug) {
+    // Only fetch if we don't have SSR data
+    if (slug && !hasSSRData) {
       fetchStoreAndDeals(slug);
     }
-  }, [slug, language]);
+  }, [slug, language, hasSSRData]);
 
   const fetchStoreAndDeals = async (storeSlug: string) => {
     try {

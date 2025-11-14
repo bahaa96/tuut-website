@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useSSRData } from "../contexts/SSRDataContext";
 import { createClient } from "../utils/supabase/client";
 import { Search, SlidersHorizontal, X, ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -67,11 +68,17 @@ interface Store {
 
 export function DealsPage() {
   const { t, isRTL, language } = useLanguage();
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [filteredDeals, setFilteredDeals] = useState<Deal[]>([]);
+  const { data: ssrData } = useSSRData();
+
+  // Check if SSR data is available
+  const hasSSRData = ssrData && ssrData.deals;
+
+  // Initialize state with SSR data when available
+  const [deals, setDeals] = useState<Deal[]>(hasSSRData ? ssrData.deals || [] : []);
+  const [filteredDeals, setFilteredDeals] = useState<Deal[]>(hasSSRData ? ssrData.deals || [] : []);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!hasSSRData);
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
   
   // Filter states
@@ -84,8 +91,11 @@ export function DealsPage() {
   useEffect(() => {
     // Scroll to top when page loads
     window.scrollTo(0, 0);
-    
-    fetchDeals();
+
+    // Only fetch on client side if we don't have SSR data
+    if (!hasSSRData) {
+      fetchDeals();
+    }
     fetchCategories();
     fetchStores();
   }, [language]);
