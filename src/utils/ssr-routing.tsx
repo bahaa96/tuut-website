@@ -1,6 +1,25 @@
 import React from 'react'
 
-// Simple fallback component for all pages
+// Import page components - start with the absolute essentials
+import { HomePage } from '../pages/HomePage'
+import { DealsPage } from '../pages/DealsPage'
+import { StoresPage } from '../pages/StoresPage'
+import { BlogPage } from '../pages/BlogPage'
+import { PrivacyPage } from '../pages/PrivacyPage'
+import { TermsPage } from '../pages/TermsPage'
+
+// We'll add these pages later once we check their exports
+// import { DealDetailPage } from '../pages/DealDetailPage'
+// import { StoreDetailsPage } from '../pages/StoreDetailsPage'
+// import { ProductDetailPage } from '../pages/ProductDetailPage'
+// import { CategoryPage } from '../pages/CategoryPage'
+// import { ArticleDetailPage } from '../pages/ArticleDetailPage'
+// import { SearchPage } from '../pages/SearchPage'
+// import { ProductsPage } from '../pages/ProductsPage'
+// import { WishlistPage } from '../pages/WishlistPage'
+// import { TrackedProductsPage } from '../pages/TrackedProductsPage'
+
+// Simple fallback component for pages not found
 const FallbackPage = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
     <div className="text-center">
@@ -10,11 +29,53 @@ const FallbackPage = () => (
   </div>
 )
 
-// Route mapping function - simplified for SSR deployment
+// Route mapping function
 export function getPageForPath(path: string): React.ComponentType {
-  // For now, return the same fallback component for all routes
-  // This ensures the SSR build works
-  return FallbackPage
+  const cleanPath = path.replace(/\/$/, '').split('?')[0]
+
+  switch (cleanPath) {
+    // Home page
+    case '':
+    case '/':
+      return HomePage
+
+    // Main pages
+    case '/deals':
+      return DealsPage
+    case '/stores':
+      return StoresPage
+    case '/blog':
+    case '/guides':
+      return BlogPage
+    case '/privacy':
+      return PrivacyPage
+    case '/terms':
+      return TermsPage
+
+    // These pages will be added later once we check their exports
+    // case '/products':
+    //   return ProductsPage
+    // case '/search':
+    //   return SearchPage
+    // case '/wishlist':
+    //   return WishlistPage
+    // case '/tracked-products':
+    //   return TrackedProductsPage
+
+    // Dynamic routes - will be added later
+    default:
+      // For now, return fallback for all dynamic routes
+      // TODO: Add these routes once we check their exports
+      // if (cleanPath.startsWith('/deal/')) return DealDetailPage
+      // if (cleanPath.startsWith('/store/')) return StoreDetailsPage
+      // if (cleanPath.startsWith('/product/')) return ProductDetailPage
+      // if (cleanPath.startsWith('/category/')) return CategoryPage
+      // if (cleanPath.startsWith('/blog/')) return ArticleDetailPage
+      // if (cleanPath.startsWith('/guides/')) return ArticleDetailPage
+
+      // Return fallback for unknown routes
+      return FallbackPage
+  }
 }
 
 // Function to extract route parameters
