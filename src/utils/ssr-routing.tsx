@@ -1,23 +1,23 @@
 import React from 'react'
 
-// Import page components - start with the absolute essentials
+// Import page components - all pages
 import { HomePage } from '../pages/HomePage'
 import { DealsPage } from '../pages/DealsPage'
 import { StoresPage } from '../pages/StoresPage'
+import { ProductsPage } from '../pages/ProductsPage'
 import { BlogPage } from '../pages/BlogPage'
 import { PrivacyPage } from '../pages/PrivacyPage'
 import { TermsPage } from '../pages/TermsPage'
+import { SearchPage } from '../pages/SearchPage'
+import { DealDetailPage } from '../pages/DealDetailPage'
+import { StoreDetailsPage } from '../pages/StoreDetailsPage'
+import { CategoryPage } from '../pages/CategoryPage'
+import { ArticleDetailPage } from '../pages/ArticleDetailPage'
+import { TrackedProductsPage } from '../pages/TrackedProductsPage'
 
-// We'll add these pages later once we check their exports
-// import { DealDetailPage } from '../pages/DealDetailPage'
-// import { StoreDetailsPage } from '../pages/StoreDetailsPage'
-// import { ProductDetailPage } from '../pages/ProductDetailPage'
-// import { CategoryPage } from '../pages/CategoryPage'
-// import { ArticleDetailPage } from '../pages/ArticleDetailPage'
-// import { SearchPage } from '../pages/SearchPage'
-// import { ProductsPage } from '../pages/ProductsPage'
-// import { WishlistPage } from '../pages/WishlistPage'
-// import { TrackedProductsPage } from '../pages/TrackedProductsPage'
+// Pages with default exports
+import WishlistPage from '../pages/WishlistPage'
+import ProductDetailPage from '../pages/ProductDetailPage'
 
 // Simple fallback component for pages not found
 const FallbackPage = () => (
@@ -44,34 +44,32 @@ export function getPageForPath(path: string): React.ComponentType {
       return DealsPage
     case '/stores':
       return StoresPage
+    case '/products':
+      return ProductsPage
     case '/blog':
     case '/guides':
       return BlogPage
+    case '/search':
+      return SearchPage
+    case '/wishlist':
+      return WishlistPage
+    case '/tracked-products':
+      return TrackedProductsPage
     case '/privacy':
       return PrivacyPage
     case '/terms':
       return TermsPage
 
-    // These pages will be added later once we check their exports
-    // case '/products':
-    //   return ProductsPage
-    // case '/search':
-    //   return SearchPage
-    // case '/wishlist':
-    //   return WishlistPage
-    // case '/tracked-products':
-    //   return TrackedProductsPage
-
-    // Dynamic routes - will be added later
+    // Dynamic routes
     default:
-      // For now, return fallback for all dynamic routes
-      // TODO: Add these routes once we check their exports
-      // if (cleanPath.startsWith('/deal/')) return DealDetailPage
-      // if (cleanPath.startsWith('/store/')) return StoreDetailsPage
-      // if (cleanPath.startsWith('/product/')) return ProductDetailPage
-      // if (cleanPath.startsWith('/category/')) return CategoryPage
-      // if (cleanPath.startsWith('/blog/')) return ArticleDetailPage
-      // if (cleanPath.startsWith('/guides/')) return ArticleDetailPage
+      // Check for dynamic routes
+      if (cleanPath.startsWith('/deal/')) return DealDetailPage
+      if (cleanPath.startsWith('/store/')) return StoreDetailsPage
+      if (cleanPath.startsWith('/product/')) return ProductDetailPage
+      if (cleanPath.startsWith('/category/')) return CategoryPage
+      if (cleanPath.startsWith('/blog/')) return ArticleDetailPage
+      if (cleanPath.startsWith('/guides/')) return ArticleDetailPage
+      if (cleanPath.startsWith('/article/')) return ArticleDetailPage
 
       // Return fallback for unknown routes
       return FallbackPage
