@@ -993,17 +993,19 @@ const isDev = process.env.DEV_MODE === 'true' || (!process.env.VERCEL && process
 
 // Only start the server if in development mode
 if (isDev) {
-  try {
-    const { serve } = await import('@hono/node-server')
-    console.log(`🚀 SSR server running at http://localhost:${port}`)
-    console.log('🔄 Hot reload enabled - modify any file to rebuild')
+  ;(async () => {
+    try {
+      const { serve } = await import('@hono/node-server')
+      console.log(`🚀 SSR server running at http://localhost:${port}`)
+      console.log('🔄 Hot reload enabled - modify any file to rebuild')
 
-    serve({
-      fetch: app.fetch,
-      port
-    })
-  } catch (error) {
-    console.error('❌ Failed to start server:', error)
-    console.log('Falling back to direct export mode...')
-  }
+      serve({
+        fetch: app.fetch,
+        port
+      })
+    } catch (error) {
+      console.error('❌ Failed to start server:', error)
+      console.log('Falling back to direct export mode...')
+    }
+  })()
 }

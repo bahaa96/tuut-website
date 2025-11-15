@@ -5,7 +5,6 @@ import { stat, readFile } from 'fs/promises';
 import { extname } from 'path';
 import * as React from 'react';
 import { createContext, useState, useEffect, useContext } from 'react';
-import { p as projectId, a as publicAnonKey, c as createClient } from './chunks/client-3RxOX92c.js';
 import { XIcon, Phone, Loader2, Globe, Languages, LogOut, PiggyBank, Menu, Mail, Chrome, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva } from 'class-variance-authority';
@@ -14,7 +13,7 @@ import { twMerge } from 'tailwind-merge';
 import * as SheetPrimitive from '@radix-ui/react-dialog';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import * as LabelPrimitive from '@radix-ui/react-label';
-import '@supabase/supabase-js';
+import { createClient as createClient$1 } from '@supabase/supabase-js';
 
 const LanguageContext = createContext(void 0);
 function LanguageProvider({ children }) {
@@ -297,7 +296,7 @@ function CountryProvider({ children }) {
   const fetchCountries = async () => {
     try {
       setIsLoading(true);
-      const { fetchCountries: fetchCountriesAPI } = await import('./chunks/api-BDUHNUYQ.js');
+      const { fetchCountries: fetchCountriesAPI } = await import('./chunks/api-BcNMdqht.js');
       const result = await fetchCountriesAPI();
       if (result.error) {
         console.error("Error fetching countries:", result.error);
@@ -338,6 +337,9 @@ function useCountry() {
   }
   return context;
 }
+
+const projectId = "oluyzqunbbqaxalodhdg";
+const publicAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdXl6cXVuYmJxYXhhbG9kaGRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTMwOTcsImV4cCI6MjA2MTAyOTA5N30.1SGmTzrAB4FLgPfOIP2DLP_ieNVqSQVtiBtjJ5eRJOM";
 
 const USE_MOCK_AUTH = true;
 const AuthContext = createContext(void 0);
@@ -1235,6 +1237,21 @@ function Header() {
   ] });
 }
 
+let supabaseClient = null;
+function createClient() {
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+  const supabaseUrl = `https://${projectId}.supabase.co`;
+  supabaseClient = createClient$1(supabaseUrl, publicAnonKey);
+  return supabaseClient;
+}
+
+const client = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  createClient
+}, Symbol.toStringTag, { value: 'Module' }));
+
 const TikTokIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
@@ -1724,7 +1741,7 @@ staticFiles.forEach((file) => {
 });
 async function fetchStoresData() {
   try {
-    const { createClient } = await import('./chunks/client-3RxOX92c.js').then(n => n.b);
+    const { createClient } = await Promise.resolve().then(() => client);
     const supabase = createClient();
     let storesQuery = supabase.from("stores").select("*").limit(50);
     const { data: storesData, error } = await storesQuery;
@@ -1740,7 +1757,7 @@ async function fetchStoresData() {
 }
 async function fetchDealsData() {
   try {
-    const { createClient } = await import('./chunks/client-3RxOX92c.js').then(n => n.b);
+    const { createClient } = await Promise.resolve().then(() => client);
     const supabase = createClient();
     const { data: dealsData, error } = await supabase.from("deals").select("*").limit(50).order("created_at", { ascending: false });
     if (error) {
@@ -1755,7 +1772,7 @@ async function fetchDealsData() {
 }
 async function fetchProductsData() {
   try {
-    const { createClient } = await import('./chunks/client-3RxOX92c.js').then(n => n.b);
+    const { createClient } = await Promise.resolve().then(() => client);
     const supabase = createClient();
     const { data: productsData, error } = await supabase.from("products").select("*").limit(50).order("created_at", { ascending: false });
     if (error) {
@@ -1770,7 +1787,7 @@ async function fetchProductsData() {
 }
 async function fetchGuidesData() {
   try {
-    const { createClient } = await import('./chunks/client-3RxOX92c.js').then(n => n.b);
+    const { createClient } = await Promise.resolve().then(() => client);
     const supabase = createClient();
     const { data: guidesData, error } = await supabase.from("articles").select("*").limit(50).order("created_at", { ascending: false });
     if (error) {
@@ -1822,7 +1839,7 @@ async function fetchFooterData(country) {
       const dealsData = await dealsResponse.json();
       featuredDeals = (dealsData.deals || []).map((item) => item.deals).filter(Boolean).slice(0, 5);
     }
-    const { createClient } = await import('./chunks/client-3RxOX92c.js').then(n => n.b);
+    const { createClient } = await Promise.resolve().then(() => client);
     const supabase = createClient();
     let storesQuery = supabase.from("stores").select("*").limit(20);
     if (country) {
@@ -1855,7 +1872,7 @@ async function fetchFooterData(country) {
 }
 async function fetchDealData(slug) {
   try {
-    const { createClient } = await import('./chunks/client-3RxOX92c.js').then(n => n.b);
+    const { createClient } = await Promise.resolve().then(() => client);
     const supabase = createClient();
     const { data: dealData, error: dealError } = await supabase.from("deals").select("*").eq("slug", slug).single();
     if (dealError) throw dealError;
@@ -1889,7 +1906,7 @@ async function fetchDealData(slug) {
 }
 async function fetchStoreData(slug) {
   try {
-    const { createClient } = await import('./chunks/client-3RxOX92c.js').then(n => n.b);
+    const { createClient } = await Promise.resolve().then(() => client);
     const supabase = createClient();
     const isUUID = (str) => {
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -2435,21 +2452,20 @@ app.get("*", async (c) => {
 const port = 3e3;
 const isDev = process.env.DEV_MODE === "true" || !process.env.VERCEL && process.env.NODE_ENV !== "production";
 if (isDev) {
-  try {
-    const { serve } = await import('@hono/node-server');
-    console.log(`🚀 SSR server running at http://localhost:${port}`);
-    console.log("🔄 Hot reload enabled - modify any file to rebuild");
-    serve({
-      fetch: app.fetch,
-      port
-    });
-  } catch (error) {
-    console.error("❌ Failed to start server:", error);
-    console.log("Falling back to direct export mode...");
-  }
+  (async () => {
+    try {
+      const { serve } = await import('@hono/node-server');
+      console.log(`🚀 SSR server running at http://localhost:${port}`);
+      console.log("🔄 Hot reload enabled - modify any file to rebuild");
+      serve({
+        fetch: app.fetch,
+        port
+      });
+    } catch (error) {
+      console.error("❌ Failed to start server:", error);
+      console.log("Falling back to direct export mode...");
+    }
+  })();
 }
 
-// Vercel serverless function handler
-export default async (req, res) => {
-  return app.fetch(req);
-};
+export { publicAnonKey as a, app as default, projectId as p };
