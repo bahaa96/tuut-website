@@ -4,15 +4,10 @@
   "outputDirectory": "build",
   "installCommand": "npm install",
   "framework": null,
-  "functions": {
-    "build/api/server.js": {
-      "maxDuration": 10
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/build/api/server.js"
+      "destination": "/api/server.js"
     }
   ],
   "headers": [
