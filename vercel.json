@@ -4,9 +4,15 @@
   "outputDirectory": "build",
   "installCommand": "npm install",
   "framework": null,
+  "builds": [
+    {
+      "src": "api/server.js",
+      "use": "@vercel/node"
+    }
+  ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/api/server.js"
     }
   ],

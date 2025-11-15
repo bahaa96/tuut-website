@@ -2449,4 +2449,7 @@ if (isDev) {
   }
 }
 
-export { app as default };
+// Vercel serverless function handler
+export default async (req, res) => {
+  return app.fetch(req);
+};
