@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "tool-call": {
+      "after": [
+        {
+          "run": "if [[ \"$TOOL_NAME\" == \"TodoWrite\" && \"$STATUS\" == \"completed\" ]]; then afplay /System/Library/Sounds/Glass.aiff; fi"
+        }
+      ]
+    },
+    "user-prompt": {
+      "before": [
+        {
+          "run": "afplay /System/Library/Sounds/Ping.aiff"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=oluyzqunbbqaxalodhdg"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_8178d7dc09256b6478cc187b9bad3fb2a37cad74"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "slash": {
+      "command": "/Users/lina/projects/slash/target/release/slash",
+      "args": ["--mcp-server"],
+      "cwd": "/Users/lina/projects/slash"
+    }
+  }
+}

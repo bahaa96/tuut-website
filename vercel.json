@@ -1,56 +1,13 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
   "outputDirectory": "build",
   "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "framework": null,
-  "builds": [
-    {
-      "src": "api/server.js",
-      "use": "@vercel/node"
-    }
-  ],
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
-      "destination": "/api/server.js"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/index.css",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
+      "destination": "/index.html"
     }
   ]
 }
