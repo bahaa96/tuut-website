@@ -1,0 +1,4 @@
+- dont change any page content, components or styling
+- respect me when I change anything manually in the code base don't get it back
+- when creating a new page make it follow the same design system and styling patterns of the website
+- whenever you finish a prompt check syntax errors and fix it

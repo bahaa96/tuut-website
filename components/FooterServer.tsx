@@ -1,12 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Tag, Smartphone, Chrome } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import Link from "next/link";
-import { projectId, publicAnonKey } from "../utils/supabase/info";
-import { useCountry } from "../contexts/CountryContext";
-import { createClient } from "../utils/supabase/client";
 
 // TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -25,19 +21,10 @@ interface Deal {
   slug?: string;
   title?: string;
   title_ar?: string;
-  description?: string;
-  description_ar?: string;
-  name?: string;
-  name_ar?: string;
-  discount_value?: string;
   discount_percentage?: number;
-  discount_amount?: number;
-  stores?: any; // Could be an object or array based on the API response
-  store_name?: string;
-  store_name_ar?: string;
   code?: string;
-  original_price?: number;
-  discounted_price?: number;
+  store_name?: string;
+  store_slug?: string;
 }
 
 interface Store {
@@ -59,15 +46,15 @@ interface Category {
   label?: string;
   title?: string;
   slug?: string;
-  [key: string]: any; // Allow any other fields from the database
+  [key: string]: any;
 }
 
 interface Product {
   id: string | number;
-  name?: string;
-  name_ar?: string;
   title?: string;
   title_ar?: string;
+  name?: string;
+  name_ar?: string;
   slug?: string;
   price?: number;
   rating?: number;
@@ -77,183 +64,23 @@ interface Product {
   store_name_ar?: string;
 }
 
-export function Footer() {
+interface FooterProps {
+  featuredDeals?: Deal[];
+  topStores?: Store[];
+  articles?: Article[];
+  categories?: Category[];
+  bestSellingProducts?: Product[];
+}
+
+export function Footer({
+  featuredDeals = [],
+  topStores = [],
+  articles = [],
+  categories = [],
+  bestSellingProducts = []
+}: FooterProps) {
   const { t, isRTL } = useLanguage();
-  const { country } = useCountry();
 
-  // Initialize state
-  const [featuredDeals, setFeaturedDeals] = useState<Deal[]>([]);
-  const [topStores, setTopStores] = useState<Store[]>([]);
-  const [guides, setGuides] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [bestSellingProducts, setBestSellingProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    // Fetch footer data on client side
-    fetchFooterData();
-  }, [country]);
-
-  const fetchFooterData = async () => {
-    try {
-      // Fetch featured deals from Supabase
-      const dealsResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/featured-deals${country?.value ? `?country=${country.value}` : ''}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
-      
-      if (dealsResponse.ok) {
-        const dealsData = await dealsResponse.json();
-
-        // Extract the actual deal data from the nested structure
-        const actualDeals = (dealsData.deals || []).map(item => item.deals).filter(Boolean);
-        setFeaturedDeals(actualDeals.slice(0, 5));
-      } else {
-        console.error('Error fetching featured deals:', dealsResponse.status);
-      }
-
-      // Fetch random 10 stores directly from Supabase
-      const supabaseClient = createClient();
-
-      try {
-        let storesQuery = supabaseClient
-          .from('stores')
-          .select('*')
-          .limit(20); // Fetch more than we need so we can randomly select
-
-        // Apply country filter if a country is selected
-        if (country) {
-          // First get the country ID
-          const { data: countryData } = await supabaseClient
-            .from('countries')
-            .select('id')
-            .eq('value', country.value)
-            .single();
-
-          if (countryData) {
-            storesQuery = storesQuery.eq('country_id', countryData.id);
-            console.log('Filtering stores by country_id:', countryData.id);
-          }
-        }
-
-        const { data: storesData, error: storesError } = await storesQuery;
-
-        if (storesError) {
-          console.error('Error fetching stores:', storesError);
-          setTopStores([]);
-        } else if (storesData && storesData.length > 0) {
-          console.log('Fetched', storesData.length, 'stores, selecting 10 random ones');
-
-          // Randomly select 10 stores
-          const shuffled = [...storesData].sort(() => 0.5 - Math.random());
-          const selectedStores = shuffled.slice(0, 10);
-
-          setTopStores(selectedStores.map(store => ({
-            id: store.id,
-            name: store.name || store.store_name || store.title || 'Store',
-            slug: store.slug || store.id,
-          })));
-        } else {
-          console.log('No stores found');
-          setTopStores([]);
-        }
-      } catch (error) {
-        console.error('Error in stores fetch:', error);
-        setTopStores([]);
-      }
-
-      // Fetch shopping guides (articles) from Supabase based on selected country
-      if (country) {
-        const articlesResponse = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/articles?limit=8&country=${country.value}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${publicAnonKey}`,
-            },
-          }
-        );
-        
-        if (articlesResponse.ok) {
-          const articlesData = await articlesResponse.json();
-          setGuides((articlesData.articles || []).slice(0, 6));
-        } else {
-          console.error('Error fetching articles:', articlesResponse.status);
-          setGuides([]);
-        }
-      } else {
-        // If no country is selected, fetch all articles
-        const supabaseClient = createClient();
-        const { data: articlesData, error: articlesError } = await supabaseClient
-          .from('articles')
-          .select('id, title, slug')
-          .order('is_featured', { ascending: false })
-          .order('published_at', { ascending: false })
-          .limit(8);
-
-        if (!articlesError && articlesData) {
-          setGuides(articlesData.slice(0, 6));
-        } else {
-          console.error('Error fetching articles:', articlesError);
-          setGuides([]);
-        }
-      }
-
-      // Fetch categories from Supabase
-      const supabase = createClient();
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .order('id', { ascending: true })
-        .limit(10);
-      
-      if (categoriesError) {
-        console.error('Error fetching categories:', categoriesError);
-      } else if (categoriesData) {
-        setCategories(categoriesData);
-      }
-
-      // Fetch best selling products (highest ratings_count)
-      const productsUrl = `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/products${country?.value ? `?country=${country.value}&sort=ratings_count&limit=10` : '?sort=ratings_count&limit=10'}`;
-
-      console.log('Fetching best selling products from:', productsUrl);
-
-      try {
-        const productsResponse = await fetch(productsUrl, {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        });
-
-        console.log('Products response status:', productsResponse.status);
-
-        if (productsResponse.ok) {
-          const productsData = await productsResponse.json();
-          console.log('Products API response:', productsData);
-          console.log('Products data length:', productsData.products?.length || 0);
-
-          if (productsData.products && productsData.products.length > 0) {
-            console.log('Best selling products fetched:', productsData.products.length);
-            const productsToSet = productsData.products.slice(0, 10);
-            console.log('Setting bestSellingProducts to:', productsToSet);
-            setBestSellingProducts(productsToSet);
-          } else {
-            console.log('No products found in API response');
-            console.log('Full API response structure:', productsData);
-          }
-        } else {
-          console.error('Products API error:', productsResponse.status, productsResponse.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching best selling products:', error);
-      }
-    } catch (error) {
-      console.error('Error fetching footer data:', error);
-    }
-  };
-  
   const footerLinks = {
     company: [
       { label: t('footer.about'), href: "#" },
@@ -326,14 +153,14 @@ export function Footer() {
                     {link.href.startsWith('#') ? (
                       <a
                         href={link.href}
-                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                       >
                         {link.label}
                       </a>
                     ) : (
                       <Link
                         href={link.href}
-                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                       >
                         {link.label}
                       </Link>
@@ -352,14 +179,14 @@ export function Footer() {
                     {link.href.startsWith('/#') ? (
                       <a
                         href={link.href}
-                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                       >
                         {link.label}
                       </a>
                     ) : (
                       <Link
                         href={link.href}
-                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
+                        className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                       >
                         {link.label}
                       </Link>
@@ -377,28 +204,20 @@ export function Footer() {
               <ul className="space-y-2">
                 {featuredDeals.length > 0 ? (
                   featuredDeals.slice(0, 5).map((deal) => {
-                    // Get the title using multiple possible field names
                     const getTitle = () => {
-                      // Try direct title fields first
                       if (isRTL) {
                         if (deal.title_ar) return deal.title_ar;
-                        if (deal.name_ar) return deal.name_ar;
                         if (deal.title) return deal.title;
-                        if (deal.name) return deal.name;
                       } else {
                         if (deal.title) return deal.title;
-                        if (deal.name) return deal.name;
                       }
 
-                      // Create a title from other available data
                       const storeName = isRTL
-                        ? (deal.store_name_ar || deal.stores?.name_ar || deal.stores?.name || 'متجر')
-                        : (deal.store_name || deal.stores?.name || deal.stores?.name_ar || 'Store');
+                        ? deal.store_name || 'متجر'
+                        : deal.store_name || 'Store';
 
                       const discount = deal.discount_percentage
                         ? `${deal.discount_percentage}% off`
-                        : deal.discount_amount
-                        ? `$${deal.discount_amount} off`
                         : deal.code
                         ? `Code: ${deal.code}`
                         : 'Special Offer';
@@ -414,7 +233,7 @@ export function Footer() {
                       <li key={deal.id}>
                         <Link
                           href={`/deal/${deal.slug || deal.id}`}
-                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                         >
                           {title}
                         </Link>
@@ -445,9 +264,9 @@ export function Footer() {
                 {t('footer.shoppingGuides')}
               </h3>
               <ul className="space-y-2">
-                {guides.length > 0 ? (
+                {articles.length > 0 ? (
                   <>
-                    {guides.map((guide) => (
+                    {articles.map((guide) => (
                       <li key={guide.id}>
                         <Link
                           href={`/guides/${guide.slug}`}
@@ -485,7 +304,7 @@ export function Footer() {
                       <li key={store.id}>
                         <Link
                           href={`/store/${store.slug}`}
-                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                         >
                           {store.name}
                         </Link>
@@ -521,7 +340,7 @@ export function Footer() {
                       <li key={category.id}>
                         <Link
                           href={categoryUrl}
-                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4"
                         >
                           {categoryName}
                         </Link>

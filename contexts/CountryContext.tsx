@@ -20,6 +20,7 @@ interface CountryContextType {
   countries: Country[];
   setCountry: (country: Country) => void;
   isLoading: boolean;
+  initializeCountryFromCode: (countryCode: string) => Promise<void>;
 }
 
 const CountryContext = createContext<CountryContextType | undefined>(undefined);

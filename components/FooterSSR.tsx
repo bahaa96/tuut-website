@@ -1,12 +1,5 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Tag, Smartphone, Chrome } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import Link from "next/link";
-import { projectId, publicAnonKey } from "../utils/supabase/info";
-import { useCountry } from "../contexts/CountryContext";
-import { createClient } from "../utils/supabase/client";
 
 // TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -25,19 +18,10 @@ interface Deal {
   slug?: string;
   title?: string;
   title_ar?: string;
-  description?: string;
-  description_ar?: string;
-  name?: string;
-  name_ar?: string;
-  discount_value?: string;
   discount_percentage?: number;
-  discount_amount?: number;
-  stores?: any; // Could be an object or array based on the API response
-  store_name?: string;
-  store_name_ar?: string;
   code?: string;
-  original_price?: number;
-  discounted_price?: number;
+  store_name?: string;
+  store_slug?: string;
 }
 
 interface Store {
@@ -59,15 +43,15 @@ interface Category {
   label?: string;
   title?: string;
   slug?: string;
-  [key: string]: any; // Allow any other fields from the database
+  [key: string]: any;
 }
 
 interface Product {
   id: string | number;
-  name?: string;
-  name_ar?: string;
   title?: string;
   title_ar?: string;
+  name?: string;
+  name_ar?: string;
   slug?: string;
   price?: number;
   rating?: number;
@@ -77,188 +61,57 @@ interface Product {
   store_name_ar?: string;
 }
 
-export function Footer() {
-  const { t, isRTL } = useLanguage();
-  const { country } = useCountry();
-
-  // Initialize state
-  const [featuredDeals, setFeaturedDeals] = useState<Deal[]>([]);
-  const [topStores, setTopStores] = useState<Store[]>([]);
-  const [guides, setGuides] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [bestSellingProducts, setBestSellingProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    // Fetch footer data on client side
-    fetchFooterData();
-  }, [country]);
-
-  const fetchFooterData = async () => {
-    try {
-      // Fetch featured deals from Supabase
-      const dealsResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/featured-deals${country?.value ? `?country=${country.value}` : ''}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
-      
-      if (dealsResponse.ok) {
-        const dealsData = await dealsResponse.json();
-
-        // Extract the actual deal data from the nested structure
-        const actualDeals = (dealsData.deals || []).map(item => item.deals).filter(Boolean);
-        setFeaturedDeals(actualDeals.slice(0, 5));
-      } else {
-        console.error('Error fetching featured deals:', dealsResponse.status);
-      }
-
-      // Fetch random 10 stores directly from Supabase
-      const supabaseClient = createClient();
-
-      try {
-        let storesQuery = supabaseClient
-          .from('stores')
-          .select('*')
-          .limit(20); // Fetch more than we need so we can randomly select
-
-        // Apply country filter if a country is selected
-        if (country) {
-          // First get the country ID
-          const { data: countryData } = await supabaseClient
-            .from('countries')
-            .select('id')
-            .eq('value', country.value)
-            .single();
-
-          if (countryData) {
-            storesQuery = storesQuery.eq('country_id', countryData.id);
-            console.log('Filtering stores by country_id:', countryData.id);
-          }
-        }
-
-        const { data: storesData, error: storesError } = await storesQuery;
-
-        if (storesError) {
-          console.error('Error fetching stores:', storesError);
-          setTopStores([]);
-        } else if (storesData && storesData.length > 0) {
-          console.log('Fetched', storesData.length, 'stores, selecting 10 random ones');
-
-          // Randomly select 10 stores
-          const shuffled = [...storesData].sort(() => 0.5 - Math.random());
-          const selectedStores = shuffled.slice(0, 10);
-
-          setTopStores(selectedStores.map(store => ({
-            id: store.id,
-            name: store.name || store.store_name || store.title || 'Store',
-            slug: store.slug || store.id,
-          })));
-        } else {
-          console.log('No stores found');
-          setTopStores([]);
-        }
-      } catch (error) {
-        console.error('Error in stores fetch:', error);
-        setTopStores([]);
-      }
-
-      // Fetch shopping guides (articles) from Supabase based on selected country
-      if (country) {
-        const articlesResponse = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/articles?limit=8&country=${country.value}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${publicAnonKey}`,
-            },
-          }
-        );
-        
-        if (articlesResponse.ok) {
-          const articlesData = await articlesResponse.json();
-          setGuides((articlesData.articles || []).slice(0, 6));
-        } else {
-          console.error('Error fetching articles:', articlesResponse.status);
-          setGuides([]);
-        }
-      } else {
-        // If no country is selected, fetch all articles
-        const supabaseClient = createClient();
-        const { data: articlesData, error: articlesError } = await supabaseClient
-          .from('articles')
-          .select('id, title, slug')
-          .order('is_featured', { ascending: false })
-          .order('published_at', { ascending: false })
-          .limit(8);
-
-        if (!articlesError && articlesData) {
-          setGuides(articlesData.slice(0, 6));
-        } else {
-          console.error('Error fetching articles:', articlesError);
-          setGuides([]);
-        }
-      }
-
-      // Fetch categories from Supabase
-      const supabase = createClient();
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .order('id', { ascending: true })
-        .limit(10);
-      
-      if (categoriesError) {
-        console.error('Error fetching categories:', categoriesError);
-      } else if (categoriesData) {
-        setCategories(categoriesData);
-      }
-
-      // Fetch best selling products (highest ratings_count)
-      const productsUrl = `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/products${country?.value ? `?country=${country.value}&sort=ratings_count&limit=10` : '?sort=ratings_count&limit=10'}`;
-
-      console.log('Fetching best selling products from:', productsUrl);
-
-      try {
-        const productsResponse = await fetch(productsUrl, {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        });
-
-        console.log('Products response status:', productsResponse.status);
-
-        if (productsResponse.ok) {
-          const productsData = await productsResponse.json();
-          console.log('Products API response:', productsData);
-          console.log('Products data length:', productsData.products?.length || 0);
-
-          if (productsData.products && productsData.products.length > 0) {
-            console.log('Best selling products fetched:', productsData.products.length);
-            const productsToSet = productsData.products.slice(0, 10);
-            console.log('Setting bestSellingProducts to:', productsToSet);
-            setBestSellingProducts(productsToSet);
-          } else {
-            console.log('No products found in API response');
-            console.log('Full API response structure:', productsData);
-          }
-        } else {
-          console.error('Products API error:', productsResponse.status, productsResponse.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching best selling products:', error);
-      }
-    } catch (error) {
-      console.error('Error fetching footer data:', error);
-    }
+interface TranslationKeys {
+  footer: {
+    about: string;
+    careers: string;
+    help: string;
+    faq: string;
+    contact: string;
+    company: string;
+    featuredDeals: string;
+    shoppingGuides: string;
+    topStores: string;
+    viewAll: string;
+    tagline: string;
+    copyright: string;
+    followUs: string;
   };
-  
+  testimonials: {
+    downloadApp: string;
+    downloadOn: string;
+    appStore: string;
+    getItOn: string;
+    googlePlay: string;
+  };
+}
+
+interface FooterProps {
+  featuredDeals?: Deal[];
+  topStores?: Store[];
+  articles?: Article[];
+  categories?: Category[];
+  bestSellingProducts?: Product[];
+  translations: TranslationKeys;
+  isRTL: boolean;
+}
+
+export function Footer({
+  featuredDeals = [],
+  topStores = [],
+  articles = [],
+  categories = [],
+  bestSellingProducts = [],
+  translations,
+  isRTL
+}: FooterProps) {
+  const { t, footer: ft, testimonials: tt } = translations;
+
   const footerLinks = {
     company: [
-      { label: t('footer.about'), href: "#" },
+      { label: ft.about, href: "#" },
       { label: isRTL ? "كيف يعمل" : "How It Works", href: "#" },
-      { label: t('footer.careers'), href: "#" },
+      { label: ft.careers, href: "#" },
       { label: isRTL ? "المدونة" : "Blog", href: "/guides" },
       { label: isRTL ? "سياسة الخصوصية" : "Privacy Policy", href: "/privacy" },
       { label: isRTL ? "الشروط والأحكام" : "Terms of Use", href: "/terms" },
@@ -270,9 +123,9 @@ export function Footer() {
       { label: isRTL ? "عروض جديدة" : "New Deals", href: "/deals" },
     ],
     support: [
-      { label: t('footer.help'), href: "#" },
-      { label: t('footer.faq'), href: "#" },
-      { label: t('footer.contact'), href: "#" },
+      { label: ft.help, href: "#" },
+      { label: ft.faq, href: "#" },
+      { label: ft.contact, href: "#" },
       { label: isRTL ? "إرسال عرض" : "Submit a Deal", href: "#" },
     ],
   };
@@ -301,7 +154,7 @@ export function Footer() {
                 />
               </div>
               <p className="text-[#6B7280] mb-6 max-w-[280px]">
-                {t('footer.tagline')}
+                {ft.tagline}
               </p>
 
               {/* Contact Info */}
@@ -319,7 +172,7 @@ export function Footer() {
             {/* Row 1 - 4 Columns */}
             {/* Company Links */}
             <div>
-              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>{t('footer.company')}</h3>
+              <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>{ft.company}</h3>
               <ul className="space-y-2">
                 {footerLinks.company.map((link, index) => (
                   <li key={index}>
@@ -372,33 +225,25 @@ export function Footer() {
             {/* Featured Deals */}
             <div>
               <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
-                {t('footer.featuredDeals')}
+                {ft.featuredDeals}
               </h3>
               <ul className="space-y-2">
                 {featuredDeals.length > 0 ? (
                   featuredDeals.slice(0, 5).map((deal) => {
-                    // Get the title using multiple possible field names
                     const getTitle = () => {
-                      // Try direct title fields first
                       if (isRTL) {
                         if (deal.title_ar) return deal.title_ar;
-                        if (deal.name_ar) return deal.name_ar;
                         if (deal.title) return deal.title;
-                        if (deal.name) return deal.name;
                       } else {
                         if (deal.title) return deal.title;
-                        if (deal.name) return deal.name;
                       }
 
-                      // Create a title from other available data
                       const storeName = isRTL
-                        ? (deal.store_name_ar || deal.stores?.name_ar || deal.stores?.name || 'متجر')
-                        : (deal.store_name || deal.stores?.name || deal.stores?.name_ar || 'Store');
+                        ? deal.store_name || 'متجر'
+                        : deal.store_name || 'Store';
 
                       const discount = deal.discount_percentage
                         ? `${deal.discount_percentage}% off`
-                        : deal.discount_amount
-                        ? `$${deal.discount_amount} off`
                         : deal.code
                         ? `Code: ${deal.code}`
                         : 'Special Offer';
@@ -428,10 +273,10 @@ export function Footer() {
                   <li className="pt-2">
                     <Link
                       href="/deals"
-                      className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                      className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors hover:underline"
                       style={{ fontWeight: 500 }}
                     >
-                      {t('footer.viewAll')} {!isRTL && '→'}
+                      {ft.viewAll} {!isRTL && '→'}
                     </Link>
                   </li>
                 )}
@@ -442,16 +287,16 @@ export function Footer() {
             {/* Shopping Guides */}
             <div>
               <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
-                {t('footer.shoppingGuides')}
+                {ft.shoppingGuides}
               </h3>
               <ul className="space-y-2">
-                {guides.length > 0 ? (
+                {articles.length > 0 ? (
                   <>
-                    {guides.map((guide) => (
+                    {articles.map((guide) => (
                       <li key={guide.id}>
                         <Link
                           href={`/guides/${guide.slug}`}
-                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1 underline underline-offset-2 hover:underline-offset-4"
+                          className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1 hover:underline"
                         >
                           {guide.title}
                         </Link>
@@ -460,10 +305,10 @@ export function Footer() {
                     <li className="pt-2">
                       <Link
                         href="/guides"
-                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors hover:underline"
                         style={{ fontWeight: 500 }}
                       >
-                        {t('footer.viewAll')} {!isRTL && '→'}
+                        {ft.viewAll} {!isRTL && '→'}
                       </Link>
                     </li>
                   </>
@@ -476,7 +321,7 @@ export function Footer() {
             {/* Top Stores */}
             <div>
               <h3 className="mb-4 text-[#111827]" style={{ fontWeight: 600 }}>
-                {t('footer.topStores')}
+                {ft.topStores}
               </h3>
               <ul className="space-y-2">
                 {topStores.length > 0 ? (
@@ -494,10 +339,10 @@ export function Footer() {
                     <li className="pt-2">
                       <Link
                         href="/stores"
-                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors hover:underline"
                         style={{ fontWeight: 500 }}
                       >
-                        {t('footer.viewAll')} {!isRTL && '→'}
+                        {ft.viewAll} {!isRTL && '→'}
                       </Link>
                     </li>
                   </>
@@ -556,7 +401,7 @@ export function Footer() {
                         <li key={product.id}>
                           <Link
                             href={`/products/${product.slug || product.id}`}
-                            className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1 underline underline-offset-2 hover:underline-offset-4"
+                            className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1 hover:underline"
                           >
                             {title}
                           </Link>
@@ -566,10 +411,10 @@ export function Footer() {
                     <li className="pt-2">
                       <Link
                         href="/products"
-                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors underline underline-offset-2 hover:underline-offset-4"
+                        className="text-[#5FB57A] hover:text-[#4a9561] text-sm transition-colors hover:underline"
                         style={{ fontWeight: 500 }}
                       >
-                        {t('footer.viewAll')} {!isRTL && '→'}
+                        {ft.viewAll} {!isRTL && '→'}
                       </Link>
                     </li>
                   </>
@@ -585,7 +430,7 @@ export function Footer() {
         <div className="mb-8 pb-8 border-b-2 border-[#E5E7EB]">
           <div className="flex flex-col items-center">
             <h3 className="text-[#111827] mb-6 text-center" style={{ fontWeight: 600 }}>
-              {t('testimonials.downloadApp')}
+              {tt.downloadApp}
             </h3>
             <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
               {/* App Store Button */}
@@ -597,8 +442,8 @@ export function Footer() {
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                 </svg>
                 <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                  <div className="text-xs text-[#111827]/70">{t('testimonials.downloadOn')}</div>
-                  <div className="text-[#111827]" style={{ fontWeight: 600 }}>{t('testimonials.appStore')}</div>
+                  <div className="text-xs text-[#111827]/70">{tt.downloadOn}</div>
+                  <div className="text-[#111827]" style={{ fontWeight: 600 }}>{tt.appStore}</div>
                 </div>
               </a>
 
@@ -611,8 +456,8 @@ export function Footer() {
                   <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
                 </svg>
                 <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                  <div className="text-xs text-[#111827]/70">{t('testimonials.getItOn')}</div>
-                  <div className="text-[#111827]" style={{ fontWeight: 600 }}>{t('testimonials.googlePlay')}</div>
+                  <div className="text-xs text-[#111827]/70">{tt.getItOn}</div>
+                  <div className="text-[#111827]" style={{ fontWeight: 600 }}>{tt.googlePlay}</div>
                 </div>
               </a>
 
@@ -636,12 +481,12 @@ export function Footer() {
           <div className={`flex flex-col md:flex-row items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
             {/* Copyright */}
             <div className="text-sm text-[#6B7280]">
-              {t('footer.copyright')}
+              {ft.copyright}
             </div>
 
             {/* Social Links */}
             <div className="flex items-center gap-3">
-              <span className="text-sm text-[#6B7280] mr-2">{t('footer.followUs')}</span>
+              <span className="text-sm text-[#6B7280] mr-2">{ft.followUs}</span>
               {socialLinks.map((social, index) => {
                 const Icon = social.icon;
                 return (

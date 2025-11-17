@@ -1,10 +1,11 @@
+"use client";
+
 import { useState } from "react";
 import { Heart, Copy } from "lucide-react";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { copyToClipboard } from "../utils/clipboard";
-import { useRouter } from "next/navigation";
 
 interface DealCardProps {
   deal: {
@@ -34,7 +35,6 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) {
-  const router = useRouter();
   const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
   const description = isRTL && deal.description_ar ? deal.description_ar : deal.description;
 
@@ -47,11 +47,11 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
     }
   };
 
-  const handleCardClick = () => {
+  const getDealUrl = () => {
     if (deal.slug) {
-      router.push(`/deal/${deal.slug}`);
+      return `/deal/${deal.slug}`;
     } else {
-      router.push(`/deal/${deal.id}`);
+      return `/deal/${deal.id}`;
     }
   };
 
@@ -61,9 +61,9 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
   const color = colors[deal.id % colors.length];
 
   return (
-    <div 
-      onClick={handleCardClick}
-      className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all cursor-pointer"
+    <Link
+      href={getDealUrl()}
+      className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all cursor-pointer block"
     >
         {/* Left/Right Discount Bar with Perforated Edge */}
         <div 
@@ -156,15 +156,15 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
           {(deal.store_name || deal.category_name) && (
             <div className="text-sm inline-block mb-6">
               {deal.store_name && deal.store_slug && (
-                <span
+                <Link
+                  href={`/store/${deal.store_slug}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(`/store/${deal.store_slug}`);
                   }}
-                  className="text-[#5FB57A] hover:underline cursor-pointer"
+                  className="text-[#5FB57A] hover:underline"
                 >
                   {deal.store_name}
-                </span>
+                </Link>
               )}
               {deal.store_name && !deal.store_slug && (
                 <span className="text-[#5FB57A]">{deal.store_name}</span>
@@ -193,6 +193,6 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
           }
         </Button>
       </div>
-    </div>
+    </Link>
   );
 }

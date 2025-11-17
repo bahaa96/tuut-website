@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { createClient } from "../../../utils/supabase/client";
+import { fetchDealsByCountrySlug, fetchCategories as fetchCategoriesFromAPI, fetchStores as fetchStoresFromAPI } from "../../../lib/supabase-fetch";
 
 interface DealsClientProps {
   initialDeals: Deal[];
@@ -72,34 +72,16 @@ export default function DealsClient({
 
     try {
       setLoadingCategories(true);
-      const supabase = createClient();
-      const limit = 5;
-      const offset = (page - 1) * limit;
 
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .range(offset, offset + limit - 1)
-        .order('name', { ascending: true });
+      const { data: categoriesData, error: categoriesError } = await fetchCategoriesFromAPI();
 
       if (!categoriesError && categoriesData) {
-        const newCategories = categoriesData.map((cat: any) => ({
-          id: cat.id,
-          name: cat.category_name || cat.name || cat.title || 'Unknown Category',
-        }));
-
-        setCategories(prev => {
-          const combined = isLoadMore ? [...prev, ...newCategories] : newCategories;
-          // Remove duplicates
-          const unique = combined.filter((cat, index, arr) =>
-            arr.findIndex(c => c.id === cat.id) === index
-          );
-          return unique;
-        });
-
-        setHasMoreCategories(categoriesData.length === limit);
-        setCategoryPage(page);
+        setCategories(categoriesData);
+      } else {
+        console.error('Error fetching categories:', categoriesError);
       }
+
+      setHasMoreCategories(false);
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
@@ -112,34 +94,16 @@ export default function DealsClient({
 
     try {
       setLoadingStores(true);
-      const supabase = createClient();
-      const limit = 5;
-      const offset = (page - 1) * limit;
 
-      const { data: storesData, error: storesError } = await supabase
-        .from('stores')
-        .select('*')
-        .range(offset, offset + limit - 1)
-        .order('name', { ascending: true });
+      const { data: storesData, error: storesError } = await fetchStoresFromAPI();
 
       if (!storesError && storesData) {
-        const newStores = storesData.map((store: any) => ({
-          id: store.id,
-          name: store.store_name || store.name || store.title || 'Unknown Store',
-        }));
-
-        setStores(prev => {
-          const combined = isLoadMore ? [...prev, ...newStores] : newStores;
-          // Remove duplicates
-          const unique = combined.filter((store, index, arr) =>
-            arr.findIndex(s => s.id === store.id) === index
-          );
-          return unique;
-        });
-
-        setHasMoreStores(storesData.length === limit);
-        setStorePage(page);
+        setStores(storesData);
+      } else {
+        console.error('Error fetching stores:', storesError);
       }
+
+      setHasMoreStores(false);
     } catch (error) {
       console.error('Error fetching stores:', error);
     } finally {
@@ -168,6 +132,20 @@ export default function DealsClient({
     });
     if (node) storeObserver.current.observe(node);
   }, [loadingStores, hasMoreStores, storePage, fetchStores]);
+
+  const refetchDeals = useCallback(async () => {
+    try {
+      const { data: dealsData, error: dealsError } = await fetchDealsByCountrySlug(country.toUpperCase());
+
+      if (!dealsError && dealsData) {
+        setDeals(dealsData);
+      } else {
+        console.error('Error refetching deals:', dealsError);
+      }
+    } catch (error) {
+      console.error('Error refetching deals:', error);
+    }
+  }, [country]);
 
   const applyFilters = () => {
     let filtered = [...deals];
