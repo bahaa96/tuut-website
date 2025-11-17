@@ -178,6 +178,7 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
         {/* View Deal Button */}
         <Button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             if (deal.code) {
               copyCouponCode(deal.code);

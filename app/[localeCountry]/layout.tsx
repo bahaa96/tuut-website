@@ -1,5 +1,6 @@
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/FooterSSR";
+import { Toaster } from "../../components/ui/sonner";
 import { fetchFooterData } from "../../lib/supabase-fetch";
 
 export default async function LocaleLayout({
@@ -70,6 +71,7 @@ export default async function LocaleLayout({
         }}
         isRTL={isRTL}
       />
+      <Toaster />
     </div>
   );
 }
