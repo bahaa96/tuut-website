@@ -1,3 +1,4 @@
+"use client";
 import { Store as StoreIcon, ArrowRight, Tag } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useRouter } from '../router';
+import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -49,7 +49,7 @@ interface SavedStore {
 export default function WishlistPage() {
   const { user, isAuthenticated } = useAuth();
   const { isRTL, language } = useLanguage();
-  const { navigate } = useRouter();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [trackedProducts, setTrackedProducts] = useState<TrackedProduct[]>([]);
   const [savedDeals, setSavedDeals] = useState<SavedDeal[]>([]);
@@ -57,7 +57,7 @@ export default function WishlistPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/');
+      router.push('/');
       return;
     }
     fetchWishlistData();
@@ -204,7 +204,7 @@ export default function WishlistPage() {
             </p>
           </div>
           <Button
-            onClick={() => navigate('/add-product')}
+            onClick={() => router.push('/add-product')}
             className="bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-lg shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
           >
             <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -253,7 +253,7 @@ export default function WishlistPage() {
                   }
                 </p>
                 <Button 
-                  onClick={() => navigate('/products')}
+                  onClick={() => router.push('/products')}
                   className="bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
                 >
                   {isRTL ? 'تصفح المنتجات' : 'Browse Products'}
@@ -326,7 +326,7 @@ export default function WishlistPage() {
                   }
                 </p>
                 <Button 
-                  onClick={() => navigate('/deals')}
+                  onClick={() => router.push('/deals')}
                   className="bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
                 >
                   {isRTL ? 'تصفح العروض' : 'Browse Deals'}
@@ -396,7 +396,7 @@ export default function WishlistPage() {
                   }
                 </p>
                 <Button 
-                  onClick={() => navigate('/stores')}
+                  onClick={() => router.push('/stores')}
                   className="bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)]"
                 >
                   {isRTL ? 'تصفح المتاجر' : 'Browse Stores'}
@@ -418,7 +418,7 @@ export default function WishlistPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => navigate(`/store/${store.store_id}`)}
+                        onClick={() => router.push(`/store/${store.store_id}`)}
                         className="border-2 border-[#111827] rounded-lg flex-1"
                       >
                         {isRTL ? 'عرض' : 'View'}

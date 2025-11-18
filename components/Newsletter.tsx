@@ -1,3 +1,4 @@
+"use client";
 import { Mail, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -13,7 +14,7 @@ export function Newsletter() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !email.includes(")) {
+    if (!email || !email.includes("@")) {
       toast.error(isRTL ? "الرجاء إدخال بريد إلكتروني صالح" : "Please enter a valid email address");
       return;
     }

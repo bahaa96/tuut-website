@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
-import { useRouter } from "../router";
+import { useRouter } from "next/navigation";
 import { getCountryValue } from "../utils/countryHelpers";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Skeleton } from "../components/ui/skeleton";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
-import { useSSRData } from "../contexts/SSRDataContext";
 import {
   Select,
   SelectContent,
@@ -65,10 +64,10 @@ interface Product {
   price_history?: Array<{ date: string; price: number }>;
 }
 
-export function ProductsPage() {
+export default function ProductsPage() {
   const { language, isRTL } = useLanguage();
   const { country } = useCountry();
-  const { data: ssrData } = useSSRData();
+  // SSR data removed - will fetch client-side
   const hasSSRData = ssrData && ssrData.products;
   const [products, setProducts] = useState<Product[]>(hasSSRData ? ssrData.products || [] : []);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(hasSSRData ? ssrData.products || [] : []);
@@ -599,7 +598,7 @@ export function ProductsPage() {
 
 // Product Grid Card Component
 function ProductGridCard({ product, language, isRTL }: { product: Product; language: string; isRTL: boolean }) {
-  const { navigate } = useRouter();
+  const router = useRouter();
   const name = language === 'ar' && product.name_ar ? product.name_ar : (product.title || product.name || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم'));
   const description = language === 'ar' && product.description_ar ? product.description_ar : (product.description || '');
   const storeName = product.store || product.store_name || '';
@@ -613,7 +612,7 @@ function ProductGridCard({ product, language, isRTL }: { product: Product; langu
   const hasDiscount = discountPercentage > 0;
 
   const handleCardClick = () => {
-    navigate(`/product/${product.slug || product.id}`);
+    router.push(`/product/${product.slug || product.id}`);
   };
 
   return (
@@ -749,7 +748,7 @@ function ProductGridCard({ product, language, isRTL }: { product: Product; langu
 
 // Product List Card Component
 function ProductListCard({ product, language, isRTL }: { product: Product; language: string; isRTL: boolean }) {
-  const { navigate } = useRouter();
+  const router = useRouter();
   const name = language === 'ar' && product.name_ar ? product.name_ar : (product.title || product.name || (language === 'en' ? 'Unnamed Product' : 'منتج بدون اسم'));
   const description = language === 'ar' && product.description_ar ? product.description_ar : (product.description || '');
   const storeName = product.store || product.store_name || '';
@@ -763,7 +762,7 @@ function ProductListCard({ product, language, isRTL }: { product: Product; langu
   const hasDiscount = discountPercentage > 0;
 
   const handleCardClick = () => {
-    navigate(`/product/${product.slug || product.id}`);
+    router.push(`/product/${product.slug || product.id}`);
   };
 
   return (

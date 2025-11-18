@@ -2,7 +2,7 @@ import { fetchDealsByCountrySlug } from "../../../lib/supabase-fetch"
 import DealsClientPage from "./DealsClient"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { Deal } from "../../../domain-models"
+import { Deal } from "../../../../domain-models"
 
 interface DealsPageProps {
   params: Promise<{

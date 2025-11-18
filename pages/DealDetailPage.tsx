@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "../router";
+import { useParams, Link } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useSSRData, getGlobalSSRData } from "../contexts/SSRDataContext";
 import { createClient } from "../utils/supabase/client";
 import { 
   ArrowLeft, 
@@ -73,18 +72,15 @@ declare global {
   }
 }
 
-export function DealDetailPage() {
+export default function DealDetailPage() {
   const { slug } = useParams();
   const { t, isRTL, language } = useLanguage();
-  const { data: ssrData } = useSSRData();
+  // SSR data removed - will fetch client-side
 
-  // Check for SSR data immediately to prevent loading state in SSR
-  const hasSSRData = ssrData && ssrData.product && ssrData.product.slug === slug;
-
-  const [deal, setDeal] = useState<Deal | null>(hasSSRData ? ssrData.product : null);
-  const [store, setStore] = useState<Store | null>(hasSSRData && ssrData.store ? ssrData.store : null);
-  const [relatedDeals, setRelatedDeals] = useState<Deal[]>(hasSSRData && ssrData.related_deals ? ssrData.related_deals : []);
-  const [loading, setLoading] = useState(!hasSSRData);
+  const [deal, setDeal] = useState<Deal | null>(null);
+  const [store, setStore] = useState<Store | null>(null);
+  const [relatedDeals, setRelatedDeals] = useState<Deal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
   const [timeLeft, setTimeLeft] = useState<string>("");

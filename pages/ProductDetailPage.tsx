@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from '../router';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCountry } from '../contexts/CountryContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -210,7 +210,7 @@ export default function ProductDetailPage() {
             <Package className="h-16 w-16 text-[#9CA3AF] mx-auto mb-4" />
             <h2 className="text-2xl mb-2">{language === 'en' ? 'Product Not Found' : 'المنتج غير موجود'}</h2>
             <p className="text-[#6B7280] mb-6">{error || (language === 'en' ? 'The product you are looking for does not exist.' : 'المنتج الذي تبحث عنه غير موجود.')}</p>
-            <Button onClick={() => navigate('/products')}>
+            <Button onClick={() => router.push('/products')}>
               {language === 'en' ? 'Browse Products' : 'تصفح المنتجات'}
             </Button>
           </div>
@@ -230,14 +230,14 @@ export default function ProductDetailPage() {
         <div className="max-w-[1200px] mx-auto px-4 py-4">
           <div className={`flex items-center gap-2 text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => router.push('/')}
               className="text-[#6B7280] hover:text-[#5FB57A] transition-colors"
             >
               {language === 'en' ? 'Home' : 'الرئيسية'}
             </button>
             <span className="text-[#9CA3AF]">/</span>
             <button
-              onClick={() => navigate('/products')}
+              onClick={() => router.push('/products')}
               className="text-[#6B7280] hover:text-[#5FB57A] transition-colors"
             >
               {language === 'en' ? 'Products' : 'المنتجات'}
@@ -253,7 +253,7 @@ export default function ProductDetailPage() {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => navigate('/products')}
+          onClick={() => router.push('/products')}
           className={`mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}

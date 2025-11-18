@@ -35,7 +35,7 @@ interface ProductPreview {
   thumbnailURL: string;
 }
 
-export function TrackedProductsPage() {
+export default function TrackedProductsPage() {
   const { user, isAuthenticated } = useAuth();
   const { isRTL } = useLanguage();
   const [showSignIn, setShowSignIn] = useState(false);

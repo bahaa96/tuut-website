@@ -32,7 +32,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   // Fetch deal data server-side
   let deal: Deal | null = null;
-  let store = null;
+  let store: any = null;
   let relatedDeals: Deal[] = [];
 
   try {
@@ -67,7 +67,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
           .limit(4);
 
         if (relatedData) {
-          relatedDeals = relatedData.map(d => ({
+          relatedDeals = relatedData.map((d: any) => ({
             ...d,
             store_name: store?.title || store?.store_name || dealResult.data.store_name,
             store_name_ar: store?.title_ar || store?.store_name_ar || dealResult.data.store_name_ar,

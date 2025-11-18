@@ -3,7 +3,7 @@ import { createClient } from '../utils/supabase/client';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
-export function StoreSearchTestPage() {
+export default function StoreSearchTestPage() {
   const [searchTerm, setSearchTerm] = useState('noon');
   const [results, setResults] = useState<any[]>([]);
   const [allStores, setAllStores] = useState<any[]>([]);

@@ -1,3 +1,4 @@
+"use client";
 import { Hero } from "../components/Hero";
 import { FeaturedDeals } from "../components/FeaturedDeals";
 import { CategoryGrid } from "../components/CategoryGrid";
@@ -8,7 +9,7 @@ import { Testimonials } from "../components/Testimonials";
 import { Newsletter } from "../components/Newsletter";
 import { useEffect } from "react";
 
-export function HomePage() {
+export default function HomePage() {
   useEffect(() => {
     // Handle hash navigation on mount
     if (window.location.hash === '#featured-deals') {

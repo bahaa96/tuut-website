@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "../router";
+import { useParams, Link } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useSSRData } from "../contexts/SSRDataContext";
 import { createClient } from "../utils/supabase/client";
 import { ArrowLeft, Store, ExternalLink } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -62,10 +61,10 @@ interface Deal {
   featured?: boolean;
 }
 
-export function StoreDetailsPage() {
+export default function StoreDetailsPage() {
   const { slug } = useParams();
   const { t, isRTL, language } = useLanguage();
-  const { data: ssrData } = useSSRData();
+  // SSR data removed - will fetch client-side
   const hasSSRData = ssrData && ssrData.store;
   const [store, setStore] = useState<Store | null>(hasSSRData ? ssrData.store : null);
   const [deals, setDeals] = useState<Deal[]>(hasSSRData ? (ssrData.deals || []) : []);

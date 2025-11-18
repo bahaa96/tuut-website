@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Deal } from "../../../domain-models";
+import { Deal } from "../../../../domain-models";
 import { DealCard } from "../../../../components/DealCard";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from '../router';
+import { useParams } from 'next/navigation';
 import { createClient } from '../utils/supabase/client';
 import { DealCard } from '../components/DealCard';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -10,7 +10,7 @@ import { Store, Tag, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
-import { Link } from '../router';
+import Link from 'next/link';
 
 interface Category {
   id: string;
@@ -56,7 +56,7 @@ interface Deal {
   expires_at?: string;
 }
 
-export function CategoryPage() {
+export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t, language, isRTL } = useLanguage();
   const { country } = useCountry();

@@ -1,7 +1,7 @@
 import { useLanguage } from "../contexts/LanguageContext";
 import { useEffect } from "react";
 
-export function PrivacyPage() {
+export default function PrivacyPage() {
   const { language } = useLanguage();
   const isRTL = language === "ar";
 

@@ -1,7 +1,7 @@
 import { useLanguage } from "../contexts/LanguageContext";
 import { useEffect } from "react";
 
-export function TermsPage() {
+export default function TermsPage() {
   const { language } = useLanguage();
   const isRTL = language === "ar";
 

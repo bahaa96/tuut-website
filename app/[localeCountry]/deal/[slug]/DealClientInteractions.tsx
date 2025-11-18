@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Deal } from "../../../domain-models";
+import { Deal } from "../../../../domain-models";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -99,7 +99,7 @@ export default function DealClientInteractions({
 
   // Handle getting the deal
   const handleGetDeal = () => {
-    const url = deal?.redirect_url || store?.redirect_url || store?.website_url;
+    const url = store?.website;
     if (url) {
       window.open(url, '_blank', 'noopener,noreferrer');
     }

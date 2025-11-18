@@ -1,3 +1,4 @@
+"use client";
 import { Heart, Copy, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
@@ -6,7 +7,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import { fetchFeaturedDeals } from "../utils/api";
-import { Link } from "../router";
+import Link from "next/link";
 import { copyToClipboard } from "../utils/clipboard";
 
 // Import translations directly for deals content

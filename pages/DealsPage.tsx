@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useSSRData } from "../contexts/SSRDataContext";
 import { createClient } from "../utils/supabase/client";
 import { Search, SlidersHorizontal, X, ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
-import { Link } from "../router";
+import Link from "next/link";
 import {
   Select,
   SelectContent,
@@ -66,9 +65,9 @@ interface Store {
   name: string;
 }
 
-export function DealsPage() {
+export default function DealsPage() {
   const { t, isRTL, language } = useLanguage();
-  const { data: ssrData } = useSSRData();
+  // SSR data removed - will fetch client-side
 
   // Check if SSR data is available
   const hasSSRData = ssrData && ssrData.deals;

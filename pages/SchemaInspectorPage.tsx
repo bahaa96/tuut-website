@@ -1,7 +1,7 @@
 import { SchemaInspector } from "../components/SchemaInspector";
 import { useLanguage } from "../contexts/LanguageContext";
 
-export function SchemaInspectorPage() {
+export default function SchemaInspectorPage() {
   const { isRTL } = useLanguage();
   
   return (

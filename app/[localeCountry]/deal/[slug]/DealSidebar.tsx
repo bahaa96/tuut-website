@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Deal } from "../../../domain-models";
+import { Deal } from "../../../../domain-models";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {

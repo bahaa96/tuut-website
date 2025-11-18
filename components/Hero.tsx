@@ -1,19 +1,20 @@
+"use client";
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useRouter } from "../router";
+import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 
 export function Hero() {
   const { t, isRTL } = useLanguage();
-  const { navigate } = useRouter();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -63,25 +64,25 @@ export function Hero() {
               {isRTL ? 'شائع:' : 'Popular:'}
             </span>
             <button 
-              onClick={() => navigate('/search?q=' + encodeURIComponent(isRTL ? 'أمازون' : 'Amazon'))}
+              onClick={() => router.push('/search?q=' + encodeURIComponent(isRTL ? 'أمازون' : 'Amazon'))}
               className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
             >
               {isRTL ? 'أمازون' : 'Amazon'}
             </button>
             <button 
-              onClick={() => navigate('/search?q=' + encodeURIComponent(isRTL ? 'نون' : 'Noon'))}
+              onClick={() => router.push('/search?q=' + encodeURIComponent(isRTL ? 'نون' : 'Noon'))}
               className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
             >
               {isRTL ? 'نون' : 'Noon'}
             </button>
             <button 
-              onClick={() => navigate('/search?q=' + encodeURIComponent(isRTL ? 'إلكترونيات' : 'Electronics'))}
+              onClick={() => router.push('/search?q=' + encodeURIComponent(isRTL ? 'إلكترونيات' : 'Electronics'))}
               className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
             >
               {isRTL ? 'إلكترونيات' : 'Electronics'}
             </button>
             <button 
-              onClick={() => navigate('/search?q=' + encodeURIComponent(isRTL ? 'أزياء' : 'Fashion'))}
+              onClick={() => router.push('/search?q=' + encodeURIComponent(isRTL ? 'أزياء' : 'Fashion'))}
               className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
             >
               {isRTL ? 'أزياء' : 'Fashion'}

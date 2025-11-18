@@ -1,3 +1,4 @@
+"use client";
 import { 
   ShoppingBag, Laptop, Coffee, Plane, Sparkles, Dumbbell, Home, Heart, 
   ChevronLeft, ChevronRight, Shirt, Watch, Footprints, Glasses, 
@@ -17,7 +18,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import { Button } from "./ui/button";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useRouter } from "../router";
+import { useRouter } from "next/navigation";
 
 interface Category {
   id: number;
@@ -224,7 +225,7 @@ function getCategoryIcon(categoryName: string): LucideIcon {
 
 export function CategoryGrid() {
   const { t, isRTL } = useLanguage();
-  const { navigate } = useRouter();
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -405,7 +406,7 @@ export function CategoryGrid() {
                 return (
                   <button
                     key={category.id}
-                    onClick={() => navigate(categoryUrl)}
+                    onClick={() => router.push(categoryUrl)}
                     className="group bg-white rounded-xl p-6 border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all text-center w-[160px] md:w-[180px] cursor-pointer"
                   >
                     <div

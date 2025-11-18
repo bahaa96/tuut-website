@@ -7,9 +7,8 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
-import { Link } from "../router";
+import Link from "next/link";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { useSSRData } from "../contexts/SSRDataContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,10 +47,10 @@ interface Store {
 type ViewMode = 'grid' | 'list';
 type SortOption = 'name' | 'deals' | 'featured';
 
-export function StoresPage() {
+export default function StoresPage() {
   const { t, isRTL, language } = useLanguage();
   const { country } = useCountry();
-  const { data: ssrData } = useSSRData();
+  // SSR data removed - will fetch client-side
   const hasSSRData = ssrData && ssrData.stores;
 
   const [stores, setStores] = useState<Store[]>(hasSSRData ? ssrData.stores || [] : []);

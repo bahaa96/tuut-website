@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search as SearchIcon, Store as StoreIcon, Tag, ShoppingBag, FileText, ArrowRight } from "lucide-react";
-import { useSearchParams, Link } from "../router";
+import { useSearchParams, Link } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
@@ -71,7 +71,7 @@ interface SearchResults {
   totalResults: number;
 }
 
-export function SearchPage() {
+export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const { language, isRTL } = useLanguage();

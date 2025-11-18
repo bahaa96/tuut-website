@@ -6,9 +6,8 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
-import { Link } from "../router";
+import Link from "next/link";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { useSSRData } from "../contexts/SSRDataContext";
 
 interface Article {
   id: string;
@@ -37,14 +36,12 @@ interface Article {
   featured?: boolean;
 }
 
-export function BlogPage() {
+export default function BlogPage() {
   const { t, isRTL, language } = useLanguage();
   const { country } = useCountry();
-  const { data: ssrData } = useSSRData();
-  const hasSSRData = ssrData && ssrData.articles;
-  const [articles, setArticles] = useState<Article[]>(hasSSRData ? ssrData.articles || [] : []);
-  const [displayedArticles, setDisplayedArticles] = useState<Article[]>(hasSSRData ? ssrData.articles?.slice(0, 12) || [] : []);
-  const [loading, setLoading] = useState(!hasSSRData);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [displayedArticles, setDisplayedArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

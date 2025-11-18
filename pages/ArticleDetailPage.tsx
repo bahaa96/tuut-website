@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "../router";
+import { useParams, Link } from "next/navigation";
 import { 
   Calendar, 
   Clock, 
@@ -54,7 +54,7 @@ interface Article {
   meta_description_ar?: string;
 }
 
-export function ArticleDetailPage() {
+export default function ArticleDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t, isRTL, language } = useLanguage();
   const { country } = useCountry();

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useRouter } from '../router';
+import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card } from '../components/ui/card';
@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 export default function AddProductPage() {
   const { isAuthenticated } = useAuth();
   const { isRTL } = useLanguage();
-  const { navigate } = useRouter();
+  const router = useRouter();
   
   const [productUrl, setProductUrl] = useState('');
   const [fetchedData, setFetchedData] = useState<any>(null);
@@ -33,7 +33,7 @@ export default function AddProductPage() {
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
-    navigate('/');
+    router.push('/');
     return null;
   }
 
@@ -129,7 +129,7 @@ export default function AddProductPage() {
 
       if (response.ok) {
         toast.success(isRTL ? 'تمت إضافة المنتج بنجاح!' : 'Product added successfully!');
-        navigate('/wishlist');
+        router.push('/wishlist');
       } else {
         const data = await response.json();
         setError(data.error || (isRTL ? 'فشل إضافة المنتج' : 'Failed to add product'));
@@ -148,7 +148,7 @@ export default function AddProductPage() {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => navigate('/wishlist')}
+          onClick={() => router.push('/wishlist')}
           className={`mb-6 hover:bg-white/50 ${isRTL ? '' : ''}`}
         >
           <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
-import { Link } from "../router";
+import Link from "next/link";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 interface Article {

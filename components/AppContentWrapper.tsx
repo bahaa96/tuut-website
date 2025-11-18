@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "@/router";
+import { useRouter } from "next/navigation";
 import { getPageForPath } from "@/utils/ssr-routing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/FooterSSR";
