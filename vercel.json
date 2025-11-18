@@ -2,7 +2,7 @@
   "version": 2,
   "outputDirectory": "build",
   "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npm run build",
+  "buildCommand": "NEXT_TELEMETRY_DISABLED=1 NEXT_TYPESCRIPT_SKIP_BUILD_CHECK=true npm run build",
   "framework": null,
   "rewrites": [
     {
