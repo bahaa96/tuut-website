@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateSupportedLocales, formatLocalesForMiddleware } from './utils/localeHelpers'
 
-// List of supported locales (generated from countries database)
-const supportedLocales = ['en-EG', 'ar-EG', 'en-AE', 'en-JO', 'en-KW', 'en-MA', 'en-OM', 'en-QA', 'en-SA', 'ar-AE', 'ar-JO', 'ar-KW', 'ar-MA', 'ar-OM', 'ar-QA', 'ar-SA']
-const defaultLocale = 'en-EG'
+// Generate supported locales dynamically from database
+// In production, you might want to cache this result or generate it at build time
+async function getSupportedLocales() {
+  const { supportedLocales, defaultLocale } = await generateSupportedLocales()
+    .then(({ locales }) => formatLocalesForMiddleware(locales));
+
+  return { supportedLocales, defaultLocale };
+}
 
 function normalizeLocale(locale: string): string {
   // Convert lowercase country codes to uppercase (e.g., en-egypt -> en-EG)
@@ -11,18 +17,12 @@ function normalizeLocale(locale: string): string {
     const [language, country] = parts
     const normalizedCountry = country.toUpperCase()
 
-    // Map some common country name variations to country codes
+    // Map some common country code variations
     const countryMap: { [key: string]: string } = {
       'EGYPT': 'EG',
-      'JORDAN': 'JO',
       'SAUDI': 'SA',
-      'SAUDIARABIA': 'SA',
-      'KUWAIT': 'KW',
-      'MOROCCO': 'MA',
-      'OMAN': 'OM',
-      'QATAR': 'QA',
-      'UAE': 'AE',
-      'EMIRATES': 'AE'
+      'USA': 'US',
+      'AMERICA': 'US'
     }
 
     const finalCountry = countryMap[normalizedCountry] || normalizedCountry
@@ -31,7 +31,10 @@ function normalizeLocale(locale: string): string {
   return locale
 }
 
-function getLocaleFromRequest(request: NextRequest): string {
+async function getLocaleFromRequest(request: NextRequest): Promise<{ locale: string; supportedLocales: string[]; defaultLocale: string }> {
+  // Get supported locales from database
+  const { supportedLocales, defaultLocale } = await getSupportedLocales();
+
   // Check for existing locale in path
   const pathname = request.nextUrl.pathname
 
@@ -41,7 +44,7 @@ function getLocaleFromRequest(request: NextRequest): string {
     const potentialLocale = pathnameParts[1]
     const normalizedLocale = normalizeLocale(potentialLocale)
     if (supportedLocales.includes(normalizedLocale)) {
-      return normalizedLocale
+      return { locale: normalizedLocale, supportedLocales, defaultLocale }
     }
   }
 
@@ -59,15 +62,15 @@ function getLocaleFromRequest(request: NextRequest): string {
     )
 
     if (matchingLocale) {
-      return matchingLocale
+      return { locale: matchingLocale, supportedLocales, defaultLocale }
     }
   }
 
   // Fallback to default locale
-  return defaultLocale
+  return { locale: defaultLocale, supportedLocales, defaultLocale }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Skip for static files, API routes, and Next.js internals
@@ -80,6 +83,9 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.next()
   }
+
+  // Get locale information (including supported locales from database)
+  const { locale, supportedLocales, defaultLocale } = await getLocaleFromRequest(request);
 
   // Check if the first path segment is a locale
   const pathnameParts = pathname.split('/')
@@ -109,9 +115,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Get the appropriate locale for new paths without locale
-  const locale = getLocaleFromRequest(request)
-
   // Redirect to locale-specific version
   const url = request.nextUrl.clone()
   url.pathname = `/${locale}${pathname}`
@@ -136,4 +139,9 @@ export const config = {
      */
     '/((?!api|_next/static|_next/image|favicon.ico|robots.txt).*)',
   ],
+}
+
+// For development and testing, you can export the current locales
+export async function getCurrentLocales() {
+  return getSupportedLocales();
 }

@@ -354,14 +354,14 @@ export async function fetchDealsByCountrySlug(countrySlug: string, options?: {
 
 
 // Fetch countries for filtering
-export async function fetchCountries(): Promise<{ data: { id: number; name: string; slug: string; code: string }[]; error: Error | null }> {
+export async function fetchCountries(): Promise<{ data: any[]; error: Error | null }> {
   try {
     const supabase = createClient();
 
     const { data, error } = await supabase
       .from('countries')
       .select('*')
-      .order('name');
+      .order('name_en');
 
     if (error) {
       return {

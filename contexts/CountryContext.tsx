@@ -43,9 +43,9 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
       try {
         const supabase = createClient();
 
-        // Fetch countries with translations using the view we created
+        // Fetch countries from the countries table
         const { data: countriesData, error } = await supabase
-          .from('countries_with_translations')
+          .from('countries')
           .select('*')
           .order('slug');
 
@@ -59,13 +59,32 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
 
           // Set default country if none is selected
           if (!country && countriesData.length > 0) {
-            // Try to get country from localStorage or use first country as default
-            const savedCountry = localStorage.getItem('selectedCountry');
             let defaultCountry = countriesData[0];
 
-            if (savedCountry) {
-              const found = countriesData.find(c => c.slug === savedCountry);
-              if (found) defaultCountry = found;
+            // Try to get country from URL locale first
+            if (typeof window !== 'undefined') {
+              const pathname = window.location.pathname;
+              const pathnameParts = pathname.split('/');
+              if (pathnameParts.length > 1) {
+                const potentialLocale = pathnameParts[1];
+                if (potentialLocale.includes('-')) {
+                  const countrySlug = potentialLocale.split('-')[1].toUpperCase();
+                  const countryFromUrl = countriesData.find(c => c.slug === countrySlug);
+                  if (countryFromUrl) {
+                    defaultCountry = countryFromUrl;
+                    localStorage.setItem('selectedCountry', countryFromUrl.slug);
+                  }
+                }
+              }
+            }
+
+            // If no country from URL, try localStorage
+            if (!defaultCountry || defaultCountry === countriesData[0]) {
+              const savedCountry = localStorage.getItem('selectedCountry');
+              if (savedCountry) {
+                const found = countriesData.find(c => c.slug === savedCountry);
+                if (found) defaultCountry = found;
+              }
             }
 
             setCountry(defaultCountry);
@@ -86,11 +105,35 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('selectedCountry', selectedCountry.slug);
   };
 
+  const initializeCountryFromCode = async (countryCode: string) => {
+    try {
+      const supabase = createClient();
+      const { data: countryData, error } = await supabase
+        .from('countries')
+        .select('*')
+        .eq('slug', countryCode.toUpperCase())
+        .single();
+
+      if (error) {
+        console.error('Error fetching country:', error);
+        return;
+      }
+
+      if (countryData) {
+        setCountry(countryData);
+        localStorage.setItem('selectedCountry', countryData.slug);
+      }
+    } catch (error) {
+      console.error('Error initializing country:', error);
+    }
+  };
+
   const value: CountryContextType = {
     country,
     countries,
     setCountry: handleSetCountry,
     isLoading,
+    initializeCountryFromCode,
   };
 
   return (
