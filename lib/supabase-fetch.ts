@@ -719,6 +719,81 @@ export async function fetchFooterData(countrySlug?: string) {
   };
 }
 
+// Fetch stores by country slug - optimized for the stores page
+export async function fetchStoresByCountrySlug(countrySlug: string, options?: {
+  limit?: number;
+  offset?: number;
+}): Promise<{ data: any[]; error: Error | null }> {
+  try {
+    const supabase = createClient();
+
+    let query = supabase
+      .from('stores')
+      .select('*')
+      .eq('country_slug', countrySlug)
+      .eq('is_active', true)
+      .order('total_offers', { ascending: false, nullsFirst: false });
+
+    // Apply additional options if provided
+    if (options?.limit) {
+      query = query.limit(options.limit);
+    }
+
+    if (options?.offset) {
+      query = query.range(options.offset, options.offset + (options.limit || 20) - 1);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      return {
+        data: [],
+        error: new Error(error.message)
+      };
+    }
+
+    // Format stores data to match expected interface
+    const formattedStores = data?.map((store: any) => {
+      return {
+        id: store.id,
+        name: store.title || 'Store',
+        name_ar: '', // No Arabic name field in current schema
+        store_name: store.title || 'Store',
+        store_name_ar: '', // No Arabic name field in current schema
+        title: store.title || 'Store',
+        title_ar: '', // No Arabic name field in current schema
+        description: store.description || '',
+        description_ar: '', // No Arabic description field in current schema
+        logo: store.profile_picture_url || '',
+        profile_picture_url: store.profile_picture_url || '',
+        profile_image: store.profile_picture_url || '',
+        banner_image: store.cover_picture_url || '',
+        slug: store.slug || '',
+        deals_count: store.total_offers || 0,
+        active_deals_count: store.total_offers || 0,
+        total_offers: store.total_offers || 0,
+        category_id: null, // No category_id in stores table
+        country_id: store.country_id,
+        featured: false, // No featured field in stores table
+        is_featured: false, // No is_featured field in stores table
+        rating: null, // No rating field in stores table
+        total_savings: null, // No total_savings field in stores table
+        is_active: store.is_active,
+      };
+    }) || [];
+
+    return {
+      data: formattedStores,
+      error: null
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error: error instanceof Error ? error : new Error('Unknown error')
+    };
+  }
+}
+
 // Example usage in a React component
 export async function loadDealsAndDisplay() {
   console.log('Loading deals from Supabase...');
