@@ -3,8 +3,8 @@ import { createClient } from '../utils/supabase/client';
 // Example table types - adjust these based on your actual Supabase tables
 interface Deal {
   id: string;
-  title: string;
-  description: string;
+  title_en: string;
+  description_en: string;
   price: number;
   original_price?: number;
   image_url?: string;
@@ -318,9 +318,9 @@ export async function fetchDealsByCountrySlug(countrySlug: string, options?: {
       return {
         id: deal.id,
         slug: deal.slug,
-        title: deal.title,
+        title_en: deal.title_en,
         title_ar: deal.title_ar,
-        description: deal.description,
+        description_en: deal.description_en,
         description_ar: deal.description_ar,
         discount_percentage: deal.discount_percentage,
         discount_amount: deal.discount_amount,
@@ -550,7 +550,7 @@ export async function fetchFooterTopStores(countrySlug?: string): Promise<{ data
 }
 
 // Fetch articles/guides for footer
-export async function fetchFooterArticles(countrySlug?: string): Promise<{ data: { id: string; title: string; slug: string }[]; error: Error | null }> {
+export async function fetchFooterArticles(countrySlug?: string): Promise<{ data: { id: string; title_en: string; slug: string }[]; error: Error | null }> {
   try {
     const supabase = createClient();
 

@@ -898,14 +898,14 @@ function FeaturedDeals() {
               console.warn(`Skipping deal ${index} - no deal data`);
               return null;
             }
-            if (!deal.title && !deal.title_ar) {
+            if (!deal.title_en && !deal.title_ar) {
               console.warn(`Skipping deal ${index} - no title`);
               return null;
             }
             return {
               id: item.id || index,
-              title: deal?.title || deal?.title_ar || "Special Deal",
-              title_ar: deal?.title_ar || deal?.title || "عرض خاص",
+              title_en: deal?.title_en || deal?.title_ar || "Special Deal",
+              title_ar: deal?.title_ar || deal?.title_en || "عرض خاص",
               store: store?.name || store?.name_ar || "Store",
               store_ar: store?.name_ar || store?.name || "متجر",
               discount: deal?.discount_percentage || deal?.discount_amount || "0%",
@@ -1275,7 +1275,7 @@ function FeaturedDeals() {
                       }
                     ),
                     /* @__PURE__ */ jsxs("div", { className: `${isRTL ? "pl-8" : "pr-8"}`, children: [
-                      /* @__PURE__ */ jsx("h3", { className: "mb-3 text-[#111827]", style: { fontSize: "20px", fontWeight: 600 }, children: isRTL && deal.title_ar ? deal.title_ar : deal.title }),
+                      /* @__PURE__ */ jsx("h3", { className: "mb-3 text-[#111827]", style: { fontSize: "20px", fontWeight: 600 }, children: isRTL && deal.title_ar ? deal.title_ar : deal.title_en }),
                       deal.code && /* @__PURE__ */ jsx("div", { className: "mb-4", children: /* @__PURE__ */ jsx(
                         "div",
                         {
@@ -1284,7 +1284,7 @@ function FeaturedDeals() {
                           children: deal.code
                         }
                       ) }),
-                      /* @__PURE__ */ jsx("p", { className: "text-[#6B7280] text-sm mb-2", children: isRTL && deal.description_ar ? deal.description_ar : deal.description }),
+                      /* @__PURE__ */ jsx("p", { className: "text-[#6B7280] text-sm mb-2", children: isRTL && deal.description_ar ? deal.description_ar : deal.description_en }),
                       /* @__PURE__ */ jsx(
                         "a",
                         {
@@ -2653,8 +2653,8 @@ function SheetTitle({
 
 function DealCard({ deal, isRTL, isSaved, onToggleSave }) {
   const { navigate } = useRouter();
-  const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
-  const description = isRTL && deal.description_ar ? deal.description_ar : deal.description;
+  const title = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
+  const description = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
   const copyCouponCode = async (code) => {
     const success = await copyToClipboard(code);
     if (success) {
@@ -2852,9 +2852,9 @@ function DealsPage() {
         return {
           id: deal.id,
           slug: deal.slug,
-          title: deal.title,
+          title_en: deal.title_en,
           title_ar: deal.title_ar,
-          description: deal.description,
+          description_en: deal.description_en,
           description_ar: deal.description_ar,
           discount_percentage: deal.discount_percentage,
           discount_amount: deal.discount_amount,
@@ -2932,8 +2932,8 @@ function DealsPage() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((deal) => {
-        const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
-        const description = isRTL && deal.description_ar ? deal.description_ar : deal.description;
+        const title = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
+        const description = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
         return title?.toLowerCase().includes(query) || description?.toLowerCase().includes(query) || deal.store_name?.toLowerCase().includes(query) || deal.category_name?.toLowerCase().includes(query);
       });
     }
@@ -5017,10 +5017,10 @@ function Footer() {
                 if (isRTL) {
                   if (deal.title_ar) return deal.title_ar;
                   if (deal.name_ar) return deal.name_ar;
-                  if (deal.title) return deal.title;
+                  if (deal.title_en) return deal.title_en;
                   if (deal.name) return deal.name;
                 } else {
-                  if (deal.title) return deal.title;
+                  if (deal.title_en) return deal.title_en;
                   if (deal.name) return deal.name;
                 }
                 const storeName = isRTL ? deal.store_name_ar || deal.stores?.name_ar || deal.stores?.name || "متجر" : deal.store_name || deal.stores?.name || deal.stores?.name_ar || "Store";
@@ -5636,8 +5636,8 @@ function generateStructuredData(route, data) {
       return {
         "@context": "https://schema.org",
         "@type": "Product",
-        name: deal.title,
-        description: deal.description,
+        name: deal.title_en,
+        description_en: deal.description_en,
         image: deal.image_url ? [deal.image_url] : [],
         brand: {
           "@type": "Brand",

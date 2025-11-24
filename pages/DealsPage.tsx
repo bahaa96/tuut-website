@@ -36,9 +36,9 @@ function isUUID(str: string): boolean {
 interface Deal {
   id: number;
   slug?: string;
-  title: string;
+  title_en: string;
   title_ar?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   discount_percentage?: number;
   discount_amount?: number;
@@ -162,7 +162,7 @@ export default function DealsPage() {
         return {
           id: deal.id,
           slug: deal.slug,
-          title: deal.title,
+          title_en: deal.title_en,
           title_ar: deal.title_ar,
           description: deal.description,
           description_ar: deal.description_ar,
@@ -266,7 +266,7 @@ export default function DealsPage() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(deal => {
-        const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
+        const title = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
         const description = isRTL && deal.description_ar ? deal.description_ar : deal.description;
         return (
           title?.toLowerCase().includes(query) ||

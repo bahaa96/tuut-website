@@ -16,7 +16,7 @@ interface Category {
   id: string;
   name: string;
   name_ar?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   color?: string;
   bg_color?: string;
@@ -26,9 +26,9 @@ interface StoreType {
   id: string;
   name: string;
   name_ar?: string;
-  title?: string;
+  title_en?: string;
   title_ar?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   logo?: string;
   logo_url?: string;
@@ -44,7 +44,7 @@ interface Deal {
   id: string;
   title: string;
   title_ar?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   discount_amount?: string;
   discount_percentage?: number;
@@ -274,7 +274,7 @@ export default function CategoryPage() {
 
   const getStoreName = (store: StoreType) => {
     if (isRTL) {
-      return store.name_ar || store.title_ar || store.name || store.title || 'Unnamed Store';
+      return store.name_ar || store.title_ar || store.name || store.title_en || 'Unnamed Store';
     }
     return store.name || store.title || store.name_ar || 'Unnamed Store';
   };

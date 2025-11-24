@@ -27,13 +27,13 @@ function isUUID(str: string): boolean {
 interface Store {
   id: string;
   slug?: string;
-  title?: string;
+  title_en?: string;
   title_ar?: string;
   store_name?: string;
   store_name_ar?: string;
   logo_url?: string;
   profile_picture_url?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   website_url?: string;
   redirect_url?: string;
@@ -44,7 +44,7 @@ interface Deal {
   id: number;
   title: string;
   title_ar?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   discount_percentage?: number;
   discount_amount?: number;
@@ -211,7 +211,7 @@ export default function StoreDetailsPage() {
       
       const formattedDeals = dealsData.map((deal: any) => ({
         id: deal.id,
-        title: deal.title,
+        title_en: deal.title_en,
         title_ar: deal.title_ar,
         description: deal.description,
         description_ar: deal.description_ar,

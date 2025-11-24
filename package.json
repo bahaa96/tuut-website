@@ -66,6 +66,13 @@
             "dev": "next dev",
             "build": "next build",
             "start": "next start",
-            "lint": "next lint"
+            "lint": "next lint",
+            "check-stores": "npx tsx scripts/check-store-deal-connection.ts",
+            "fix-stores": "npx tsx scripts/fix-store-deal-connections.ts",
+            "distribute-deals": "npx tsx scripts/distribute-deals-across-countries.ts",
+            "debug-stores": "npx tsx scripts/debug-store-structure.ts",
+            "final-fix": "npx tsx scripts/final-fix-store-deal-connections.ts",
+            "check-schema": "npx tsx scripts/check-deal-schema.ts",
+            "corrected-fix": "npx tsx scripts/corrected-fix-store-deals.ts"
       }
 }

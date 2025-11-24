@@ -30,9 +30,9 @@ import { copyToClipboard } from "../utils/clipboard";
 interface Deal {
   id: number;
   slug?: string;
-  title: string;
+  title_en: string;
   title_ar?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   discount_percentage?: number;
   discount_amount?: number;
@@ -375,8 +375,8 @@ export default function DealDetailPage() {
     );
   }
 
-  const dealTitle = isRTL && deal.title_ar ? deal.title_ar : deal.title;
-  const dealDescription = isRTL && deal.description_ar ? deal.description_ar : deal.description;
+  const dealTitle = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
+  const dealDescription = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
   
   // Get store name with proper fallbacks (using 'title' field from stores table)
   const getStoreName = (): string => {

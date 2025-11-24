@@ -15,21 +15,21 @@ interface Store {
   id: string;
   name?: string;
   store_name?: string;
-  title?: string;
+  title_en?: string;
   name_ar?: string;
   store_name_ar?: string;
   logo?: string;
   logo_url?: string;
   profile_picture_url?: string;
   slug?: string;
-  description?: string;
+  description_en?: string;
   total_offers?: number;
 }
 
 interface Deal {
   id: string;
-  title?: string;
-  description?: string;
+  title_en?: string;
+  description_en?: string;
   coupon_code?: string;
   discount_percentage?: number;
   discount_amount?: number;
@@ -44,7 +44,7 @@ interface Product {
   id: string;
   name?: string;
   name_ar?: string;
-  description?: string;
+  description_en?: string;
   description_ar?: string;
   price?: number;
   image_url?: string;
@@ -54,7 +54,7 @@ interface Product {
 
 interface Article {
   id: string;
-  title?: string;
+  title_en?: string;
   title_ar?: string;
   excerpt?: string;
   excerpt_ar?: string;
@@ -356,14 +356,14 @@ export default function SearchPage() {
                             <div className="aspect-video overflow-hidden border-b-2 border-[#111827]">
                               <ImageWithFallback
                                 src={deal.image_url}
-                                alt={deal.title || ''}
+                                alt={deal.title_en || ''}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                               />
                             </div>
                           )}
                           <div className="p-6">
                             <h3 style={{ fontSize: '18px', fontWeight: 600 }} className="text-[#111827] mb-2 line-clamp-2">
-                              {deal.title}
+                              {isRTL && deal.title_ar ? deal.title_ar : deal.title_en}
                             </h3>
                             {deal.description && (
                               <p className="text-[#6B7280] text-sm line-clamp-2 mb-3">
@@ -508,14 +508,14 @@ export default function SearchPage() {
                           <div className="aspect-video overflow-hidden border-b-2 border-[#111827]">
                             <ImageWithFallback
                               src={deal.image_url}
-                              alt={deal.title || ''}
+                              alt={deal.title_en || ''}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                             />
                           </div>
                         )}
                         <div className="p-6">
                           <h3 style={{ fontSize: '18px', fontWeight: 600 }} className="text-[#111827] mb-2 line-clamp-2">
-                            {deal.title}
+                            {isRTL && deal.title_ar ? deal.title_ar : deal.title_en}
                           </h3>
                           {deal.description && (
                             <p className="text-[#6B7280] text-sm line-clamp-2 mb-3">

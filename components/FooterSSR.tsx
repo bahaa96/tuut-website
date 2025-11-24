@@ -233,9 +233,9 @@ export function Footer({
                     const getTitle = () => {
                       if (isRTL) {
                         if (deal.title_ar) return deal.title_ar;
-                        if (deal.title) return deal.title;
+                        if (deal.title_en) return deal.title_en;
                       } else {
-                        if (deal.title) return deal.title;
+                        if (deal.title_en) return deal.title_en;
                       }
 
                       const storeName = isRTL
