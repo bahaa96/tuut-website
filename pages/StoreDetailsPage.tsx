@@ -27,12 +27,18 @@ function isUUID(str: string): boolean {
 interface Store {
   id: string;
   slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
+  title?: string;
   title_en?: string;
   title_ar?: string;
   store_name?: string;
   store_name_ar?: string;
+  name?: string;
+  name_ar?: string;
   logo_url?: string;
   profile_picture_url?: string;
+  description?: string;
   description_en?: string;
   description_ar?: string;
   website_url?: string;
@@ -52,7 +58,8 @@ interface Deal {
   discounted_price?: number;
   code?: string;
   store_id?: string;
-  store_slug?: string;
+  store_slug_en?: string;
+  slug_ar?: string;
   store_name?: string;
   store_logo?: string;
   category_name?: string;
@@ -110,56 +117,92 @@ export default function StoreDetailsPage() {
           return;
         }
       } else {
-        // Attempt 2: Try by slug column
-        const slugResult = await supabase
+        // Attempt 2: Try by slug_en first (localized slug)
+        const slugEnResult = await supabase
           .from('stores')
           .select('*')
-          .eq('slug', storeSlug)
+          .eq('slug_en', storeSlug)
           .maybeSingle();
 
-        if (slugResult.data) {
-          storeData = slugResult.data;
-          console.log('Found store by slug column:', storeData.title || storeData.store_name || storeData.name);
+        if (slugEnResult.data) {
+          storeData = slugEnResult.data;
+          console.log('Found store by slug_en column:', storeData.title_en || storeData.title);
         } else {
-          // Attempt 3: Try by title (case-insensitive match) - primary field in stores table
-          const searchName = storeSlug.replace(/-/g, ' ');
-          const titleResult = await supabase
+          // Attempt 3: Try by slug_ar (Arabic slug)
+          const slugArResult = await supabase
             .from('stores')
             .select('*')
-            .ilike('title', searchName)
+            .eq('slug_ar', storeSlug)
             .maybeSingle();
 
-          if (titleResult.data) {
-            storeData = titleResult.data;
-            console.log('Found store by title column:', titleResult.data.title);
+          if (slugArResult.data) {
+            storeData = slugArResult.data;
+            console.log('Found store by slug_ar column:', storeData.title_ar || storeData.title_en || storeData.title);
           } else {
-            // Attempt 4: Try by store_name (case-insensitive match)
-            const nameResult = await supabase
+            // Attempt 4: Try by legacy slug column
+            const slugResult = await supabase
               .from('stores')
               .select('*')
-              .ilike('store_name', searchName)
+              .eq('slug', storeSlug)
               .maybeSingle();
 
-            if (nameResult.data) {
-              storeData = nameResult.data;
-              console.log('Found store by store_name column:', storeData.store_name);
+            if (slugResult.data) {
+              storeData = slugResult.data;
+              console.log('Found store by legacy slug column:', storeData.title_en || storeData.title || storeData.store_name || storeData.name);
             } else {
-              // Attempt 5: Try by name column (case-insensitive match)
-              const nameAltResult = await supabase
+              // Attempt 5: Try by title_en first, then title (case-insensitive match)
+              const searchName = storeSlug.replace(/-/g, ' ');
+              const titleEnResult = await supabase
                 .from('stores')
                 .select('*')
-                .ilike('name', searchName)
+                .ilike('title_en', searchName)
                 .maybeSingle();
 
-              if (nameAltResult.data) {
-                storeData = nameAltResult.data;
-                console.log('Found store by name column:', storeData.name);
+              if (titleEnResult.data) {
+                storeData = titleEnResult.data;
+                console.log('Found store by title_en column:', titleEnResult.data.title_en);
               } else {
-                console.error('Store not found with slug:', storeSlug);
-                console.log('Tried:', { slug: storeSlug, searchName });
-                toast.error(isRTL ? 'المتجر غير موجود' : 'Store not found');
-                setLoading(false);
-                return;
+                // Attempt 6: Try by legacy title (case-insensitive match)
+                const titleResult = await supabase
+                  .from('stores')
+                  .select('*')
+                  .ilike('title', searchName)
+                  .maybeSingle();
+
+                if (titleResult.data) {
+                  storeData = titleResult.data;
+                  console.log('Found store by legacy title column:', titleResult.data.title);
+                } else {
+                  // Attempt 7: Try by store_name (case-insensitive match)
+                  const nameResult = await supabase
+                    .from('stores')
+                    .select('*')
+                    .ilike('store_name', searchName)
+                    .maybeSingle();
+
+                  if (nameResult.data) {
+                    storeData = nameResult.data;
+                    console.log('Found store by store_name column:', storeData.store_name);
+                  } else {
+                    // Attempt 8: Try by name column (case-insensitive match)
+                    const nameAltResult = await supabase
+                      .from('stores')
+                      .select('*')
+                      .ilike('name', searchName)
+                      .maybeSingle();
+
+                    if (nameAltResult.data) {
+                      storeData = nameAltResult.data;
+                      console.log('Found store by name column:', storeData.name);
+                    } else {
+                      console.error('Store not found with slug:', storeSlug);
+                      console.log('Tried:', { slug: storeSlug, searchName });
+                      toast.error(isRTL ? 'المتجر غير موجود' : 'Store not found');
+                      setLoading(false);
+                      return;
+                    }
+                  }
+                }
               }
             }
           }
@@ -173,22 +216,30 @@ export default function StoreDetailsPage() {
         return;
       }
 
-      const storeName = storeData.title || storeData.store_name || storeData.name;
-      
-      // Compute proper slug: use database slug only if it's not a UUID
-      const computedStoreSlug = (storeData.slug && !isUUID(storeData.slug)) 
-        ? storeData.slug 
-        : generateSlug(storeName);
-      
+      const storeName = storeData.title_en || storeData.title || storeData.store_name || storeData.name;
+      const storeNameAr = storeData.title_ar || storeData.name_ar || storeData.store_name_ar || storeName;
+
+      // Compute proper slug: prioritize localized slugs
+      const computedStoreSlug = storeData.slug_en || storeData.slug_ar ||
+        ((storeData.slug && !isUUID(storeData.slug)) ? storeData.slug : generateSlug(storeName));
+
       setStore({
         id: storeData.id,
         slug: computedStoreSlug,
+        slug_en: storeData.slug_en,
+        slug_ar: storeData.slug_ar,
+        title: storeData.title_en || storeData.title || storeName,
+        title_en: storeData.title_en || storeData.title || storeName,
+        title_ar: storeData.title_ar || storeNameAr,
         store_name: storeName,
-        store_name_ar: storeData.store_name_ar || storeData.name_ar,
+        store_name_ar: storeNameAr,
+        name: storeName,
+        name_ar: storeNameAr,
         logo_url: storeData.logo_url,
         profile_picture_url: storeData.profile_picture_url,
-        description: storeData.description,
-        description_ar: storeData.description_ar,
+        description: storeData.description_en || storeData.description || '',
+        description_en: storeData.description_en || storeData.description || '',
+        description_ar: storeData.description_ar || '',
         website_url: storeData.website_url,
         redirect_url: storeData.redirect_url,
         category: storeData.category,
@@ -298,10 +349,10 @@ export default function StoreDetailsPage() {
     );
   }
 
-  const storeName = isRTL 
-    ? (store.title_ar || store.store_name_ar || store.title || store.store_name) 
-    : (store.title || store.store_name);
-  const storeDescription = isRTL && store.description_ar ? store.description_ar : store.description;
+  const storeName = isRTL
+    ? (store.title_ar || store.name_ar || store.store_name_ar || store.title || store.store_name)
+    : (store.title_en || store.title || store.store_name || store.name);
+  const storeDescription = isRTL && store.description_ar ? store.description_ar : (store.description_en || store.description);
 
   return (
     <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">

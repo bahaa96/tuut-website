@@ -258,7 +258,7 @@ export function Footer({
                     return (
                       <li key={deal.id}>
                         <Link
-                          href={`/deal/${deal.slug || deal.id}`}
+                          href={`/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`}
                           className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
                         >
                           {title}
@@ -329,7 +329,7 @@ export function Footer({
                     {topStores.map((store) => (
                       <li key={store.id}>
                         <Link
-                          href={`/store/${store.slug}`}
+                          href={`/store/${isRTL && store.slug_ar ? store.slug_ar : store.slug_en || store.id}`}
                           className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
                         >
                           {store.name}
@@ -361,7 +361,7 @@ export function Footer({
                 {categories.length > 0 ? (
                   categories.map((category) => {
                     const categoryName = category.category_name || category.name || category.label || category.title || 'Category';
-                    const categoryUrl = `/category/${category.slug || category.id}`;
+                    const categoryUrl = `/category/${isRTL && category.slug_ar ? category.slug_ar : category.slug_en || category.id}`;
                     return (
                       <li key={category.id}>
                         <Link
@@ -400,7 +400,7 @@ export function Footer({
                       return (
                         <li key={product.id}>
                           <Link
-                            href={`/products/${product.slug || product.id}`}
+                            href={`/products/${isRTL && product.slug_ar ? product.slug_ar : product.slug_en || product.id}`}
                             className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm line-clamp-1 hover:underline"
                           >
                             {title}

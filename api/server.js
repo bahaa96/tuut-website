@@ -914,7 +914,8 @@ function FeaturedDeals() {
               code: deal?.code || "",
               type: deal?.code ? "coupon" : "sale",
               color: ["#7EC89A", "#5FB57A", "#9DD9B3", "#BCF0CC"][index % 4],
-              slug: deal?.slug || `deal-${item.id || index}`
+              slug_en: deal?.slug_en || `deal-${item.id || index}`,
+              slug_ar: deal?.slug_ar || `عرض-${item.id || index}`
             };
           }).filter(Boolean);
           console.log("Transformed deals:", transformedDeals);
@@ -1236,7 +1237,7 @@ function FeaturedDeals() {
             children: /* @__PURE__ */ jsx("div", { className: "grid grid-rows-2 grid-flow-col gap-6 pb-2", children: deals.map((deal) => /* @__PURE__ */ jsxs(
               Link,
               {
-                to: `/deal/${deal.slug || deal.id}`,
+                to: `/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`,
                 className: "group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all w-[320px] md:w-[360px] block",
                 children: [
                   /* @__PURE__ */ jsxs("div", { className: `absolute ${isRTL ? "right-0" : "left-0"} top-0 bottom-0 w-[100px] flex items-center justify-center`, style: { backgroundColor: deal.color }, children: [
@@ -2664,7 +2665,7 @@ function DealCard({ deal, isRTL, isSaved, onToggleSave }) {
     }
   };
   const handleCardClick = () => {
-    navigate(`/deal/${deal.slug || deal.id}`);
+    navigate(`/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`);
   };
   const colors = ["#7EC89A", "#5FB57A", "#9DD9B3", "#BCF0CC"];
   const color = colors[deal.id % colors.length];
@@ -2851,7 +2852,8 @@ function DealsPage() {
         }
         return {
           id: deal.id,
-          slug: deal.slug,
+          slug_en: deal.slug_en,
+          slug_ar: deal.slug_ar,
           title_en: deal.title_en,
           title_ar: deal.title_ar,
           description_en: deal.description_en,
@@ -5031,7 +5033,7 @@ function Footer() {
               return /* @__PURE__ */ jsx("li", { children: /* @__PURE__ */ jsx(
                 Link,
                 {
-                  to: `/deal/${deal.slug || deal.id}`,
+                  to: `/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`,
                   className: "text-[#6B7280] hover:text-[#111827] transition-colors text-sm underline underline-offset-2 hover:underline-offset-4",
                   children: title
                 }

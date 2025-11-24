@@ -35,7 +35,8 @@ function isUUID(str: string): boolean {
 
 interface Deal {
   id: number;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   title_en: string;
   title_ar?: string;
   description_en?: string;
@@ -46,7 +47,8 @@ interface Deal {
   discounted_price?: number;
   code?: string;
   store_id?: string;
-  store_slug?: string;
+  store_slug_en?: string;
+  slug_ar?: string;
   store_name?: string;
   store_logo?: string;
   category_name?: string;

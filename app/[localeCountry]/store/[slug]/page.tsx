@@ -5,13 +5,19 @@ import { DealCard } from "@/components/DealCard";
 interface Store {
   id: string;
   slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   title?: string;
+  title_en?: string;
   title_ar?: string;
   store_name?: string;
   store_name_ar?: string;
+  name?: string;
+  name_ar?: string;
   logo_url?: string;
   profile_picture_url?: string;
   description?: string;
+  description_en?: string;
   description_ar?: string;
   website_url?: string;
   redirect_url?: string;
@@ -23,8 +29,10 @@ interface Deal {
   id: number;
   title: string;
   title_ar?: string;
+  title_en?: string;
   description?: string;
   description_ar?: string;
+  description_en?: string;
   discount_percentage?: number;
   discount_amount?: number;
   original_price?: number;
@@ -38,6 +46,8 @@ interface Deal {
   expires_at?: string;
   is_verified?: boolean;
   featured?: boolean;
+  slug_en?: string;
+  slug_ar?: string;
 }
 
 interface StoreDetailPageProps {
@@ -68,37 +78,39 @@ export default async function StoreDetailPage({
     const { createClient } = await import("../../../../utils/supabase/client");
     const supabase = createClient();
 
-    // Fetch store by slug
-    const { data: storeData } = await supabase
+    // Fetch store by slug (check multiple slug fields for compatibility)
+    const { data: storeData, error: storeError } = await supabase
       .from("stores")
       .select("*")
-      .eq("slug", storeSlug)
+      .or(`slug_en.eq.${storeSlug},slug_ar.eq.${storeSlug}`)
       .single();
 
     if (storeData) {
-      // Format store data to match expected interface
+      // Format store data to match expected interface, prioritizing localized fields
       store = {
         id: storeData.id,
         name:
-          storeData.title || storeData.store_name || storeData.name || "Store",
+          storeData.title_en || storeData.title || storeData.store_name || storeData.name || "Store",
         name_ar: storeData.title_ar || storeData.name_ar || "",
         store_name:
-          storeData.title || storeData.store_name || storeData.name || "Store",
+          storeData.title_en || storeData.title || storeData.store_name || storeData.name || "Store",
         store_name_ar: storeData.title_ar || storeData.name_ar || "",
         title:
-          storeData.title || storeData.store_name || storeData.name || "Store",
+          storeData.title_en || storeData.title || storeData.store_name || storeData.name || "Store",
         title_ar: storeData.title_ar || storeData.name_ar || "",
-        description: storeData.description || "",
+        title_en: storeData.title_en || storeData.title || storeData.store_name || storeData.name || "Store",
+        description: storeData.description_en || storeData.description || "",
         description_ar: storeData.description_ar || "",
+        description_en: storeData.description_en || storeData.description || "",
         logo: storeData.profile_picture_url || "",
         profile_picture_url: storeData.profile_picture_url || "",
         website_url: storeData.website_url || "",
         redirect_url: storeData.redirect_url || "",
         category: storeData.category || "",
-        slug: storeData.slug || "",
+        slug: storeData.slug_en || storeData.slug || "",
+        slug_en: storeData.slug_en || storeData.slug || "",
+        slug_ar: storeData.slug_ar || "",
       };
-
-      console.log("🎨 DEBUG: Store data:", storeData.id);
 
       // Fetch deals for this store
       const { data: dealsData } = await supabase
@@ -106,29 +118,31 @@ export default async function StoreDetailPage({
         .select("*")
         .eq("store_id", storeData.id);
 
-      console.log("🎨 DEBUG: Deals data:", dealsData);
-
       if (dealsData) {
         deals = dealsData.map((deal: any) => ({
           id: deal.id,
-          title: deal.title,
+          title: deal.title_en || deal.title,
           title_ar: deal.title_ar,
-          description: deal.description,
+          title_en: deal.title_en || deal.title,
+          description: deal.description_en || deal.description,
           description_ar: deal.description_ar,
+          description_en: deal.description_en || deal.description,
           discount_percentage: deal.discount_percentage,
           discount_amount: deal.discount_amount,
           original_price: deal.original_price,
           discounted_price: deal.discounted_price,
           code: deal.code,
           store_id: deal.store_id,
-          store_slug: deal.store_slug,
+          store_slug: deal.slug_en || deal.store_slug,
           store_name:
-            storeData.title || storeData.store_name || deal.store_name,
+            storeData.title_en || storeData.title || storeData.store_name || deal.store_name,
           store_logo: storeData.profile_picture_url || deal.store_logo,
           category_name: deal.category_name,
           expires_at: deal.expires_at,
           is_verified: deal.is_verified,
           featured: deal.featured,
+          slug_en: deal.slug_en,
+          slug_ar: deal.slug_ar,
         }));
       }
     }
@@ -162,10 +176,12 @@ export default async function StoreDetailPage({
   }
 
   const storeName = isRTL
-    ? store.title_ar || store.store_name_ar || store.title || store.store_name
-    : store.title || store.store_name;
+    ? store.title_ar || store.name_ar || store.store_name_ar || store.title_en || store.title || store.store_name || store.name
+    : store.title_en || store.title || store.store_name || store.name;
   const storeDescription =
-    isRTL && store.description_ar ? store.description_ar : store.description;
+    isRTL && store.description_ar
+      ? store.description_ar
+      : (store.description_en || store.description);
 
   return (
     <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">

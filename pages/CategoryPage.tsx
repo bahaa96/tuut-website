@@ -37,7 +37,8 @@ interface StoreType {
   profile_image_url?: string;
   active_deals_count?: number;
   deals_count?: number;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
 }
 
 interface Deal {

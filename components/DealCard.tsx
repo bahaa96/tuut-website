@@ -10,7 +10,8 @@ import { copyToClipboard } from "../utils/clipboard";
 interface DealCardProps {
   deal: {
     id: number;
-    slug?: string;
+    slug_en?: string;
+    slug_ar?: string;
     title?: string;
     title_ar?: string;
     description?: string;
@@ -48,8 +49,9 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
   };
 
   const getDealUrl = () => {
-    if (deal.slug) {
-      return `/deal/${deal.slug}`;
+    const slug = isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en;
+    if (slug) {
+      return `/deal/${slug}`;
     } else {
       return `/deal/${deal.id}`;
     }

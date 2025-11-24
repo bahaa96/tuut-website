@@ -63,7 +63,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
           .from('deals')
           .select('*')
           .eq('store_id', dealResult.data.store_id)
-          .neq('slug', dealSlug)
+          .neq('slug_en', dealSlug)
+          .neq('slug_ar', dealSlug)
           .limit(4);
 
         if (relatedData) {

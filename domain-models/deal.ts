@@ -1,6 +1,7 @@
 export interface Deal {
   id: number;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   title_en: string;
   title_ar?: string;
   description_en?: string;
@@ -11,7 +12,7 @@ export interface Deal {
   discounted_price?: number;
   code?: string;
   store_id?: string;
-  store_slug?: string;
+  store_slug_en?: string;
   store_name?: string;
   store_logo?: string;
   category_name?: string;
@@ -34,7 +35,8 @@ export interface DealWithStore extends Deal {
     name: string;
     store_name?: string;
     title_en?: string;
-    slug?: string;
+    slug_en?: string;
+    slug_ar?: string;
     logo_url?: string;
   };
 }

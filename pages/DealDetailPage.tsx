@@ -29,7 +29,8 @@ import { copyToClipboard } from "../utils/clipboard";
 
 interface Deal {
   id: number;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   title_en: string;
   title_ar?: string;
   description_en?: string;

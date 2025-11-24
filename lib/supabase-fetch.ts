@@ -30,7 +30,8 @@ interface Product {
   title_ar?: string;
   name?: string;
   name_ar?: string;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   price?: number;
   rating?: number;
   ratings_count?: number;
@@ -43,7 +44,8 @@ interface Product {
 export async function fetchDeals(options?: {
   category?: string;
   store?: string;
-  country_slug?: string;
+  country_slug_en?: string;
+  slug_ar?: string;
   limit?: number;
   offset?: number;
 }): Promise<{ data: Deal[]; error: Error | null }> {
@@ -206,7 +208,8 @@ export async function updateUserPreferences(preferences: Record<string, any>): P
 export async function searchDeals(searchTerm: string, options?: {
   category?: string;
   store?: string;
-  country_slug?: string;
+  country_slug_en?: string;
+  slug_ar?: string;
   limit?: number;
 }): Promise<{ data: Deal[]; error: Error | null }> {
   try {
@@ -317,7 +320,8 @@ export async function fetchDealsByCountrySlug(countrySlug: string, options?: {
     const formattedDeals = data?.map((deal: any) => {
       return {
         id: deal.id,
-        slug: deal.slug,
+        slug_en: deal.slug_en,
+        slug_ar: deal.slug_ar,
         title_en: deal.title_en,
         title_ar: deal.title_ar,
         description_en: deal.description_en,
@@ -428,7 +432,7 @@ export async function fetchStores(): Promise<{ data: { id: number; name: string 
     const { data, error } = await supabase
       .from('stores')
       .select('*')
-      .order('name');
+      .order('title_en');
 
     if (error) {
       return {
@@ -437,10 +441,10 @@ export async function fetchStores(): Promise<{ data: { id: number; name: string 
       };
     }
 
-    // Format stores with consistent name field
+    // Format stores with consistent name field, prioritizing localized columns
     const formattedStores = data ? data.map((store: any) => ({
       id: store.id,
-      name: store.store_name || store.name || store.title || 'Unknown Store',
+      name: store.title_en || store.title || store.store_name || store.name || 'Unknown Store',
     })) : [];
 
     return {
@@ -511,7 +515,7 @@ export async function fetchFooterTopStores(countrySlug?: string): Promise<{ data
 
     let query = supabase
       .from('stores')
-      .select('id, title, slug')
+      .select('id, title_en, title_ar, slug_en, slug_ar, title, slug')
       .eq('is_active', true)
       .order('total_offers', { ascending: false, nullsFirst: false })
       .limit(10);
@@ -530,11 +534,11 @@ export async function fetchFooterTopStores(countrySlug?: string): Promise<{ data
       };
     }
 
-    // Format stores data
+    // Format stores data, prioritizing localized columns
     const formattedStores = data ? data.map((store: any) => ({
       id: store.id,
-      name: store.title || 'Store',
-      slug: store.slug || store.id,
+      name: store.title_en || store.title || 'Store',
+      slug: store.slug_en || store.slug || store.id,
     })) : [];
 
     return {
@@ -628,7 +632,7 @@ export async function fetchFooterBestSellingProducts(countrySlug?: string): Prom
   }
 }
 
-// Fetch a single deal by slug
+// Fetch a single deal by slug (checks both slug_en and slug_ar)
 export async function fetchDealBySlug(dealSlug: string): Promise<{ data: any | null; error: Error | null }> {
   try {
     const supabase = createClient();
@@ -636,7 +640,7 @@ export async function fetchDealBySlug(dealSlug: string): Promise<{ data: any | n
     const { data, error } = await supabase
       .from('deals')
       .select('*')
-      .eq('slug', dealSlug)
+      .or(`slug_en.eq.${dealSlug},slug_ar.eq.${dealSlug}`)
       .single();
 
     if (error) {
@@ -752,23 +756,27 @@ export async function fetchStoresByCountrySlug(countrySlug: string, options?: {
       };
     }
 
-    // Format stores data to match expected interface
+    // Format stores data to match expected interface, using localized columns
     const formattedStores = data?.map((store: any) => {
       return {
         id: store.id,
-        name: store.title || 'Store',
-        name_ar: '', // No Arabic name field in current schema
-        store_name: store.title || 'Store',
-        store_name_ar: '', // No Arabic name field in current schema
-        title: store.title || 'Store',
-        title_ar: '', // No Arabic name field in current schema
-        description: store.description || '',
-        description_ar: '', // No Arabic description field in current schema
+        name: store.title_en || store.title || 'Store',
+        name_ar: store.title_ar || '',
+        store_name: store.title_en || store.title || 'Store',
+        store_name_ar: store.title_ar || '',
+        title: store.title_en || store.title || 'Store',
+        title_ar: store.title_ar || '',
+        title_en: store.title_en || store.title || 'Store',
+        description: store.description_en || store.description || '',
+        description_ar: store.description_ar || '',
+        description_en: store.description_en || store.description || '',
         logo: store.profile_picture_url || '',
         profile_picture_url: store.profile_picture_url || '',
         profile_image: store.profile_picture_url || '',
         banner_image: store.cover_picture_url || '',
-        slug: store.slug || '',
+        slug: store.slug_en || store.slug || '',
+        slug_en: store.slug_en || store.slug || '',
+        slug_ar: store.slug_ar || '',
         deals_count: store.total_offers || 0,
         active_deals_count: store.total_offers || 0,
         total_offers: store.total_offers || 0,

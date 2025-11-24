@@ -19,12 +19,14 @@ import {
 interface Store {
   id: string;
   name?: string;
-  store_name?: string;
-  title?: string;
   name_ar?: string;
+  store_name?: string;
   store_name_ar?: string;
+  title?: string;
+  title_en?: string;
   title_ar?: string;
   description?: string;
+  description_en?: string;
   description_ar?: string;
   logo?: string;
   logo_url?: string;
@@ -34,6 +36,8 @@ interface Store {
   banner_image?: string;
   cover_image?: string;
   slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   deals_count?: number;
   active_deals_count?: number;
   category_id?: string;
@@ -205,17 +209,17 @@ export default function StoresPage() {
   // Helper functions
   function getStoreName(store: Store, lang: string): string {
     if (lang === 'ar') {
-      return store.name_ar || store.store_name_ar || store.title_ar || 
-             store.name || store.store_name || store.title || 'Store';
+      return store.title_ar || store.name_ar || store.store_name_ar ||
+             store.title || store.name || store.store_name || 'Store';
     }
-    return store.name || store.store_name || store.title || 'Store';
+    return store.title_en || store.title || store.name || store.store_name || 'Store';
   }
 
   function getStoreDescription(store: Store, lang: string): string {
     if (lang === 'ar') {
-      return store.description_ar || store.description || '';
+      return store.description_ar || store.description_en || store.description || '';
     }
-    return store.description || '';
+    return store.description_en || store.description || '';
   }
 
   function getStoreLogo(store: Store): string {
@@ -228,7 +232,8 @@ export default function StoresPage() {
 
   function getStoreSlug(store: Store): string {
     const name = getStoreName(store, 'en');
-    return store.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return store.slug_en || store.slug_ar || store.slug ||
+           name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
 
   function getDealsCount(store: Store): number {

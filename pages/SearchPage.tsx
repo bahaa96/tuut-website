@@ -21,7 +21,8 @@ interface Store {
   logo?: string;
   logo_url?: string;
   profile_picture_url?: string;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   description_en?: string;
   total_offers?: number;
 }
@@ -36,7 +37,8 @@ interface Deal {
   original_price?: number;
   discounted_price?: number;
   image_url?: string;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   stores?: Store;
 }
 
@@ -48,7 +50,8 @@ interface Product {
   description_ar?: string;
   price?: number;
   image_url?: string;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   category?: string;
 }
 
@@ -59,7 +62,8 @@ interface Article {
   excerpt?: string;
   excerpt_ar?: string;
   image_url?: string;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
   published_at?: string;
 }
 
@@ -350,7 +354,7 @@ export default function SearchPage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {results.deals.slice(0, 4).map((deal) => (
-                      <Link key={deal.id} to={`/deal/${deal.slug || deal.id}`}>
+                      <Link key={deal.id} to={`/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`}>
                         <div className="group bg-white rounded-xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden">
                           {deal.image_url && (
                             <div className="aspect-video overflow-hidden border-b-2 border-[#111827]">
@@ -502,7 +506,7 @@ export default function SearchPage() {
               {results.deals.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {results.deals.map((deal) => (
-                    <Link key={deal.id} to={`/deal/${deal.slug || deal.id}`}>
+                    <Link key={deal.id} to={`/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`}>
                       <div className="group bg-white rounded-xl border-2 border-[#111827] shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden">
                         {deal.image_url && (
                           <div className="aspect-video overflow-hidden border-b-2 border-[#111827]">

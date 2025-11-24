@@ -50,7 +50,8 @@ interface Deal {
   code?: string;
   type: "coupon" | "sale";
   color: string;
-  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
 }
 
 export function FeaturedDeals() {
@@ -182,7 +183,8 @@ export function FeaturedDeals() {
                 code: deal?.code || '',
                 type: deal?.code ? 'coupon' : 'sale',
                 color: ['#7EC89A', '#5FB57A', '#9DD9B3', '#BCF0CC'][index % 4],
-                slug: deal?.slug || `deal-${item.id || index}`,
+                slug_en: deal?.slug_en || `deal-${item.id || index}`,
+                slug_ar: deal?.slug_ar || `عرض-${item.id || index}`,
               };
             })
             .filter(Boolean); // Remove null entries
@@ -547,7 +549,7 @@ export function FeaturedDeals() {
               {deals.map((deal) => (
             <Link
               key={deal.id}
-              to={`/deal/${deal.slug || deal.id}`}
+              to={`/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`}
               className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all w-[320px] md:w-[360px] block"
             >
               {/* Left/Right Discount Bar with Perforated Edge */}
