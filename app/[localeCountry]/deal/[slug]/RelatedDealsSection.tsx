@@ -14,7 +14,7 @@ export default function RelatedDealsSection({ deals, isRTL }: RelatedDealsSectio
   };
 
   return (
-    <div className="grid sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-6">
       {deals.map((deal) => (
         <DealCard
           key={deal.id}
