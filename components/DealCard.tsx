@@ -12,9 +12,9 @@ interface DealCardProps {
     id: number;
     slug_en?: string;
     slug_ar?: string;
-    title?: string;
+    title_en?: string;
     title_ar?: string;
-    description?: string;
+    description_en?: string;
     description_ar?: string;
     discount_percentage?: number;
     discount_amount?: number;
@@ -36,8 +36,8 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) {
-  const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
-  const description = isRTL && deal.description_ar ? deal.description_ar : deal.description;
+  const title = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
+  const description = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
 
   const copyCouponCode = async (code: string) => {
     const success = await copyToClipboard(code);

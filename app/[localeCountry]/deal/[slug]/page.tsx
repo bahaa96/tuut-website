@@ -101,8 +101,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     );
   }
 
-  const dealTitle = isRTL && deal.title_ar ? deal.title_ar : deal.title;
-  const dealDescription = isRTL && deal.description_ar ? deal.description_ar : deal.description;
+  const dealTitle = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
+  const dealDescription = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
 
   // Get store name with proper fallbacks
   const getStoreName = (): string => {

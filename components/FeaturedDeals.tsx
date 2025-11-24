@@ -166,7 +166,7 @@ export function FeaturedDeals() {
                 return null;
               }
               
-              if (!deal.title && !deal.title_ar) {
+              if (!deal.title_en && !deal.title_ar) {
                 console.warn(`Skipping deal ${index} - no title`);
                 return null;
               }
@@ -599,7 +599,7 @@ export function FeaturedDeals() {
                 {/* Content */}
                 <div className={`${isRTL ? 'pl-8' : 'pr-8'}`}>
                   <h3 className="mb-3 text-[#111827]" style={{ fontSize: '20px', fontWeight: 600 }}>
-                    {isRTL && deal.title_ar ? deal.title_ar : deal.title}
+                    {isRTL && deal.title_ar ? deal.title_ar : deal.title_en}
                   </h3>
                   
                   {deal.code && (
@@ -614,7 +614,7 @@ export function FeaturedDeals() {
                   )}
 
                   <p className="text-[#6B7280] text-sm mb-2">
-                    {isRTL && deal.description_ar ? deal.description_ar : deal.description}
+                    {isRTL && deal.description_ar ? deal.description_ar : deal.description_en}
                   </p>
 
                   <a 

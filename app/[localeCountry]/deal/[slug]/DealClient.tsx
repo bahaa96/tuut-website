@@ -21,6 +21,10 @@ interface DealClientPageProps {
 export default function DealClientPage({ deal, isRTL, footerData }: DealClientPageProps) {
   const [isSaved, setIsSaved] = useState(false);
 
+  // Get localized content
+  const dealTitle = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
+  const dealDescription = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
+
   // Interactive functions
   const copyCode = async () => {
     if (deal?.code) {
@@ -75,7 +79,7 @@ export default function DealClientPage({ deal, isRTL, footerData }: DealClientPa
               <div className="p-8">
                 <div className="mb-6">
                   <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                    {deal.title}
+                    {dealTitle}
                   </h1>
 
                   {deal.discount_percentage && (
@@ -91,13 +95,13 @@ export default function DealClientPage({ deal, isRTL, footerData }: DealClientPa
                   )}
                 </div>
 
-                {deal.description && (
+                {dealDescription && (
                   <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">
                       {isRTL ? 'الوصف' : 'Description'}
                     </h2>
                     <p className="text-gray-600 leading-relaxed">
-                      {deal.description}
+                      {dealDescription}
                     </p>
                   </div>
                 )}
@@ -165,7 +169,7 @@ export default function DealClientPage({ deal, isRTL, footerData }: DealClientPa
                       if (navigator.share) {
                         navigator.share({
                           title: deal.title,
-                          text: `Check out this deal: ${deal.title}`,
+                          text: `Check out this deal: ${dealTitle}`,
                         });
                       }
                     }}
