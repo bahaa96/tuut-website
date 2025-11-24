@@ -108,9 +108,9 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const getStoreName = (): string => {
     if (store) {
       if (isRTL) {
-        return store.title_ar || store.title || store.store_name_ar || store.store_name || 'Store';
+        return store.title_ar || store.name_ar || store.store_name_ar || store.title_en || store.title || store.store_name || store.name || 'Store';
       }
-      return store.title || store.store_name || 'Store';
+      return store.title_en || store.title || store.store_name || store.name || 'Store';
     }
     if (isRTL) {
       return deal.store_name_ar || deal.store_name || 'Store';
@@ -122,10 +122,16 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   // Get store slug for navigation
   const getStoreSlug = (): string => {
-    if (store?.slug) return store.slug;
+    // Use localized slug based on language
+    if (isRTL && store?.slug_ar) return store.slug_ar;
+    if (!isRTL && store?.slug_en) return store.slug_en;
+
+    // Fallback to any available slug
+    if (store?.slug_en) return store.slug_en;
+    if (store?.slug_ar) return store.slug_ar;
     if (deal.store_slug) return deal.store_slug;
 
-    const fallbackName = storeName || store?.title || '';
+    const fallbackName = storeName || store?.title_en || store?.title || '';
     return fallbackName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   };
 
