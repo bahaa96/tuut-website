@@ -365,7 +365,7 @@ export default function DealDetailPage() {
             <h2 className="text-[#111827] mb-4" style={{ fontSize: '24px', fontWeight: 700 }}>
               {isRTL ? 'العرض غير موجود' : 'Deal not found'}
             </h2>
-            <Link to="/deals">
+            <Link href="/deals">
               <Button className="bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg">
                 {isRTL ? 'العودة إلى العروض' : 'Back to Deals'}
               </Button>
@@ -420,7 +420,7 @@ export default function DealDetailPage() {
     <section className="py-12 md:py-16 bg-[#E8F3E8]">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         {/* Back Button */}
-        <Link to="/deals" className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-8 transition-colors">
+        <Link href="/deals" className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-8 transition-colors">
           <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
           {isRTL ? 'العودة إلى جميع العروض' : 'Back to All Deals'}
         </Link>

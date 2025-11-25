@@ -252,7 +252,7 @@ export default function ArticleDetailPage() {
               : 'المقال الذي تبحث عنه غير موجود.'
             }
           </p>
-          <Link to="/blog">
+          <Link href="/blog">
             <Button className="bg-[#5FB57A] hover:bg-[#4FA56A] text-white rounded-lg">
               <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
               {language === 'en' ? 'Back to Blog' : 'العودة للمدونة'}
@@ -277,7 +277,7 @@ export default function ArticleDetailPage() {
       {/* Back Button */}
       <div className="bg-white border-b-2 border-[#E5E7EB]">
         <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 py-4">
-          <Link to="/blog">
+          <Link href="/blog">
             <Button 
               variant="ghost" 
               className={`text-[#111827] hover:text-[#5FB57A] ${isRTL ? 'flex-row-reverse' : ''}`}

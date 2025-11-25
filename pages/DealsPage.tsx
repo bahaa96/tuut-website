@@ -459,7 +459,7 @@ export default function DealsPage() {
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className={`mb-8 ${isRTL ? 'text-right' : 'text-left'}`}>
-          <Link to="/" className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors">
+          <Link href="/" className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors">
             <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
             {isRTL ? 'العودة إلى الصفحة الرئيسية' : 'Back to Home'}
           </Link>
