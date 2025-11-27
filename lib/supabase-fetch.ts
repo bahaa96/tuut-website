@@ -460,7 +460,7 @@ export async function fetchStores(): Promise<{ data: { id: number; name: string 
 }
 
 // Fetch featured deals for footer
-export async function fetchFooterFeaturedDeals(countrySlug?: string): Promise<{ data: Deal[]; error: Error | null }> {
+export async function fetchFooterFeaturedDeals(countrySlug?: string): Promise<{ data: any[]; error: Error | null }> {
   try {
     const supabase = createClient();
 
@@ -469,9 +469,12 @@ export async function fetchFooterFeaturedDeals(countrySlug?: string): Promise<{ 
       .select(`
         deals (
           id,
-          slug,
-          title,
+          slug_en,
+          slug_ar,
+          title_en,
+          title_ar,
           discount,
+          discount_unit,
           code
         )
       `)
@@ -493,8 +496,21 @@ export async function fetchFooterFeaturedDeals(countrySlug?: string): Promise<{ 
       };
     }
 
-    // Extract deals directly from the nested structure
-    const deals = data?.map((item: any) => item.deals).filter(Boolean) || [];
+    // Extract deals directly from the nested structure and format them for FooterSSR
+    const deals = data?.map((item: any) => {
+      const deal = item.deals;
+      if (!deal) return null;
+
+      return {
+        id: deal.id,
+        slug: deal.slug_en || deal.slug_ar || deal.id,
+        title: deal.title_en || deal.title_ar,
+        title_ar: deal.title_ar,
+        title_en: deal.title_en,
+        discount_percentage: deal.discount_unit === 'percentage' ? deal.discount : null,
+        code: deal.code
+      };
+    }).filter(Boolean) || [];
 
     return {
       data: deals,
@@ -509,13 +525,13 @@ export async function fetchFooterFeaturedDeals(countrySlug?: string): Promise<{ 
 }
 
 // Fetch top stores for footer
-export async function fetchFooterTopStores(countrySlug?: string): Promise<{ data: { id: string; name: string; slug: string }[]; error: Error | null }> {
+export async function fetchFooterTopStores(countrySlug?: string): Promise<{ data: any[]; error: Error | null }> {
   try {
     const supabase = createClient();
 
     let query = supabase
       .from('stores')
-      .select('id, title_en, title_ar, slug_en, slug_ar, title, slug')
+      .select('id, title_en, title_ar, slug_en, slug_ar')
       .eq('is_active', true)
       .order('total_offers', { ascending: false, nullsFirst: false })
       .limit(10);
@@ -534,11 +550,15 @@ export async function fetchFooterTopStores(countrySlug?: string): Promise<{ data
       };
     }
 
-    // Format stores data, prioritizing localized columns
+    // Format stores data to match FooterSSR expectations
     const formattedStores = data ? data.map((store: any) => ({
       id: store.id,
-      name: store.title_en || store.title || 'Store',
-      slug: store.slug_en || store.slug || store.id,
+      name: store.title_en || store.title_ar || 'Store',
+      name_ar: store.title_ar,
+      name_en: store.title_en,
+      slug_en: store.slug_en,
+      slug_ar: store.slug_ar,
+      slug: store.slug_en || store.slug_ar || store.id,
     })) : [];
 
     return {
@@ -577,6 +597,117 @@ export async function fetchFooterArticles(countrySlug?: string): Promise<{ data:
       return {
         data: [],
         error: new Error(error.message)
+      };
+    }
+
+    return {
+      data: data || [],
+      error: null
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error: error instanceof Error ? error : new Error('Unknown error')
+    };
+  }
+}
+
+// Fetch articles/guides for guides page - more comprehensive data
+export async function fetchArticles(countrySlug?: string, searchQuery?: string, limit: number = 100): Promise<{ data: any[]; error: Error | null }> {
+  try {
+    const supabase = createClient();
+
+    let query = supabase
+      .from('articles')
+      .select(`
+        id,
+        title,
+        slug,
+        excerpt,
+        content,
+        featured_image_url,
+        author_name,
+        author_avatar_url,
+        read_time_minutes,
+        is_featured,
+        is_published,
+        published_at,
+        created_at,
+        view_count,
+        like_count,
+        country_slug
+      `)
+      .eq('is_published', true);
+
+    // Filter by country if provided - prioritize country-specific articles
+    if (countrySlug) {
+      // First try to get country-specific articles
+      query = query.or(`country_slug.eq.${countrySlug}`);
+    }
+
+    // Apply search filter if provided
+    if (searchQuery) {
+      query = query.or(`title.ilike.%${searchQuery}%,excerpt.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`);
+    }
+
+    // Order by featured first, then by publication date
+    query = query.order('is_featured', { ascending: false })
+                .order('published_at', { ascending: false })
+                .limit(limit);
+
+    const { data, error } = await query;
+
+    if (error) {
+      return {
+        data: [],
+        error: new Error(error.message)
+      };
+    }
+
+    // If no country-specific articles found and countrySlug is provided, fallback to global articles
+    if ((!data || data.length === 0) && countrySlug) {
+      const fallbackQuery = supabase
+        .from('articles')
+        .select(`
+          id,
+          title,
+          slug,
+          excerpt,
+          content,
+          featured_image_url,
+          author_name,
+          author_avatar_url,
+          read_time_minutes,
+          is_featured,
+          is_published,
+          published_at,
+          created_at,
+          view_count,
+          like_count,
+          country_slug
+        `)
+        .eq('is_published', true)
+        .is('country_slug', null)
+        .order('is_featured', { ascending: false })
+        .order('published_at', { ascending: false })
+        .limit(limit);
+
+      if (searchQuery) {
+        fallbackQuery.or(`title.ilike.%${searchQuery}%,excerpt.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`);
+      }
+
+      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+
+      if (fallbackError) {
+        return {
+          data: [],
+          error: new Error(fallbackError.message)
+        };
+      }
+
+      return {
+        data: fallbackData || [],
+        error: null
       };
     }
 
