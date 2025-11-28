@@ -723,6 +723,54 @@ export async function fetchArticles(countrySlug?: string, searchQuery?: string, 
   }
 }
 
+// Fetch single article by slug
+export async function fetchArticleBySlug(slug: string): Promise<{ data: any | null; error: Error | null }> {
+  try {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from('articles')
+      .select(`
+        id,
+        title,
+        slug,
+        excerpt,
+        content,
+        featured_image_url,
+        author_name,
+        author_avatar_url,
+        read_time_minutes,
+        is_featured,
+        is_published,
+        published_at,
+        created_at,
+        view_count,
+        like_count,
+        country_slug
+      `)
+      .eq('slug', slug)
+      .eq('is_published', true)
+      .single();
+
+    if (error) {
+      return {
+        data: null,
+        error: new Error(error.message)
+      };
+    }
+
+    return {
+      data: data,
+      error: null
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error')
+    };
+  }
+}
+
 // Fetch best selling products for footer
 export async function fetchFooterBestSellingProducts(countrySlug?: string): Promise<{ data: Product[]; error: Error | null }> {
   try {
