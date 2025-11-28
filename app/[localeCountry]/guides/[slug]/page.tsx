@@ -180,10 +180,10 @@ export default async function GuidePage({ params }: GuidePageProps) {
         {/* Article Content */}
         <div
           className={`prose prose-lg max-w-none ${isRTL ? 'text-right' : 'text-left'}`}
+          dir={isRTL ? 'rtl' : 'ltr'}
           style={{
             fontSize: '18px',
             lineHeight: '1.7',
-            color: '#374151'
           }}
           dangerouslySetInnerHTML={{ __html: snarkdown(content || '') }}
         />
