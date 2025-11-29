@@ -78,7 +78,7 @@ export async function fetchStores(options: FetchOptions = {}) {
 
 export async function fetchCountries() {
   const url = `${BASE_URL}/countries`;
-  
+
   const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${publicAnonKey}`,
@@ -90,4 +90,30 @@ export async function fetchCountries() {
   }
 
   return response.json();
+}
+
+export async function fetchProducts(options: FetchOptions = {}) {
+  const params = new URLSearchParams();
+  if (options.country) params.append('country', options.country);
+  if (options.limit) params.append('limit', options.limit.toString());
+  if (options.offset !== undefined) params.append('offset', options.offset.toString());
+  if (options.search) params.append('search', options.search);
+  if (options.storeId) params.append('store_id', options.storeId);
+  if (options.categoryId) params.append('category_id', options.categoryId);
+
+  const url = `${BASE_URL}/products${params.toString() ? '?' + params.toString() : ''}`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${publicAnonKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  // Return the products array from the response
+  return data.products || [];
 }

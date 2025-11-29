@@ -1494,4 +1494,97 @@ app.post("/make-server-4f34ef25/scrape-product", async (c) => {
   }
 });
 
+// Fetch products from the products table
+app.get("/make-server-4f34ef25/products", async (c) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    // Get query parameters
+    const countryValue = c.req.query('country');
+    const limit = parseInt(c.req.query('limit') || '12');
+    const offset = parseInt(c.req.query('offset') || '0');
+    const search = c.req.query('search');
+    const storeId = c.req.query('store_id');
+    const categoryId = c.req.query('category_id');
+
+    console.log('Fetching products with params:', { countryValue, limit, offset, search, storeId, categoryId });
+
+    // First, get the country ID if country is provided
+    let countryId = null;
+    if (countryValue) {
+      const { data: countryData, error: countryError } = await supabase
+        .from('countries')
+        .select('id')
+        .eq('value', countryValue)
+        .single();
+
+      if (countryError) {
+        console.error('Error fetching country:', countryError);
+      } else if (countryData) {
+        countryId = countryData.id;
+        console.log(`Country ID for ${countryValue}: ${countryId}`);
+      }
+    }
+
+    // Build the query
+    let query = supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    // Apply country filter if specified
+    if (countryValue) {
+      query = query.eq('country_slug', countryValue);
+    }
+
+    // Apply search filter if specified
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,store.ilike.%${search}%`);
+    }
+
+    // Apply store filter if specified
+    if (storeId) {
+      query = query.eq('store', storeId);
+    }
+
+    // Apply category filter if specified (check if category exists in categories array)
+    if (categoryId) {
+      query = query.contains('categories', [categoryId]);
+    }
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: productsData, error: productsError } = await query;
+
+    if (productsError) {
+      console.error('Error fetching products:', productsError);
+      return c.json({
+        error: productsError.message,
+        details: productsError,
+      }, 500);
+    }
+
+    console.log(`Found ${productsData?.length || 0} products`);
+
+    return c.json({
+      success: true,
+      products: productsData || [],
+      country: countryValue,
+      limit,
+      offset,
+      total: productsData?.length || 0,
+    });
+  } catch (err) {
+    console.error('Error in products endpoint:', err);
+    return c.json({
+      error: err instanceof Error ? err.message : 'Unknown error',
+      success: false,
+    }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

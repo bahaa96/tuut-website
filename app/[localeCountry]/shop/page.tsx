@@ -1,33 +1,16 @@
-import { Header } from "@/components/Header"
-import Footer from "@/components/Footer"
 import { fetchProducts } from "../../../utils/api"
-import ProductsClientPage from "./page.client"
+import ShopClientPage from "./page.client"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { Product } from "../types"
 
-interface Product {
-  id: number;
-  title?: string;
-  description?: string;
-  price?: number;
-  original_price?: number;
-  currency?: string;
-  rating?: number;
-  store?: string;
-  url?: string;
-  images?: string[];
-  categories?: string[];
-  available?: boolean;
-  created_at?: string;
-}
-
-interface ProductsPageProps {
+interface ShopPageProps {
   params: Promise<{
     localeCountry: string;
   }>;
 }
 
-export default async function ProductsPage({ params }: ProductsPageProps) {
+export default async function ShopPage({ params }: ShopPageProps) {
   // Await params as required by Next.js 15
   const resolvedParams = await params;
 
@@ -36,18 +19,16 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
   const language = resolvedParams.localeCountry.split('-')[0];
   const isRTL = language === 'ar';
 
-  // Fetch products server-side
+  // Fetch products server-side from Supabase products table
   const productsResult = await fetchProducts({
     country: country,
     limit: 12
   });
 
-  const products = productsResult.success ? productsResult.products : [];
+  const products = productsResult.success ? productsResult.products || productsResult.data || [] : [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main>
+    <main className="min-h-screen">
         <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
           <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
             {/* Header */}
@@ -57,17 +38,17 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
                 {language === 'ar' ? 'العودة إلى الصفحة الرئيسية' : 'Back to Home'}
               </Link>
               <h1 className="text-[#111827] mb-4" style={{ fontSize: '36px', fontWeight: 700 }}>
-                {language === 'ar' ? 'جميع المنتجات' : 'All Products'}
+                {language === 'ar' ? 'المتجر' : 'Shop'}
               </h1>
               <p className="text-[#6B7280] text-sm">
                 {language === 'ar'
-                  ? `عرض المنتجات لـ: ${country}`
-                  : `Showing products for: ${country}`
+                  ? `اكتشف منتجات رائعة لـ: ${country}`
+                  : `Discover amazing products for: ${country}`
                 }
               </p>
             </div>
 
-            <ProductsClientPage
+            <ShopClientPage
               initialProducts={products}
               language={language}
               isRTL={isRTL}
@@ -75,8 +56,6 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
             />
           </div>
         </section>
-      </main>
-      <Footer />
-    </div>
+    </main>
   )
 }

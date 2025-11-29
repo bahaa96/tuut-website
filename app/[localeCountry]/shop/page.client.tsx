@@ -9,19 +9,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-interface ProductsClientPageProps {
+interface ShopClientPageProps {
   initialProducts: Product[];
   language: string;
   isRTL: boolean;
   country: string;
 }
 
-export default function ProductsClientPage({
+export default function ShopClientPage({
   initialProducts,
   language,
   isRTL,
   country
-}: ProductsClientPageProps) {
+}: ShopClientPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedDiscount, setSelectedDiscount] = useState("all");
@@ -134,14 +134,9 @@ export default function ProductsClientPage({
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)]">
             <p className="text-[#6B7280] mb-4" style={{ fontSize: '18px' }}>
-              {initialProducts.length === 0
-                ? (language === 'ar' ? 'جارٍ تحميل المنتجات...' : 'Loading products...')
-                : (language === 'ar' ? 'لم يتم العثور على منتجات تطابق البحث' : 'No products found matching your search')
-              }
+              {language === 'ar' ? 'لم يتم العثور على منتجات' : 'No products found'}
             </p>
-            {initialProducts.length === 0 ? (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5FB57A] mx-auto"></div>
-            ) : hasActiveFilters && (
+            {hasActiveFilters && (
               <Button
                 onClick={clearFilters}
                 className="bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg"

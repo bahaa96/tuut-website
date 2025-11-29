@@ -12,4 +12,5 @@ export interface Product {
   categories?: string[];
   available?: boolean;
   created_at?: string;
+  country_slug?: string;
 }
