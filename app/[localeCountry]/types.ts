@@ -1,16 +1,3 @@
-export interface Product {
-  id: number;
-  title?: string;
-  description?: string;
-  price?: number;
-  original_price?: number;
-  currency?: string;
-  rating?: number;
-  store?: string;
-  url?: string;
-  images?: string[];
-  categories?: string[];
-  available?: boolean;
-  created_at?: string;
-  country_slug?: string;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:ecb6bbd76815fa28267884285b03cb5c8f9d398a3aeb9ef521b11c7392df9e98
+size 320

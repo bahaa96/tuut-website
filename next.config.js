@@ -1,21 +1,3 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  },
-  serverExternalPackages: ['@jsr/supabase__supabase-js'],
-  env: {
-    CUSTOM_KEY: 'my-value'
-  },
-  turbopack: {},
-  typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
-  },
-}
-
-module.exports = nextConfig
+version https://git-lfs.github.com/spec/v1
+oid sha256:435dcca361a7fbc370708fefe0a482749e726d7da4ecdf09a9c9a4a872223d47
+size 469

@@ -1,4 +1,3 @@
-Line 452:   const copyCode = (code: string) => {
-Line 453:     navigator.clipboard.writeText(code);
-Line 454:     toast.success(isRTL ? `تم نسخ الكود \"${code}\"!` : `Code \"${code}\" copied to clipboard!`);
-Line 455:   };
+version https://git-lfs.github.com/spec/v1
+oid sha256:148b50bfe3adffad72677cafd49bb776d935260805062476311c6cf9fd0db34f
+size 233

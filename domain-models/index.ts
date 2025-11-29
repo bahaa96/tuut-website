@@ -1,9 +1,3 @@
-// Domain Models Gateway
-// Export all domain interfaces and types from here
-
-export * from './deal';
-export * from './store';
-export * from './category';
-export * from './product';
-export * from './user';
-export * from './common';
+version https://git-lfs.github.com/spec/v1
+oid sha256:b9803af121217a193a18ccaa197a7dd60f05066ba6afb2274f58fceb4adadff5
+size 231

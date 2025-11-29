@@ -1,11 +1,3 @@
-
-  # Tuut Mobile App Home Screen
-
-  This is a code bundle for Tuut Mobile App Home Screen. The original project is available at https://www.figma.com/design/VmDYWc3kRKq9zqxyhzD4Ut/Tuut-Mobile-App-Home-Screen.
-
-  ## Running the code
-
-  Run `npm i` to install the dependencies.
-
-  Run `npm run dev` to start the development server.
-  
+version https://git-lfs.github.com/spec/v1
+oid sha256:38a4af4cab602c17c2bc62accd249d8808b56dc6e01843d4bce4e9a04b30617f
+size 332

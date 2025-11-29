@@ -1,35 +1,3 @@
-export interface Product {
-  id: number;
-  title?: string;
-  description?: string;
-  price?: number;
-  original_price?: number;
-  currency?: string;
-  rating?: number;
-  store?: string;
-  store_id?: number;
-  url?: string;
-  images?: string[];
-  categories?: string[];
-  available?: boolean;
-  created_at?: string;
-  slug?: string;
-}
-
-export interface ProductFilters {
-  searchQuery?: string;
-  selectedCategory?: string;
-  selectedStore?: string;
-  selectedDiscount?: string;
-  sortBy?: string;
-  minPrice?: number;
-  maxPrice?: number;
-}
-
-export interface ProductWithStore extends Product {
-  store_data?: {
-    name: string;
-    logo_url?: string;
-    slug?: string;
-  };
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:98a743d966c7bb4053f6ef8ee3a9093a97e1cd06e9577ba93684c5cd82dbf350
+size 676

@@ -1,25 +1,3 @@
-export interface User {
-  id: string;
-  email?: string;
-  name?: string;
-  avatar_url?: string;
-  country?: string;
-  language?: string;
-  created_at?: string;
-}
-
-export interface UserProfile extends User {
-  saved_deals?: number[];
-  saved_products?: number[];
-  preferences?: {
-    notifications?: boolean;
-    newsletter?: boolean;
-    preferred_categories?: string[];
-  };
-}
-
-export interface UserSession {
-  user: User;
-  accessToken?: string;
-  refreshToken?: string;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:dfff79a3a04674eab289c618ac9448492ab7034b44a3770fdc449208b0647c9e
+size 475

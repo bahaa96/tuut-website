@@ -1,28 +1,3 @@
-"use client";
-
-import * as React from "react";
-import * as SeparatorPrimitive from "@radix-ui/react-slot";
-
-import { cn } from "./utils";
-
-function Separator({
-  className,
-  orientation = "horizontal",
-  decorative = true,
-  ...props
-}: React.ComponentProps<typeof SeparatorPrimitive.Root>) {
-  return (
-    <SeparatorPrimitive.Root
-      data-slot="separator-root"
-      decorative={decorative}
-      orientation={orientation}
-      className={cn(
-        "bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-export { Separator };
+version https://git-lfs.github.com/spec/v1
+oid sha256:4c75e032ee3b48a328029434a9d3853b2d67f855ed65247b4c5b7be103010c07
+size 702
