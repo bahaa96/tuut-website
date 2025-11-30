@@ -1,109 +1,49 @@
 import { NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
 
-// CDN configuration
-const CDN_CONFIG = {
-  // Primary CDN - GitHub Pages
-  primary: 'https://bahaa96.github.io/tuut-sitemap/sitemap.xml',
-  // Fallback CDN - GitHub Gist (will be updated after sitemap generation)
-  fallback: null
-};
-
-async function fetchFromCDN(url: string): Promise<Response | null> {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'TUUT-Sitemap-Proxy/1.0'
-      },
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
-
-    if (!response.ok) {
-      console.warn(`CDN response not OK: ${response.status} ${response.statusText}`);
-      return null;
-    }
-
-    return response;
-  } catch (error) {
-    console.warn(`Failed to fetch from CDN: ${url}`, error);
-    return null;
-  }
-}
-
-async function getFallbackCDNUrl(): Promise<string | null> {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const cdnConfigPath = path.join(process.cwd(), 'sitemap-cdn-config.json');
-
-    if (fs.existsSync(cdnConfigPath)) {
-      const config = JSON.parse(fs.readFileSync(cdnConfigPath, 'utf8'));
-      return config.cdnUrl;
-    }
-  } catch (error) {
-    console.warn('Could not read CDN config:', error);
-  }
-
-  return null;
-}
-
 export async function GET() {
-  // Try primary CDN first
-  let cdnResponse = await fetchFromCDN(CDN_CONFIG.primary);
+  try {
+    // Serve the gzipped sitemap directly
+    const gzippedSitemapPath = path.join(process.cwd(), 'public/sitemap.xml.gz');
 
-  if (cdnResponse) {
-    const content = await cdnResponse.text();
-    return new NextResponse(content, {
-      headers: {
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
+    // Check if gzipped version exists
+    try {
+      const gzippedContent = await fs.readFile(gzippedSitemapPath);
 
-  // Try fallback CDN if available
-  const fallbackUrl = await getFallbackCDNUrl();
-  if (fallbackUrl) {
-    cdnResponse = await fetchFromCDN(fallbackUrl);
-
-    if (cdnResponse) {
-      const content = await cdnResponse.text();
-      return new NextResponse(content, {
+      return new NextResponse(gzippedContent, {
         headers: {
-          'Content-Type': 'application/xml',
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-          'Access-Control-Allow-Origin': '*'
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Content-Encoding': 'gzip',
+          'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+          'Access-Control-Allow-Origin': '*',
+          'X-Sitemap-Source': 'local-gzipped'
         }
       });
-    }
-  }
+    } catch (gzipError) {
+      console.warn('Gzipped sitemap not found, falling back to XML:', gzipError);
 
-  // Fallback to local file if CDN fails
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const localSitemapPath = path.join(process.cwd(), 'public/sitemap.xml');
+      // Fallback to regular XML sitemap
+      const xmlSitemapPath = path.join(process.cwd(), 'public/sitemap.xml');
+      const xmlContent = await fs.readFile(xmlSitemapPath, 'utf8');
 
-    if (fs.existsSync(localSitemapPath)) {
-      const content = fs.readFileSync(localSitemapPath, 'utf8');
-      return new NextResponse(content, {
+      return new NextResponse(xmlContent, {
         headers: {
-          'Content-Type': 'application/xml',
-          'Cache-Control': 'public, max-age=1800, s-maxage=1800', // Shorter cache for fallback
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600, s-maxage=86400',
           'Access-Control-Allow-Origin': '*',
-          'X-Sitemap-Source': 'local-fallback'
+          'X-Sitemap-Source': 'local-xml'
         }
       });
     }
   } catch (error) {
-    console.error('Failed to read local sitemap:', error);
-  }
+    console.error('Failed to serve sitemap:', error);
 
-  // If all else fails, return a basic sitemap
-  const basicSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    // Emergency fallback - basic sitemap
+    const basicSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://tuut.shop/</loc>
@@ -113,13 +53,14 @@ export async function GET() {
   </url>
 </urlset>`;
 
-  return new NextResponse(basicSitemap, {
-    status: 503, // Service Unavailable
-    headers: {
-      'Content-Type': 'application/xml',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Access-Control-Allow-Origin': '*',
-      'X-Sitemap-Source': 'emergency-fallback'
-    }
-  });
+    return new NextResponse(basicSitemap, {
+      status: 503,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Access-Control-Allow-Origin': '*',
+        'X-Sitemap-Source': 'emergency-fallback'
+      }
+    });
+  }
 }
