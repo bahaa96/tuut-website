@@ -42,7 +42,7 @@ class SitemapGenerator {
 
         // Clone or create the sitemap repository
         // Note: You'll need to create this repository first on GitHub
-        execSync(`git clone https://github.com/tuut-shop/sitemap.git ${tempDir}`, {
+        execSync(`git clone https://github.com/tuut-shop/tuut-sitemap.git ${tempDir}`, {
           stdio: 'pipe',
           timeout: 30000
         });

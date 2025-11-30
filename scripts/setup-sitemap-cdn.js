@@ -16,7 +16,7 @@ const setupInstructions = `
 
 ## Step 1: Create GitHub Repository
 1. Go to https://github.com/organizations/tuut-shop/repositories/new
-2. Repository name: \`sitemap\`
+2. Repository name: \`tuut-sitemap\`
 3. Description: \`TUUT Shop Sitemap XML for SEO\`
 4. Make it **Public** (required for GitHub Pages)
 5. Initialize with a README (optional)

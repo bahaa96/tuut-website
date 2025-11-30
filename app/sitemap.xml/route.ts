@@ -6,7 +6,7 @@ export const revalidate = 3600; // Revalidate every hour
 // CDN configuration
 const CDN_CONFIG = {
   // Primary CDN - GitHub Pages
-  primary: 'https://tuut-shop.github.io/sitemap/sitemap.xml',
+  primary: 'https://tuut-shop.github.io/tuut-sitemap/sitemap.xml',
   // Fallback CDN - GitHub Gist (will be updated after sitemap generation)
   fallback: null
 };
