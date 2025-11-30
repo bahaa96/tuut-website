@@ -16,7 +16,7 @@ const SUPPORTED_LOCALES = [
   'ar-EG', 'ar-JO', 'ar-SA', 'ar-KW', 'ar-MA', 'ar-OM', 'ar-QA', 'ar-AE'
 ];
 
-const BASE_URL = process.env.VITE_APP_URL || 'https://tuut.com';
+const BASE_URL = process.env.VITE_APP_URL || 'https://tuut.shop';
 
 class SitemapGenerator {
   constructor() {
@@ -501,7 +501,7 @@ class SitemapGenerator {
     // Initialize counters
     const breakdown = {
       domains: {
-        'tuut.com': 0
+        'tuut.shop': 0
       },
       countries: {},
       languages: {
@@ -523,7 +523,7 @@ class SitemapGenerator {
     for (const entry of this.entries) {
       const url = entry.url;
 
-      // Domain counting (all should be tuut.com)
+      // Domain counting (all should be tuut.shop)
       const domainMatch = url.match(/^https?:\/\/([^\/]+)/);
       if (domainMatch) {
         breakdown.domains[domainMatch[1]] = (breakdown.domains[domainMatch[1]] || 0) + 1;
@@ -669,8 +669,8 @@ class SitemapGenerator {
     console.log('');
     console.log('✅ Sitemap generation complete!');
     console.log('🌐 The sitemap will be served directly from Vercel:');
-    console.log('   • Regular sitemap: https://tuut.com/sitemap.xml (rewrites to .gz version)');
-    console.log('   • Direct gzipped: https://tuut.com/sitemap.xml.gz');
+    console.log('   • Regular sitemap: https://tuut.shop/sitemap.xml (rewrites to .gz version)');
+    console.log('   • Direct gzipped: https://tuut.shop/sitemap.xml.gz');
     console.log('📦 Make sure to commit the .gz file to your repository');
 
     return xml;

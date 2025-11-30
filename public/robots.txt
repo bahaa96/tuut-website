@@ -1,3 +1,11 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7e5f21db237993ac1508c1a273d1b379f2411c5fad70389e2276dae794019c3d
-size 181
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://tuut.shop/sitemap.xml
+
+# Block common non-content paths
+Disallow: /api/
+Disallow: /_next/
+Disallow: /favicon.ico
+Disallow: /*.json$

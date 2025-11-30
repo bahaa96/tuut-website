@@ -13,7 +13,7 @@ const SUPPORTED_LOCALES = [
   'ar-EG', 'ar-JO', 'ar-SA', 'ar-KW', 'ar-MA', 'ar-OM', 'ar-QA', 'ar-AE'
 ];
 
-const BASE_URL = process.env.VITE_APP_URL || 'https://tuut.com';
+const BASE_URL = process.env.VITE_APP_URL || 'https://tuut.shop';
 
 class SitemapGenerator {
   constructor() {
