@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6f8ce80ce48c76c9ff5676cc27e8bc092f68a8790391d8603fc304141eb25f32
-size 265
+export interface Category {
+  id: number;
+  name: string;
+  category_name?: string;
+  title?: string;
+  description?: string;
+  slug?: string;
+  icon?: string;
+  created_at?: string;
+}
+
+export interface CategoryFilters {
+  searchQuery?: string;
+  sortBy?: string;
+}

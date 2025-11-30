@@ -1,3 +1,27 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:0684fa16e56689b6af5c5be5413cad79b575365b65928f13ba8108432bc737c2
-size 535
+export interface Store {
+  id: number;
+  name: string;
+  name_ar?: string;
+  store_name?: string;
+  store_name_ar?: string;
+  title?: string;
+  title_en?: string;
+  title_ar?: string;
+  slug?: string;
+  slug_en?: string;
+  slug_ar?: string;
+  logo_url?: string;
+  description?: string;
+  description_en?: string;
+  description_ar?: string;
+  website?: string;
+  verified?: boolean;
+  created_at?: string;
+}
+
+export interface StoreFilters {
+  searchQuery?: string;
+  selectedCategory?: string;
+  verified?: boolean;
+  sortBy?: string;
+}

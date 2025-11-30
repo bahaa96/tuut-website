@@ -1,3 +1,25 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c5853f16cc11cb69e0115bab13eeabe7be5dad16fafd77b35cdfe4dbc64f0256
-size 571
+"use client";
+
+import { useTheme } from "next-themes";
+import { Toaster as Sonner, ToasterProps } from "sonner";
+
+const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme = "system" } = useTheme();
+
+  return (
+    <Sonner
+      theme={theme as ToasterProps["theme"]}
+      className="toaster group"
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+        } as React.CSSProperties
+      }
+      {...props}
+    />
+  );
+};
+
+export { Toaster };

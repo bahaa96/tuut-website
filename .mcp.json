@@ -1,3 +1,28 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:aff9fac9af1a17a7d3c50b35fd8601663ae706fd687439150ecee170eb633a9a
-size 660
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=oluyzqunbbqaxalodhdg"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_8178d7dc09256b6478cc187b9bad3fb2a37cad74"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "slash": {
+      "command": "/Users/lina/projects/slash/target/release/slash",
+      "args": ["--mcp-server"],
+      "cwd": "/Users/lina/projects/slash"
+    }
+  }
+}

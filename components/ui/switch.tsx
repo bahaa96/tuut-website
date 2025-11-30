@@ -1,3 +1,31 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:f501300fd3a5bc973779a6bd3f42aec38df8ecefe33ec9bbec090c6a98e4c9eb
-size 1180
+"use client";
+
+import * as React from "react";
+import * as SwitchPrimitive from "@radix-ui/react-slot";
+
+import { cn } from "./utils";
+
+function Switch({
+  className,
+  ...props
+}: React.ComponentProps<typeof SwitchPrimitive.Root>) {
+  return (
+    <SwitchPrimitive.Root
+      data-slot="switch"
+      className={cn(
+        "peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-switch-background focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        className,
+      )}
+      {...props}
+    >
+      <SwitchPrimitive.Thumb
+        data-slot="switch-thumb"
+        className={cn(
+          "bg-card dark:data-[state=unchecked]:bg-card-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0",
+        )}
+      />
+    </SwitchPrimitive.Root>
+  );
+}
+
+export { Switch };

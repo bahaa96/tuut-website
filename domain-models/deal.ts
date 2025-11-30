@@ -1,3 +1,42 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:991fe20baba8f4112ece3e69feb4c43ebc1f234908749a193a1c188cfc2ab033
-size 878
+export interface Deal {
+  id: number;
+  slug_en?: string;
+  slug_ar?: string;
+  title_en: string;
+  title_ar?: string;
+  description_en?: string;
+  description_ar?: string;
+  discount_percentage?: number;
+  discount_amount?: number;
+  original_price?: number;
+  discounted_price?: number;
+  code?: string;
+  store_id?: string;
+  store_slug_en?: string;
+  store_name?: string;
+  store_logo?: string;
+  category_name?: string;
+  expires_at?: string;
+  is_verified?: boolean;
+  featured?: boolean;
+  created_at?: string;
+}
+
+export interface DealFilters {
+  searchQuery?: string;
+  selectedCategory?: string;
+  selectedStore?: string;
+  selectedDiscount?: string;
+  sortBy?: string;
+}
+
+export interface DealWithStore extends Deal {
+  store: {
+    name: string;
+    store_name?: string;
+    title_en?: string;
+    slug_en?: string;
+    slug_ar?: string;
+    logo_url?: string;
+  };
+}

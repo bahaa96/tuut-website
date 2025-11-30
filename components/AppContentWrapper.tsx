@@ -1,3 +1,45 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:166686281c36546210e20c14fe863fc79919e6870cbebd05290946e3a75bf61a
-size 1260
+"use client";
+
+import { useRouter } from "next/router";
+import { getPageForPath } from "@/utils/ssr-routing";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/FooterSSR";
+import { Toaster } from "@/components/ui/sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+interface AppContentWrapperProps {
+  footerData: any;
+  defaultTranslations: any;
+}
+
+export function AppContentWrapper({ footerData, defaultTranslations }: AppContentWrapperProps) {
+  const router = useRouter();
+  const { isRTL } = useLanguage();
+
+  // Guard against SSR
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  // Get the page component for the current path using shared routing
+  const PageComponent = getPageForPath(router.pathname);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main>
+        <PageComponent />
+      </main>
+      <Footer
+        featuredDeals={footerData.featuredDeals}
+        topStores={footerData.topStores}
+        articles={footerData.articles}
+        categories={footerData.categories}
+        bestSellingProducts={footerData.bestSellingProducts}
+        translations={defaultTranslations}
+        isRTL={isRTL}
+      />
+      <Toaster />
+    </div>
+  );
+}
