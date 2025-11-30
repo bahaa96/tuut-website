@@ -30,54 +30,18 @@ class SitemapGenerator {
     console.log('🚀 Uploading sitemap to CDN...');
 
     try {
-      // For this solution, we'll use GitHub Pages as a free CDN
-      // The sitemap will be committed to a separate repository or branch
+      // Use the simple local repository approach
+      console.log('📤 Using local sitemap-cdn repository...');
+      execSync('node scripts/upload-sitemap-to-cdn.js', {
+        stdio: 'inherit',
+        timeout: 60000
+      });
+      return true;
 
-      // Create a temporary directory for the sitemap repository
-      const tempDir = '/tmp/tuut-sitemap';
-
-      try {
-        // Clean up any existing temp directory
-        execSync(`rm -rf ${tempDir}`, { stdio: 'ignore' });
-
-        // Clone or create the sitemap repository
-        // Note: You'll need to create this repository first on GitHub
-        execSync(`git clone https://github.com/tuut-shop/tuut-sitemap.git ${tempDir}`, {
-          stdio: 'pipe',
-          timeout: 30000
-        });
-
-        // Write the new sitemap
-        const sitemapPath = path.join(tempDir, 'sitemap.xml');
-        fs.writeFileSync(sitemapPath, xmlContent);
-
-        // Commit and push changes
-        execSync(`cd ${tempDir} && git add sitemap.xml`, { stdio: 'pipe' });
-        execSync(`cd ${tempDir} && git commit -m "Update sitemap - $(date '+%Y-%m-%d %H:%M:%S')"`, {
-          stdio: 'pipe',
-          env: { ...process.env, GIT_AUTHOR_NAME: 'TUUT Bot', GIT_AUTHOR_EMAIL: 'bot@tuut.shop', GIT_COMMITTER_NAME: 'TUUT Bot', GIT_COMMITTER_EMAIL: 'bot@tuut.shop' }
-        });
-        execSync(`cd ${tempDir} && git push origin main`, { stdio: 'pipe' });
-
-        // Clean up
-        execSync(`rm -rf ${tempDir}`, { stdio: 'ignore' });
-
-        console.log('✅ Sitemap uploaded to CDN successfully!');
-        console.log('📍 Available at: https://tuut.shop/sitemap.xml');
-
-        return true;
-      } catch (gitError) {
-        console.error('❌ Git operations failed:', gitError.message);
-
-        // Fallback: upload to a free file hosting service
-        console.log('🔄 Attempting fallback upload method...');
-
-        return this.uploadToAlternativeCDN(xmlContent);
-      }
     } catch (error) {
-      console.error('❌ CDN upload failed:', error);
-      console.log('📝 Sitemap saved locally but not uploaded to CDN');
-      return false;
+      console.error('❌ CDN upload failed:', error.message);
+      console.log('🔄 Attempting fallback upload method...');
+      return this.uploadToAlternativeCDN(xmlContent);
     }
   }
 
