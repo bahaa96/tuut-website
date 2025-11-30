@@ -1,3 +1,9 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8060299cc7426fd15df8372296a8a7ca4c131397f6ae636dab7a88b93961c145
-size 46
+.history/
+node_modules
+build
+.vercel
+
+.next/*
+
+# Sitemap - will be hosted on CDN
+public/sitemap.xml
