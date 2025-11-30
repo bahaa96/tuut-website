@@ -1,3 +1,59 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4f75640cc9a1b674e6f07e2b84880ed0ee1eac1d98e6bff20fbd330e6bd66216
-size 1961
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "deals": "عروض",
+  "stores": "متاجر",
+  "home": "الرئيسية",
+  "profile": "الملف الشخصي",
+  "settings": "الإعدادات",
+  "sign_in": "تسجيل الدخول",
+  "sign_out": "تسجيل الخروج",
+  "welcome": "مرحباً",
+  "search": "بحث",
+  "filter": "تصفية",
+  "sort_by": "ترتيب حسب",
+  "price_low_to_high": "السعر: من الأقل للأعلى",
+  "price_high_to_low": "السعر: من الأعلى للأقل",
+  "newest_first": "الأحدث أولاً",
+  "oldest_first": "الأقدم أولاً",
+  "popular": "الأكثر شعبية",
+  "categories": "الفئات",
+  "all_categories": "جميع الفئات",
+  "electronics": "إلكترونيات",
+  "fashion": "أزياء",
+  "home_and_garden": "المنزل والحديقة",
+  "sports": "رياضة",
+  "toys": "ألعاب",
+  "books": "كتب",
+  "automotive": "سيارات",
+  "health": "صحة",
+  "other": "أخرى",
+  "header": {
+    "deals": "عروض",
+    "stores": "متاجر",
+    "products": "منتجات",
+    "shop": "تسوق",
+    "blog": "مدونة"
+  },
+  "footer": {
+    "about": "من نحن",
+    "careers": "وظائف",
+    "help": "مساعدة",
+    "faq": "أسئلة شائعة",
+    "contact": "اتصل بنا",
+    "tagline": "وفر المال في كل مرة تتسوق فيها مع عروض وخصومات موثوقة",
+    "company": "الشركة",
+    "featuredDeals": "عروض مميزة",
+    "viewAll": "عرض الكل",
+    "shoppingGuides": "أدلة التسوق",
+    "topStores": "أفضل المتاجر",
+    "copyright": "© 2024 Tuut. جميع الحقوق محفوظة.",
+    "followUs": "تابعنا"
+  },
+  "testimonials": {
+    "downloadApp": "حمل تطبيقنا",
+    "downloadOn": "حمل من",
+    "appStore": "App Store",
+    "getItOn": "حمل من",
+    "googlePlay": "Google Play"
+  }
+}

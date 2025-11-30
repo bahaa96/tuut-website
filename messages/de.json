@@ -1,3 +1,4 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7dd45f344467e3ada90ed494d33a60b968b58606b4620cee3ea7535f9683b890
-size 111
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "example_message": "Guten Tag {username}"
+}
