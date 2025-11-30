@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  tuut-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tuut-website
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - VITE_APP_URL=https://tuut.com
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - tuut-network
+    volumes:
+      - ./logs:/app/logs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tuut.rule=Host(`tuut.com`) || Host(`www.tuut.com`)"
+      - "traefik.http.routers.tuut.tls=true"
+      - "traefik.http.routers.tuut.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.tuut.middlewares=www-redirect"
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.+)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
+
+  # Traefik reverse proxy with SSL
+  traefik:
+    image: "traefik:v2.10"
+    container_name: tuut-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@tuut.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--global.checknewversion=false"
+      - "--global.sendanonymoususage=false"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+      - "./logs/traefik:/var/log/traefik"
+    networks:
+      - tuut-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.tuut.com`)"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$tB8QrN7v$$GqO5K9nX2sP4wL6mH1jF7/"
+
+  # Optional: Portainer for container management
+  portainer:
+    image: "portainer/portainer-ce:latest"
+    container_name: tuut-portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./portainer:/data"
+    networks:
+      - tuut-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.tuut.com`)"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
+
+networks:
+  tuut-network:
+    driver: bridge
+
+volumes:
+  letsencrypt:
+    driver: local
+  portainer:
+    driver: local

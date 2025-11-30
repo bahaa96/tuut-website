@@ -77,6 +77,6 @@
             "check-schema": "npx tsx scripts/check-deal-schema.ts",
             "corrected-fix": "npx tsx scripts/corrected-fix-store-deals.ts",
             "generate-sitemap": "node scripts/generate-sitemap.js",
-            "upload-sitemap": "node scripts/upload-sitemap-to-cdn.js"
+            "generate-sitemap-docker": "node scripts/generate-sitemap-docker.js"
       }
 }

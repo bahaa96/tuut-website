@@ -1,3 +1,49 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:2d83fe01c6b80a5b1cde260837e73bc4c2dfcc58b7eaebe7ce11faaa7b3a004a
-size 189
+{
+  "version": 2,
+  "outputDirectory": "build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "NEXT_TELEMETRY_DISABLED=1 npm run build",
+  "framework": "nextjs",
+  "headers": [
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Content-Encoding",
+          "value": "gzip"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=86400"
+        }
+      ]
+    },
+    {
+      "source": "/sitemap.xml.gz",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Content-Encoding",
+          "value": "gzip"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=86400"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml.gz"
+    }
+  ]
+}

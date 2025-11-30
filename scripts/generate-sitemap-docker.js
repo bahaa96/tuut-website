@@ -1,11 +1,8 @@
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
-const { execSync } = require('child_process');
-const zlib = require('zlib');
 
-// Supabase configuration - you can update these if they change
+// Supabase configuration
 const projectId = "oluyzqunbbqaxalodhdg";
 const publicAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sdXl6cXVuYmJxYXhhbG9kaGRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTMwOTcsImV4cCI6MjA2MTAyOTA5N30.1SGmTzrAB4FLgPfOIP2DLP_ieNVqSQVtiBtjJ5eRJOM";
 
@@ -25,90 +22,6 @@ class SitemapGenerator {
       publicAnonKey
     );
     this.entries = [];
-  }
-
-  async uploadToCDN(xmlContent) {
-    console.log('🚀 Uploading sitemap to CDN...');
-
-    try {
-      // Use the simple local repository approach
-      console.log('📤 Using local sitemap-cdn repository...');
-      execSync('node scripts/upload-sitemap-to-cdn.js', {
-        stdio: 'inherit',
-        timeout: 60000
-      });
-      return true;
-
-    } catch (error) {
-      console.error('❌ CDN upload failed:', error.message);
-      console.log('🔄 Attempting fallback upload method...');
-      return this.uploadToAlternativeCDN(xmlContent);
-    }
-  }
-
-  async uploadToAlternativeCDN(xmlContent) {
-    try {
-      // Using jsdelivr.net as a CDN alternative
-      // This creates a temporary GitHub Gist with the sitemap
-      const postData = JSON.stringify({
-        description: 'TUUT Shop Sitemap',
-        public: true,
-        files: {
-          'sitemap.xml': {
-            content: xmlContent
-          }
-        }
-      });
-
-      const response = await new Promise((resolve, reject) => {
-        const req = https.request({
-          hostname: 'api.github.com',
-          port: 443,
-          path: '/gists',
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(postData),
-            'User-Agent': 'TUUT-Sitemap-Generator'
-          }
-        }, (res) => {
-          let data = '';
-          res.on('data', (chunk) => data += chunk);
-          res.on('end', () => {
-            try {
-              resolve(JSON.parse(data));
-            } catch (e) {
-              reject(e);
-            }
-          });
-        });
-
-        req.on('error', reject);
-        req.write(postData);
-        req.end();
-      });
-
-      if (response.html_url) {
-        const rawUrl = response.files['sitemap.xml'].raw_url;
-        console.log(`✅ Sitemap uploaded to alternative CDN!`);
-        console.log(`📍 Raw URL: ${rawUrl}`);
-        console.log(`🌐 This URL can be used for: https://tuut.shop/sitemap.xml`);
-
-        // Save the CDN URL for reference
-        const cdnConfigPath = path.join(__dirname, '../sitemap-cdn-config.json');
-        fs.writeFileSync(cdnConfigPath, JSON.stringify({
-          cdnUrl: rawUrl,
-          timestamp: new Date().toISOString()
-        }, null, 2));
-
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('❌ Alternative CDN upload also failed:', error);
-      return false;
-    }
   }
 
   addEntry(url, options = {}) {
@@ -386,14 +299,6 @@ class SitemapGenerator {
   async addDynamicPages() {
     const { deals, stores, products, guides } = await this.getDynamicSlugs();
 
-    // Store dynamic data for analysis
-    this.dynamicData = {
-      deals: deals,
-      stores: stores,
-      products: products,
-      guides: guides
-    };
-
     // Deal pages
     for (const deal of deals) {
       // Generate for both English and Arabic versions
@@ -494,141 +399,8 @@ class SitemapGenerator {
     return xml;
   }
 
-  analyzeURLBreakdown() {
-    console.log('\n📊 Detailed URL Breakdown Analysis:');
-    console.log('=====================================');
-
-    // Initialize counters
-    const breakdown = {
-      domains: {
-        'tuut.com': 0
-      },
-      countries: {},
-      languages: {
-        'en': 0,
-        'ar': 0
-      },
-      types: {
-        'static': 0,
-        'deals': 0,
-        'stores': 0,
-        'products': 0,
-        'guides': 0
-      }
-    };
-
-    // Count by country from URL patterns
-    const countryRegex = /\/([a-z]{2})-([a-z]{2})\//;
-
-    for (const entry of this.entries) {
-      const url = entry.url;
-
-      // Domain counting (all should be tuut.com)
-      const domainMatch = url.match(/^https?:\/\/([^\/]+)/);
-      if (domainMatch) {
-        breakdown.domains[domainMatch[1]] = (breakdown.domains[domainMatch[1]] || 0) + 1;
-      }
-
-      // Country and language counting
-      const localeMatch = url.match(countryRegex);
-      if (localeMatch) {
-        const lang = localeMatch[1];
-        const country = localeMatch[2];
-
-        breakdown.languages[lang] = (breakdown.languages[lang] || 0) + 1;
-        breakdown.countries[country] = (breakdown.countries[country] || 0) + 1;
-      }
-
-      // Page type counting
-      if (url.includes('/deal/')) {
-        breakdown.types.deals++;
-      } else if (url.includes('/store/')) {
-        breakdown.types.stores++;
-      } else if (url.includes('/product/')) {
-        breakdown.types.products++;
-      } else if (url.includes('/guides/')) {
-        breakdown.types.guides++;
-      } else {
-        breakdown.types.static++;
-      }
-    }
-
-    // Print domain breakdown
-    console.log('\n🌐 By Domain:');
-    for (const [domain, count] of Object.entries(breakdown.domains)) {
-      const percentage = ((count / this.entries.length) * 100).toFixed(2);
-      console.log(`   ${domain}: ${count.toLocaleString()} URLs (${percentage}%)`);
-    }
-
-    // Print country breakdown
-    console.log('\n🌍 By Country:');
-    const sortedCountries = Object.entries(breakdown.countries).sort((a, b) => b[1] - a[1]);
-    for (const [country, count] of sortedCountries) {
-      const percentage = ((count / this.entries.length) * 100).toFixed(2);
-      console.log(`   ${country.toUpperCase()}: ${count.toLocaleString()} URLs (${percentage}%)`);
-    }
-
-    // Print language breakdown
-    console.log('\n🗣️  By Language:');
-    for (const [lang, count] of Object.entries(breakdown.languages)) {
-      const percentage = ((count / this.entries.length) * 100).toFixed(2);
-      const langName = lang === 'en' ? 'English' : 'Arabic';
-      console.log(`   ${langName} (${lang}): ${count.toLocaleString()} URLs (${percentage}%)`);
-    }
-
-    // Print page type breakdown
-    console.log('\n📄 By Page Type:');
-    for (const [type, count] of Object.entries(breakdown.types)) {
-      const percentage = ((count / this.entries.length) * 100).toFixed(2);
-      console.log(`   ${type.charAt(0).toUpperCase() + type.slice(1)}: ${count.toLocaleString()} URLs (${percentage}%)`);
-    }
-
-    // Detailed analysis from dynamic data
-    if (this.dynamicData) {
-      console.log('\n🔍 Detailed Content Analysis:');
-      console.log(`   • Total unique deals: ${this.dynamicData.deals.length.toLocaleString()}`);
-      console.log(`   • Total unique stores: ${this.dynamicData.stores.length.toLocaleString()}`);
-      console.log(`   • Total unique products: ${this.dynamicData.products.length.toLocaleString()}`);
-      console.log(`   • Total unique guides: ${this.dynamicData.guides.length.toLocaleString()}`);
-
-      // Country breakdown for deals
-      const dealCountries = {};
-      for (const deal of this.dynamicData.deals) {
-        dealCountries[deal.country_slug] = (dealCountries[deal.country_slug] || 0) + 1;
-      }
-      if (Object.keys(dealCountries).length > 0) {
-        console.log('\n   🛍️  Deals by Country:');
-        const sortedDealCountries = Object.entries(dealCountries).sort((a, b) => b[1] - a[1]);
-        for (const [country, count] of sortedDealCountries.slice(0, 10)) { // Top 10
-          console.log(`      ${country.toUpperCase()}: ${count.toLocaleString()} deals`);
-        }
-        if (sortedDealCountries.length > 10) {
-          console.log(`      ... and ${sortedDealCountries.length - 10} more countries`);
-        }
-      }
-
-      // Country breakdown for stores
-      const storeCountries = {};
-      for (const store of this.dynamicData.stores) {
-        storeCountries[store.country_slug] = (storeCountries[store.country_slug] || 0) + 1;
-      }
-      if (Object.keys(storeCountries).length > 0) {
-        console.log('\n   🏪 Stores by Country:');
-        const sortedStoreCountries = Object.entries(storeCountries).sort((a, b) => b[1] - a[1]);
-        for (const [country, count] of sortedStoreCountries.slice(0, 10)) { // Top 10
-          console.log(`      ${country.toUpperCase()}: ${count.toLocaleString()} stores`);
-        }
-        if (sortedStoreCountries.length > 10) {
-          console.log(`      ... and ${sortedStoreCountries.length - 10} more countries`);
-        }
-      }
-    }
-
-    return breakdown;
-  }
-
   async generate() {
-    console.log('🚀 Starting sitemap generation...');
+    console.log('🚀 Starting sitemap generation for Docker deployment...');
 
     console.log('📝 Adding static pages...');
     this.addStaticPages();
@@ -639,39 +411,22 @@ class SitemapGenerator {
     console.log('📄 Generating XML...');
     const xml = this.generateXML();
 
-    // Write to public directory (regular XML)
+    // Write to public directory
     const outputPath = path.join(__dirname, '../public/sitemap.xml');
     fs.writeFileSync(outputPath, xml);
 
-    // Generate and write gzipped version
-    console.log('🗜️  Generating gzipped sitemap...');
-    const gzippedXml = zlib.gzipSync(xml, { level: 9 });
-    const gzippedPath = path.join(__dirname, '../public/sitemap.xml.gz');
-    fs.writeFileSync(gzippedPath, gzippedXml);
-
-    // Get file sizes for comparison
-    const xmlStats = fs.statSync(outputPath);
-    const gzippedStats = fs.statSync(gzippedPath);
-    const compressionRatio = ((1 - gzippedStats.size / xmlStats.size) * 100).toFixed(1);
-
     console.log(`✅ Sitemap generated successfully!`);
-    console.log(`📍 Local location (XML): ${outputPath}`);
-    console.log(`📍 Local location (GZIP): ${gzippedPath}`);
+    console.log(`📍 Location: ${outputPath}`);
     console.log(`🔢 Total URLs: ${this.entries.length}`);
-    console.log(`📊 File size (XML): ${(xmlStats.size / 1024 / 1024).toFixed(2)} MB`);
-    console.log(`📊 File size (GZIP): ${(gzippedStats.size / 1024 / 1024).toFixed(2)} MB`);
-    console.log(`🗜️  Compression: ${compressionRatio}% smaller`);
-
-    // Run detailed analysis
-    this.analyzeURLBreakdown();
-
-    // No longer uploading to CDN - serving directly from Vercel
     console.log('');
-    console.log('✅ Sitemap generation complete!');
-    console.log('🌐 The sitemap will be served directly from Vercel:');
-    console.log('   • Regular sitemap: https://tuut.com/sitemap.xml (rewrites to .gz version)');
-    console.log('   • Direct gzipped: https://tuut.com/sitemap.xml.gz');
-    console.log('📦 Make sure to commit the .gz file to your repository');
+    console.log('📊 Breakdown:');
+    console.log(`   • Static pages: ${SUPPORTED_LOCALES.length * 6}`);
+    console.log(`   • Dynamic deal pages: ${this.entries.filter(e => e.url.includes('/deal/')).length}`);
+    console.log(`   • Dynamic store pages: ${this.entries.filter(e => e.url.includes('/store/')).length}`);
+    console.log(`   • Dynamic product pages: ${this.entries.filter(e => e.url.includes('/product/')).length}`);
+    console.log(`   • Dynamic guide pages: ${this.entries.filter(e => e.url.includes('/guides/')).length}`);
+    console.log('');
+    console.log('🐳 Sitemap will be served from the Docker container at /sitemap.xml');
 
     return xml;
   }
@@ -683,7 +438,7 @@ if (require.main === module) {
 
   generator.generate()
     .then(() => {
-      console.log('\n🎉 Sitemap generation completed!');
+      console.log('\n🎉 Docker sitemap generation completed!');
       process.exit(0);
     })
     .catch((error) => {

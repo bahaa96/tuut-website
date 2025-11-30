@@ -5,8 +5,9 @@ build
 
 .next/*
 
-# Sitemap - will be hosted on CDN
+# Sitemap - XML will be generated locally, GZIP version will be deployed
 public/sitemap.xml
+!public/sitemap.xml.gz
 
 # Sitemap CDN directory - has its own git repo
 sitemap-cdn/
