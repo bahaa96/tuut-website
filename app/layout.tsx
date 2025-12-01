@@ -16,25 +16,33 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = getLocale();
+  // Extract locale from URL headers if available, fallback to getLocale()
+  const getLanguageFromHeaders = () => {
+    if (typeof window !== 'undefined') {
+      // Client-side: extract from URL path
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      if (pathSegments.length > 0 && pathSegments[0].includes('-')) {
+        return pathSegments[0].split('-')[0]; // Extract language from localeCountry
+      }
+    }
+    return getLocale();
+  };
+
+  const locale = getLanguageFromHeaders();
+  const language = locale.includes('-') ? locale.split('-')[0] : locale;
+
   return (
     <html lang={locale}>
       <head>
         {/* Font Preloading and Preconnect for Performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* Readex Pro font for both English and Arabic */}
         <link
-          rel="preload"
-          href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap"
-          as="style"
-          onLoad="this.onload=null;this.rel='stylesheet'"
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap"
         />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap"
-          />
-        </noscript>
 
         {/* Google Analytics */}
         <Script

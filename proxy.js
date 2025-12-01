@@ -17,9 +17,8 @@ export function proxy(request) {
   const needsLocale = localizedPaths.some(path => pathname === path || pathname.startsWith(path + '/'));
 
   if (needsLocale && !pathname.match(/^\/[a-z]{2}-[A-Z]{2}/)) {
-    // Default localeCountry - could be based on browser language, IP, etc.
-    // For now, default to en-US
-    const defaultLocaleCountry = 'en-US';
+    // Default to Arabic Saudi Arabia
+    const defaultLocaleCountry = 'ar-SA';
 
     // Redirect to the same path with localeCountry prefix (preserve original path with trailing slash)
     const newUrl = new URL(`/${defaultLocaleCountry}${originalPathname}`, request.url);

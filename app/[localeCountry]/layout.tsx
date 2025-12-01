@@ -34,8 +34,8 @@ export default async function LocaleLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col" data-font={language.startsWith('ar') ? 'arabic' : 'english'}>
+        <Header />
       <main className="flex-1">
         {children}
       </main>

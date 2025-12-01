@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Readex Pro', 'Noto Sans Arabic', 'sans-serif'],
+        sans: ['Readex Pro', 'sans-serif'],
       },
     },
   },
