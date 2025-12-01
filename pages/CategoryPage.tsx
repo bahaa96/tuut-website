@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { createClient } from '../utils/supabase/client';
 import { DealCard } from '../components/DealCard';
-import { useLanguage } from '../contexts/LanguageContext';
+
 import { useCountry } from '../contexts/CountryContext';
 import { getCountryValue } from '../utils/countryHelpers';
 import { Skeleton } from '../components/ui/skeleton';
@@ -60,7 +60,8 @@ interface Deal {
 export default function CategoryPage() {
   const router = useRouter();
   const slug = router.query.slug as string;
-  const { t, language, isRTL } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const { country } = useCountry();
   
   const [category, setCategory] = useState<Category | null>(null);

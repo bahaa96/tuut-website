@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { useRouter } from "next/router";
 import { getCountryValue } from "../utils/countryHelpers";
@@ -65,7 +64,8 @@ interface Product {
 }
 
 export default function ProductsPage() {
-  const { language, isRTL } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const { country } = useCountry();
   // SSR data removed - will fetch client-side
   const [products, setProducts] = useState<Product[]>([]);

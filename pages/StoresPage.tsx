@@ -4,7 +4,6 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import Link from "next/link";
@@ -52,7 +51,8 @@ type ViewMode = 'grid' | 'list';
 type SortOption = 'name' | 'deals' | 'featured';
 
 export default function StoresPage() {
-  const { t, isRTL, language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const { country } = useCountry();
   // SSR data removed - will fetch client-side
 

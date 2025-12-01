@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { createClient } from "../utils/supabase/client";
 import { Search, SlidersHorizontal, X, ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -68,7 +67,8 @@ interface Store {
 }
 
 export default function DealsPage() {
-  const { t, isRTL, language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   // SSR data removed - will fetch client-side
 
   // Initialize state without SSR data

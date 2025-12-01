@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 import { useRouter } from 'next/router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card } from '../components/ui/card';
@@ -48,7 +47,8 @@ interface SavedStore {
 
 export default function WishlistPage() {
   const { user, isAuthenticated } = useAuth();
-  const { isRTL, language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [trackedProducts, setTrackedProducts] = useState<TrackedProduct[]>([]);

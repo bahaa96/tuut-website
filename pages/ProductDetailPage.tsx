@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useLanguage } from '../contexts/LanguageContext';
+
 import { useCountry } from '../contexts/CountryContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
@@ -58,10 +58,10 @@ interface Product {
 
 export default function ProductDetailPage() {
   const router = useRouter();
-  const { language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const { selectedCountry } = useCountry();
   const { user, isAuthenticated } = useAuth();
-  const isRTL = language === 'ar';
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);

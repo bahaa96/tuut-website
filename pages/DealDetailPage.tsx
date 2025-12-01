@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { useLanguage } from "../contexts/LanguageContext";
 import { createClient } from "../utils/supabase/client";
 import { 
   ArrowLeft, 
@@ -77,7 +76,8 @@ declare global {
 export default function DealDetailPage() {
   const router = useRouter();
   const slug = router.query.slug as string;
-  const { t, isRTL, language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   // SSR data removed - will fetch client-side
 
   const [deal, setDeal] = useState<Deal | null>(null);

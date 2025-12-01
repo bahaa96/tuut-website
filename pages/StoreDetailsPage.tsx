@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { useLanguage } from "../contexts/LanguageContext";
 import { createClient } from "../utils/supabase/client";
 import { ArrowLeft, Store, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -72,7 +71,8 @@ interface Deal {
 export default function StoreDetailsPage() {
   const router = useRouter();
   const slug = router.query.slug as string;
-  const { t, isRTL, language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   // SSR data removed - will fetch client-side
   const [store, setStore] = useState<Store | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);

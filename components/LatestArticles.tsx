@@ -1,7 +1,6 @@
 import { BookOpen, ArrowRight, Calendar, Clock } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import Link from "next/link";
@@ -23,7 +22,8 @@ interface Article {
 }
 
 export function LatestArticles() {
-  const { t, isRTL, language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const { country } = useCountry();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);

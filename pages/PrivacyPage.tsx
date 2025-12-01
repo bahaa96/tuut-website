@@ -1,9 +1,8 @@
-import { useLanguage } from "../contexts/LanguageContext";
 import { useEffect } from "react";
 
 export default function PrivacyPage() {
-  const { language } = useLanguage();
-  const isRTL = language === "ar";
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
 
   useEffect(() => {
     window.scrollTo(0, 0);

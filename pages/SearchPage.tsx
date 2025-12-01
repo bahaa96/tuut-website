@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search as SearchIcon, Store as StoreIcon, Tag, ShoppingBag, FileText, ArrowRight } from "lucide-react";
 import { useSearchParams, Link } from "next/navigation";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
@@ -78,7 +77,8 @@ interface SearchResults {
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
-  const { language, isRTL } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const { country } = useCountry();
   
   const [results, setResults] = useState<SearchResults>({

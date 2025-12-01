@@ -5,7 +5,6 @@ import { getPageForPath } from "@/utils/ssr-routing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/FooterSSR";
 import { Toaster } from "@/components/ui/sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AppContentWrapperProps {
   footerData: any;
@@ -14,7 +13,7 @@ interface AppContentWrapperProps {
 
 export function AppContentWrapper({ footerData, defaultTranslations }: AppContentWrapperProps) {
   const router = useRouter();
-  const { isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
 
   // Guard against SSR
   if (typeof window === 'undefined') {

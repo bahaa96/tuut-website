@@ -76,7 +76,7 @@ export function Newsletter() {
                 style={{ fontWeight: 600 }}
               >
                 {isSubmitting ? (
-                  {SUBSCRIBING()}
+                  SUBSCRIBING()
                 ) : (
                   <>
                     {SUBSCRIBE()}

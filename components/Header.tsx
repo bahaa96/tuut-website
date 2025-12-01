@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
-import { deals, stores, shop, blog } from "../src/paraglide/messages.js";
+import { deals, stores, SHOP, BLOG } from "../src/paraglide/messages.js";
 import { useCountry } from "../contexts/CountryContext";
 import { useAuth } from "../contexts/AuthContext";
 import { getCountryName, getCountryImage, getCountryId } from "../utils/countryHelpers";
@@ -36,8 +36,8 @@ export function Header() {
   const navItems = [
     { key: 'deals', label: deals(), href: '/deals' },
     { key: 'stores', label: stores(), href: '/stores' },
-    { key: 'shop', label: shop(), href: '/products' },
-    { key: 'guides', label: blog(), href: '/guides' }
+    { key: 'shop', label: SHOP(), href: '/products' },
+    { key: 'guides', label: BLOG(), href: '/guides' }
   ];
 
   const handleStartSaving = () => {
