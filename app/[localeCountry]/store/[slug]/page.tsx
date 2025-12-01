@@ -1,6 +1,7 @@
 import { ArrowLeft, Store, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { DealCard } from "@/components/DealCard";
+import { Metadata } from "next";
 
 interface Store {
   id: string;
@@ -55,6 +56,107 @@ interface StoreDetailPageProps {
     localeCountry: string;
     slug: string;
   }>;
+}
+
+export async function generateMetadata({ params }: StoreDetailPageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const { localeCountry, slug } = resolvedParams;
+
+  // Extract language from localeCountry (e.g., "en-EG" -> "en")
+  const language = localeCountry.split('-')[0];
+  const country = localeCountry.split('-')[1];
+  const isArabic = language === 'ar';
+
+  // Import fetch functions dynamically to avoid server-side issues
+  const { fetchStoreBySlug } = await import("../../../../lib/supabase-fetch");
+
+  // Fetch store data for metadata
+  const { data: store } = await fetchStoreBySlug(slug);
+
+  if (!store) {
+    return {
+      title: isArabic ? 'المتجر غير موجود | Tuut' : 'Store Not Found | Tuut',
+      description: isArabic ? 'هذا المتجر غير متوفر حالياً' : 'This store is currently unavailable',
+    };
+  }
+
+  const storeName = isArabic && store.title_ar ? store.title_ar : (store.title_en || store.store_name || store.name);
+  const storeDescription = isArabic && store.description_ar ? store.description_ar : (store.description_en || store.description);
+
+  // Create SEO-optimized title
+  const title = storeName
+    ? `${storeName} | ${isArabic ? 'العروض والخصومات' : 'Deals and Discounts'} | Tuut`
+    : `${isArabic ? 'عروض المتجر' : 'Store Deals'} | Tuut`;
+
+  // Create SEO-optimized description
+  let description = '';
+  if (storeDescription) {
+    description = storeDescription.length > 160
+      ? storeDescription.substring(0, 157) + '...'
+      : storeDescription;
+  } else if (storeName) {
+    description = isArabic
+      ? `اكتشف أحدث العروض والخصومات من ${storeName}. أفضل الصفقات والعروض الحصرية في ${country}.`
+      : `Discover latest deals and discounts from ${storeName}. Best offers and exclusive deals in ${country}.`;
+  } else {
+    description = isArabic
+      ? `استعرض أفضل العروض والخصومات من المتاجر الرائدة في ${country}.`
+      : `Browse best deals and discounts from leading stores in ${country}.`;
+  }
+
+  return {
+    title,
+    description,
+    keywords: [
+      storeName,
+      isArabic ? 'عروض' : 'deals',
+      isArabic ? 'خصومات' : 'discounts',
+      isArabic ? 'تخفيضات' : 'coupons',
+      isArabic ? 'متجر' : 'store',
+      isArabic ? 'تسوق' : 'shopping',
+      store?.category,
+      country,
+      isArabic ? 'عروض حصرية' : 'exclusive offers',
+      isArabic ? 'توفير المال' : 'money saving'
+    ].filter(Boolean).join(', '),
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `https://tuut.shop/${localeCountry}/store/${slug}/`,
+      siteName: 'Tuut',
+      images: store.logo_url || store.profile_picture_url ? [{
+        url: store.logo_url || store.profile_picture_url,
+        width: 1200,
+        height: 630,
+        alt: `${storeName} ${isArabic ? 'شعار' : 'logo'}`,
+      }] : [],
+      locale: localeCountry,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: store.logo_url || store.profile_picture_url ? [store.logo_url || store.profile_picture_url] : [],
+    },
+    alternates: {
+      canonical: `https://tuut.shop/${localeCountry}/store/${slug}/`,
+      languages: {
+        [localeCountry]: `https://tuut.shop/${localeCountry}/store/${slug}/`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+  };
 }
 
 export default async function StoreDetailPage({
