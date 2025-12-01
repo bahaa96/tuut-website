@@ -282,6 +282,7 @@ export async function fetchDealsByCountrySlug(countrySlug: string, options?: {
   offset?: number;
 }): Promise<{ data: Deal[]; error: Error | null }> {
   try {
+    console.log('🐛 DEBUG fetchDealsByCountrySlug - Received countrySlug:', countrySlug);
     const supabase = createClient();
 
     let query = supabase
@@ -289,6 +290,8 @@ export async function fetchDealsByCountrySlug(countrySlug: string, options?: {
       .select('*')
       .eq('country_slug', countrySlug)
       .order('created_at', { ascending: false });
+
+    console.log('🐛 DEBUG fetchDealsByCountrySlug - Query built with country_slug filter:', countrySlug);
 
     // Apply additional filters if provided
     if (options?.category) {
@@ -308,6 +311,11 @@ export async function fetchDealsByCountrySlug(countrySlug: string, options?: {
     }
 
     const { data, error } = await query;
+
+    console.log('🐛 DEBUG fetchDealsByCountrySlug - Query executed');
+    console.log('🐛 DEBUG fetchDealsByCountrySlug - Raw data count:', data?.length || 0);
+    console.log('🐛 DEBUG fetchDealsByCountrySlug - Sample raw country_slugs:', data?.slice(0, 3).map((d: any) => d.country_slug));
+    console.log('🐛 DEBUG fetchDealsByCountrySlug - Query error:', error);
 
     if (error) {
       return {

@@ -5,6 +5,7 @@ import { Heart, Copy } from "lucide-react";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { copyToClipboard } from "../utils/clipboard";
 
 interface DealCardProps {
@@ -36,6 +37,12 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Extract localeCountry from current pathname (e.g., /en-EG/deals -> en-EG)
+  const localeCountry = pathname.split('/')[1];
+
   const title = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
   const description = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
 
@@ -51,9 +58,9 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
   const getDealUrl = () => {
     const slug = isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en;
     if (slug) {
-      return `/deal/${slug}`;
+      return `/${localeCountry}/deal/${slug}`;
     } else {
-      return `/deal/${deal.id}`;
+      return `/${localeCountry}/deal/${deal.id}`;
     }
   };
 
@@ -159,7 +166,7 @@ export function DealCard({ deal, isRTL, isSaved, onToggleSave }: DealCardProps) 
             <div className="text-sm inline-block mb-6">
               {deal.store_name && deal.store_slug && (
                 <Link
-                  href={`/store/${deal.store_slug}`}
+                  href={`/${localeCountry}/store/${deal.store_slug}`}
                   onClick={(e) => {
                     e.stopPropagation();
                   }}

@@ -102,19 +102,30 @@ export default async function DealsPage({ params }: DealsPageProps) {
   // Await params as required by Next.js 15
   const resolvedParams = await params;
 
+  // DEBUG: Log the raw localeCountry parameter
+  console.log('🐛 DEBUG /deals page.tsx - Raw localeCountry param:', resolvedParams.localeCountry);
+
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
   const country = resolvedParams.localeCountry.split('-')[1];
   const language = resolvedParams.localeCountry.split('-')[0];
   const isRTL = language === 'ar';
 
+  // DEBUG: Log the extracted country and language
+  console.log('🐛 DEBUG /deals page.tsx - Extracted country:', country);
+  console.log('🐛 DEBUG /deals page.tsx - Extracted language:', language);
+  console.log('🐛 DEBUG /deals page.tsx - Country to be used for filtering:', country.toUpperCase());
+
   // Fetch deals data server-side using supabase-fetch with country_slug filter
   let deals: Deal[] = [];
 
   try {
+    console.log('🐛 DEBUG /deals page.tsx - About to call fetchDealsByCountrySlug with:', country.toUpperCase());
     const dealsResult = await fetchDealsByCountrySlug(country.toUpperCase());
 
     if (!dealsResult.error && dealsResult.data) {
       deals = dealsResult.data;
+      console.log('🐛 DEBUG /deals page.tsx - Fetched deals count:', deals.length);
+      console.log('🐛 DEBUG /deals page.tsx - Sample deal country_slugs:', deals.slice(0, 3).map(d => d.country_slug));
     } else {
       console.error('Error fetching deals data:', dealsResult.error);
     }

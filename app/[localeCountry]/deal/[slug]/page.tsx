@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: DealDetailPageProps): Promise
     openGraph: {
       title,
       description,
-      type: 'product',
+      type: 'website',
       url: `https://tuut.shop/${localeCountry}/deal/${slug}/`,
       siteName: 'Tuut',
       images: deal.featured_image_url ? [{
@@ -192,7 +192,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
             <h2 className="text-[#111827] mb-4" style={{ fontSize: '24px', fontWeight: 700 }}>
               {isRTL ? 'العرض غير موجود' : 'Deal not found'}
             </h2>
-            <Link href="/deals" className="inline-flex items-center bg-white text-[#111827] border-2 border-[#111827] hover:bg-[#F0F7F0] px-6 py-3 rounded-xl font-medium transition-all shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)]">
+            <Link href={`/${resolvedParams.localeCountry}/deals`} className="inline-flex items-center bg-white text-[#111827] border-2 border-[#111827] hover:bg-[#F0F7F0] px-6 py-3 rounded-xl font-medium transition-all shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)]">
               {isRTL ? 'العودة إلى العروض' : 'Back to Deals'}
             </Link>
           </div>
@@ -242,7 +242,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         {/* Back Button */}
-        <Link href="/deals" className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-8 transition-colors">
+        <Link href={`/${resolvedParams.localeCountry}/deals`} className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-8 transition-colors">
           <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
           {isRTL ? 'العودة إلى جميع العروض' : 'Back to All Deals'}
         </Link>
@@ -254,7 +254,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
             <div className="bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] p-8 mb-8">
               {/* Store Header */}
               <Link
-                href={`/store/${storeSlug}`}
+                href={`/${resolvedParams.localeCountry}/store/${storeSlug}`}
                 className={`flex items-center gap-4 mb-6 pb-6 border-b-2 border-[#E5E7EB] ${isRTL ? 'flex-row-reverse' : ''} group cursor-pointer hover:bg-[#F9FAFB] -mx-8 -mt-8 px-8 pt-8 rounded-t-2xl transition-colors`}
               >
                 {store && store.profile_picture_url ? (

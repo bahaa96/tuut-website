@@ -135,9 +135,11 @@ export default function DealsClient({
 
   const refetchDeals = useCallback(async () => {
     try {
+      console.log('🐛 DEBUG DealsClient - Refetching deals with country:', country.toUpperCase());
       const { data: dealsData, error: dealsError } = await fetchDealsByCountrySlug(country.toUpperCase());
 
       if (!dealsError && dealsData) {
+        console.log('🐛 DEBUG DealsClient - Refetched deals count:', dealsData.length);
         setDeals(dealsData);
       } else {
         console.error('Error refetching deals:', dealsError);
