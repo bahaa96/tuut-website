@@ -67,7 +67,7 @@
       },
       "scripts": {
             "dev": "next dev",
-            "build": "next build",
+            "build": "npx @inlang/paraglide-js compile && next build",
             "start": "next start",
             "lint": "next lint",
             "check-stores": "npx tsx scripts/check-store-deal-connection.ts",
