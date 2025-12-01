@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
-import { useLanguage } from "../contexts/LanguageContext";
+import { deals, stores, shop, blog } from "../src/paraglide/messages.js";
 import { useCountry } from "../contexts/CountryContext";
 import { useAuth } from "../contexts/AuthContext";
 import { getCountryName, getCountryImage, getCountryId } from "../utils/countryHelpers";
@@ -27,17 +27,17 @@ import { usePathname } from "next/navigation";
 import { SignInModal } from "./SignInModal";
 
 export function Header() {
-  const { language, setLanguage, t, isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
   const { country, countries, setCountry } = useCountry();
   const { user, isAuthenticated, signOut } = useAuth();
   const currentPath = usePathname();
   const [showSignIn, setShowSignIn] = useState(false);
   
   const navItems = [
-    { key: 'deals', label: t('header.deals'), href: '/deals' },
-    { key: 'stores', label: t('header.stores'), href: '/stores' },
-    { key: 'shop', label: t('header.shop'), href: '/products' },
-    { key: 'guides', label: t('header.blog'), href: '/guides' }
+    { key: 'deals', label: deals(), href: '/deals' },
+    { key: 'stores', label: stores(), href: '/stores' },
+    { key: 'shop', label: shop(), href: '/products' },
+    { key: 'guides', label: blog(), href: '/guides' }
   ];
 
   const handleStartSaving = () => {

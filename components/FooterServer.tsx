@@ -1,7 +1,13 @@
 "use client";
 
 import { Facebook, Twitter, Instagram, Youtube, Mail, Tag, Smartphone, Chrome } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
+import {
+  ABOUT,
+  CAREERS,
+  HELP,
+  FAQ,
+  CONTACT
+} from "../src/paraglide/messages.js";
 import Link from "next/link";
 
 // TikTok Icon Component
@@ -79,13 +85,13 @@ export function Footer({
   categories = [],
   bestSellingProducts = []
 }: FooterProps) {
-  const { t, isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
 
   const footerLinks = {
     company: [
-      { label: t('footer.about'), href: "#" },
+      { label: ABOUT(), href: "#" },
       { label: isRTL ? "كيف يعمل" : "How It Works", href: "#" },
-      { label: t('footer.careers'), href: "#" },
+      { label: CAREERS(), href: "#" },
       { label: isRTL ? "المدونة" : "Blog", href: "/guides" },
       { label: isRTL ? "سياسة الخصوصية" : "Privacy Policy", href: "/privacy" },
       { label: isRTL ? "الشروط والأحكام" : "Terms of Use", href: "/terms" },
@@ -97,9 +103,9 @@ export function Footer({
       { label: isRTL ? "عروض جديدة" : "New Deals", href: "/deals" },
     ],
     support: [
-      { label: t('footer.help'), href: "#" },
-      { label: t('footer.faq'), href: "#" },
-      { label: t('footer.contact'), href: "#" },
+      { label: HELP(), href: "#" },
+      { label: FAQ(), href: "#" },
+      { label: CONTACT(), href: "#" },
       { label: isRTL ? "إرسال عرض" : "Submit a Deal", href: "#" },
     ],
   };

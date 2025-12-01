@@ -4,10 +4,19 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useLanguage } from "../contexts/LanguageContext";
+import {
+  SUBSCRIBE_TO_OUR_NEWSLETTER,
+  GET_THE_LATEST_DEALS_AND_EXCLUSIVE_OFFERS_DELIVERED_TO_YOUR_INBOX,
+  ENTER_YOUR_EMAIL_ADDRESS,
+  SUBSCRIBING,
+  SUBSCRIBE,
+  EXCLUSIVE_DEALS,
+  WEEKLY_UPDATES,
+  PERSONALIZED_OFFERS
+} from "../src/paraglide/messages.js";
 
 export function Newsletter() {
-  const { t, isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,10 +50,10 @@ export function Newsletter() {
 
             {/* Heading */}
             <h2 className="mb-3 text-[#111827]" style={{ fontSize: '36px', fontWeight: 700 }}>
-              {t('newsletter.title')}
+              {SUBSCRIBE_TO_OUR_NEWSLETTER()}
             </h2>
             <p className="text-[#6B7280] mb-8">
-              {t('newsletter.subtitle')}
+              {GET_THE_LATEST_DEALS_AND_EXCLUSIVE_OFFERS_DELIVERED_TO_YOUR_INBOX()}
             </p>
 
             {/* Form */}
@@ -52,7 +61,7 @@ export function Newsletter() {
               <div className="flex-1">
                 <Input
                   type="email"
-                  placeholder={t('newsletter.emailPlaceholder')}
+                  placeholder={ENTER_YOUR_EMAIL_ADDRESS()}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-14 bg-white border-2 border-[#111827] focus-visible:ring-2 focus-visible:ring-[#5FB57A] rounded-xl"
@@ -67,10 +76,10 @@ export function Newsletter() {
                 style={{ fontWeight: 600 }}
               >
                 {isSubmitting ? (
-                  t('newsletter.subscribing')
+                  {SUBSCRIBING()}
                 ) : (
                   <>
-                    {t('newsletter.subscribe')}
+                    {SUBSCRIBE()}
                     <ArrowRight className={`h-5 w-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                   </>
                 )}
@@ -86,15 +95,15 @@ export function Newsletter() {
             <div className="grid sm:grid-cols-3 gap-4 mt-8 text-[#111827] text-sm">
               <div className={`flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <span className="text-[#5FB57A] text-lg">✓</span>
-                <span style={{ fontWeight: 500 }}>{t('newsletter.features.exclusive')}</span>
+                <span style={{ fontWeight: 500 }}>{EXCLUSIVE_DEALS()}</span>
               </div>
               <div className={`flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <span className="text-[#5FB57A] text-lg">✓</span>
-                <span style={{ fontWeight: 500 }}>{t('newsletter.features.weekly')}</span>
+                <span style={{ fontWeight: 500 }}>{WEEKLY_UPDATES()}</span>
               </div>
               <div className={`flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <span className="text-[#5FB57A] text-lg">✓</span>
-                <span style={{ fontWeight: 500 }}>{t('newsletter.features.personalized')}</span>
+                <span style={{ fontWeight: 500 }}>{PERSONALIZED_OFFERS()}</span>
               </div>
             </div>
           </div>

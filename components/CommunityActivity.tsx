@@ -1,6 +1,5 @@
 "use client";
 import { useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -49,7 +48,7 @@ interface HotCode {
 }
 
 export function CommunityActivity() {
-  const { language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
   const isRTL = language === 'ar';
   const [searchQuery, setSearchQuery] = useState('');
 

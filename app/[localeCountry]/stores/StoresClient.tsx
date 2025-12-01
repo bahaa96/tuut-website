@@ -65,7 +65,7 @@ export default function StoresClientPage({
   isRTL,
   country
 }: StoresClientPageProps) {
-  const [stores, setStores] = useState<Store[]>(initialStores);
+    const [stores, setStores] = useState<Store[]>(initialStores);
   const [displayedStores, setDisplayedStores] = useState<Store[]>(initialStores.slice(0, 20));
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -381,7 +381,7 @@ function StoreCard({
                 {logo ? (
                   <ImageWithFallback
                     src={logo}
-                    alt={name}
+                    alt={`${name} ${t('logo')} - ${dealsCountText}`}
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -447,7 +447,7 @@ function StoreCard({
             {logo ? (
               <ImageWithFallback
                 src={logo}
-                alt={name}
+                alt={`${name} ${t('logo')} - ${dealsCountText}`}
                 className="w-full h-full object-contain"
               />
             ) : (

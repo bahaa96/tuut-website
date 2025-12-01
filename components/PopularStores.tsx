@@ -2,7 +2,7 @@
 import { Store as StoreIcon, ArrowRight, Tag } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { logo, deals } from "../src/paraglide/messages.js";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import Link from "next/link";
@@ -30,7 +30,8 @@ interface Store {
 }
 
 export function PopularStores() {
-  const { t, isRTL, language } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
+const language = 'en'; // TODO: Replace with proper locale detection
   const { country } = useCountry();
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,7 +151,7 @@ export function PopularStores() {
                         {logo ? (
                           <ImageWithFallback
                             src={logo}
-                            alt={name}
+                            alt={`${name} ${logo()} - ${dealsCount} ${deals()}`}
                             className="w-full h-full object-cover"
                           />
                         ) : (

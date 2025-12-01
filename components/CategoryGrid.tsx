@@ -17,8 +17,8 @@ import {
 import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import { Button } from "./ui/button";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useRouter } from "next/router";
+import { CATEGORIES, EXPLORE_DEALS_CATEGORY } from "../src/paraglide/messages.js";
 
 interface Category {
   id: number;
@@ -224,7 +224,7 @@ function getCategoryIcon(categoryName: string): LucideIcon {
 }
 
 export function CategoryGrid() {
-  const { t, isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection when needed
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -300,10 +300,10 @@ export function CategoryGrid() {
         <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="mb-2 text-[#111827]" style={{ fontSize: '36px', fontWeight: 700 }}>
-              {t('categories.title')}
+              {CATEGORIES()}
             </h2>
             <p className="text-[#6B7280]">
-              {t('categories.subtitle')}
+              {EXPLORE_DEALS_CATEGORY()}
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -321,10 +321,10 @@ export function CategoryGrid() {
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="mb-2 text-[#111827]" style={{ fontSize: '36px', fontWeight: 700 }}>
-            {t('categories.title')}
+            {CATEGORIES()}
           </h2>
           <p className="text-[#6B7280]">
-            {t('categories.subtitle')}
+            {EXPLORE_DEALS_CATEGORY()}
           </p>
         </div>
 

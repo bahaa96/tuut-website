@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "../index.css";
 import "./globals.css";
-import { getDefaultLocale, isValidLocale } from "../lib/i18n";
+import { getLocale } from "../src/paraglide/runtime.js";
 import { AuthProvider } from "../contexts/AuthContext";
-import { LanguageProvider } from "../contexts/LanguageContext";
 import { CountryProvider } from "../contexts/CountryContext";
 
 export const metadata: Metadata = {
@@ -17,9 +16,26 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const locale = getLocale();
   return (
-    <html lang={getDefaultLocale()}>
+    <html lang={locale}>
       <head>
+        {/* Font Preloading and Preconnect for Performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+          rel="preload"
+          href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+          as="style"
+          onLoad="this.onload=null;this.rel='stylesheet'"
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+          />
+        </noscript>
+
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-QQQYHWZVFE"
@@ -36,9 +52,7 @@ export default function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <LanguageProvider>
-            <CountryProvider>{children}</CountryProvider>
-          </LanguageProvider>
+          <CountryProvider>{children}</CountryProvider>
         </AuthProvider>
       </body>
     </html>

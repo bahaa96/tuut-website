@@ -2,12 +2,11 @@
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useRouter } from "next/router";
 import { useState, FormEvent } from "react";
 
 export function Hero() {
-  const { t, isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 

@@ -2,11 +2,98 @@ import { fetchStoresByCountrySlug } from "../../../lib/supabase-fetch"
 import StoresClientPage from "./StoresClient"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { Metadata } from "next"
 
 interface StoresPageProps {
   params: Promise<{
     localeCountry: string;
   }>;
+}
+
+export async function generateMetadata({ params }: StoresPageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const localeCountry = resolvedParams.localeCountry;
+
+  // Extract language and country from localeCountry (e.g., "en-EG" -> "en", "EG")
+  const language = localeCountry.split('-')[0];
+  const country = localeCountry.split('-')[1];
+  const isArabic = language === 'ar';
+
+  // Fetch stores count for metadata
+  let storesCount = 0;
+  try {
+    const storesResult = await fetchStoresByCountrySlug(country.toUpperCase());
+    if (!storesResult.error && storesResult.data) {
+      storesCount = storesResult.data.length;
+    }
+  } catch (error) {
+    console.error('Error fetching stores count for metadata:', error);
+  }
+
+  const countryName = country === 'EG' ? (isArabic ? 'مصر' : 'Egypt') :
+                      country === 'SA' ? (isArabic ? 'السعودية' : 'Saudi Arabia') :
+                      country;
+
+  const title = isArabic
+    ? `جميع المتاجر في ${countryName} | العروض والخصومات | Tuut`
+    : `All Stores in ${countryName} | Deals and Discounts | Tuut`;
+
+  const description = isArabic
+    ? `استعرض ${storesCount} متجر في ${countryName}. اكتشف أفضل العروض والخصومات والكوبونات من المتاجر الرائدة. وفّر المال مع Tuut.`
+    : `Browse ${storesCount} stores in ${countryName}. Discover the best deals, discounts, and coupons from leading retailers. Save money with Tuut.`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      isArabic ? 'متاجر' : 'stores',
+      isArabic ? 'عروض' : 'deals',
+      isArabic ? 'خصومات' : 'discounts',
+      isArabic ? 'كوبونات' : 'coupons',
+      isArabic ? 'تسوق' : 'shopping',
+      isArabic ? 'توفير المال' : 'save money',
+      countryName,
+      isArabic ? 'عروض حصرية' : 'exclusive offers',
+      isArabic ? 'متاجر رائدة' : 'leading retailers'
+    ].join(', '),
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `https://tuut.shop/${localeCountry}/stores`,
+      siteName: 'Tuut',
+      images: [{
+        url: 'https://tuut.shop/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: isArabic ? 'جميع المتاجر في Tuut' : 'All Stores on Tuut',
+      }],
+      locale: localeCountry,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['https://tuut.shop/og-image.jpg'],
+    },
+    alternates: {
+      canonical: `https://tuut.shop/${localeCountry}/stores`,
+      languages: {
+        [localeCountry]: `https://tuut.shop/${localeCountry}/stores`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+  };
 }
 
 export default async function StoresPage({ params }: StoresPageProps) {
@@ -34,8 +121,69 @@ export default async function StoresPage({ params }: StoresPageProps) {
     console.error('Error fetching stores data:', error);
   }
 
+  // Generate JSON-LD structured data for stores listing
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `https://tuut.shop/${resolvedParams.localeCountry}/stores`,
+    "name": language === 'ar' ? `جميع المتاجر في ${country}` : `All Stores in ${country}`,
+    "description": language === 'ar'
+      ? `استعرض ${stores.length} متجر في ${country}. اكتشف أفضل العروض والخصومات من المتاجر الرائدة.`
+      : `Browse ${stores.length} stores in ${country}. Discover the best deals and discounts from leading retailers.`,
+    "url": `https://tuut.shop/${resolvedParams.localeCountry}/stores`,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": stores.length,
+      "itemListElement": stores.slice(0, 20).map((store, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "Store",
+          "@id": `https://tuut.shop/${resolvedParams.localeCountry}/store/${store.slug_en || store.slug}/`,
+          "name": language === 'ar' ? (store.title_ar || store.name_ar) : (store.title_en || store.name || store.store_name),
+          "description": language === 'ar' ? store.description_ar : store.description_en,
+          "image": store.profile_picture_url || store.logo_url,
+          "category": store.category
+        }
+      }))
+    }
+  };
+
+  // Generate breadcrumb structured data
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": language === 'ar' ? "الرئيسية" : "Home",
+        "item": `https://tuut.shop/${resolvedParams.localeCountry}/`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": language === 'ar' ? "المتاجر" : "Stores",
+        "item": `https://tuut.shop/${resolvedParams.localeCountry}/stores/`
+      }
+    ]
+  };
+
   return (
-    <main>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd)
+        }}
+      />
+      <main>
       <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
         <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
           {/* Header */}
@@ -64,5 +212,6 @@ export default async function StoresPage({ params }: StoresPageProps) {
         </div>
       </section>
     </main>
+    </>
   )
 }

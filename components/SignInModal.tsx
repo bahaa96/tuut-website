@@ -5,7 +5,6 @@ import { X, Mail, Lock } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -27,7 +26,7 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const { signIn, signUp, signInWithGoogle } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

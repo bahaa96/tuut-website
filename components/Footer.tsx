@@ -2,7 +2,26 @@
 
 import { useState, useEffect } from "react";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Tag, Smartphone, Chrome } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
+import {
+  ABOUT,
+  CAREERS,
+  HELP,
+  FAQ,
+  CONTACT,
+  SAVE_MONEY_EVERY_TIME_YOU_SHOP_WITH_VERIFIED_DEALS_AND_DISCOUNTS,
+  COMPANY,
+  FEATURED_DEALS,
+  VIEW_ALL,
+  SHOPPING_GUIDES,
+  TOP_STORES,
+  COPYRIGHT,
+  FOLLOW_US,
+  DOWNLOAD_OUR_APP,
+  DOWNLOAD_ON,
+  APP_STORE,
+  GET_IT_ON,
+  GOOGLE_PLAY
+} from "../src/paraglide/messages.js";
 import Link from "next/link";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { useCountry } from "../contexts/CountryContext";
@@ -78,7 +97,7 @@ interface Product {
 }
 
 export function Footer() {
-  const { t, isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
   const { country } = useCountry();
 
   // Initialize state
@@ -256,9 +275,9 @@ export function Footer() {
   
   const footerLinks = {
     company: [
-      { label: t('footer.about'), href: "#" },
+      { label: ABOUT(), href: "#" },
       { label: isRTL ? "كيف يعمل" : "How It Works", href: "#" },
-      { label: t('footer.careers'), href: "#" },
+      { label: CAREERS(), href: "#" },
       { label: isRTL ? "المدونة" : "Blog", href: "/guides" },
       { label: isRTL ? "سياسة الخصوصية" : "Privacy Policy", href: "/privacy" },
       { label: isRTL ? "الشروط والأحكام" : "Terms of Use", href: "/terms" },
@@ -270,9 +289,9 @@ export function Footer() {
       { label: isRTL ? "عروض جديدة" : "New Deals", href: "/deals" },
     ],
     support: [
-      { label: t('footer.help'), href: "#" },
-      { label: t('footer.faq'), href: "#" },
-      { label: t('footer.contact'), href: "#" },
+      { label: HELP(), href: "#" },
+      { label: FAQ(), href: "#" },
+      { label: CONTACT(), href: "#" },
       { label: isRTL ? "إرسال عرض" : "Submit a Deal", href: "#" },
     ],
   };
@@ -301,7 +320,7 @@ export function Footer() {
                 />
               </div>
               <p className="text-[#6B7280] mb-6 max-w-[280px]">
-                {t('footer.tagline')}
+                {SAVE_MONEY_EVERY_TIME_YOU_SHOP_WITH_VERIFIED_DEALS_AND_DISCOUNTS()}
               </p>
 
               {/* Contact Info */}

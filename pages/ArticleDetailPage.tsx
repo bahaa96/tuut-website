@@ -21,7 +21,6 @@ import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { copyToClipboard } from "../utils/clipboard";
 import { Skeleton } from "../components/ui/skeleton";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
@@ -58,7 +57,8 @@ interface Article {
 export default function ArticleDetailPage() {
   const router = useRouter();
   const slug = router.query.slug as string;
-  const { t, isRTL, language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const { country } = useCountry();
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);

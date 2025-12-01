@@ -1,7 +1,6 @@
 import { Star, ArrowDown } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Button } from "./ui/button";
-import { useLanguage } from "../contexts/LanguageContext";
 
 interface Testimonial {
   id: number;
@@ -14,7 +13,8 @@ interface Testimonial {
 }
 
 export function Testimonials() {
-  const { t, isRTL } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
+  const isRTL = language === 'ar';
   const testimonials: Testimonial[] = [
     {
       id: 1,

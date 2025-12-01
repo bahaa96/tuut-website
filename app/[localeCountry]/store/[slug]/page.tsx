@@ -2,6 +2,7 @@ import { ArrowLeft, Store, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { DealCard } from "@/components/DealCard";
 import { Metadata } from "next";
+import { store_logo } from "../../../../src/paraglide/messages.js";
 
 interface Store {
   id: string;
@@ -285,8 +286,77 @@ export default async function StoreDetailPage({
       ? store.description_ar
       : (store.description_en || store.description);
 
+  // Generate JSON-LD structured data for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    "@id": `https://tuut.shop/${resolvedParams.localeCountry}/store/${resolvedParams.slug}/`,
+    "name": storeName,
+    "description": storeDescription,
+    "url": store.website_url || store.redirect_url,
+    "image": store.profile_picture_url || store.logo_url,
+    "category": store.category,
+    "address": {
+      "@type": "Country",
+      "name": country
+    },
+    "offers": deals.map((deal) => ({
+      "@type": "Offer",
+      "name": isRTL ? deal.title_ar : deal.title_en,
+      "description": isRTL ? deal.description_ar : deal.description_en,
+      "discount": deal.discount_percentage ? `${deal.discount_percentage}%` : undefined,
+      "price": deal.discounted_price,
+      "priceCurrency": country === "EG" ? "EGP" : country === "SA" ? "SAR" : "USD",
+      "availability": "https://schema.org/InStock",
+      "validThrough": deal.expires_at
+    })),
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://tuut.shop/${resolvedParams.localeCountry}/store/${resolvedParams.slug}/`
+    }
+  };
+
+  // Generate breadcrumb structured data
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": isRTL ? "الرئيسية" : "Home",
+        "item": `https://tuut.shop/${resolvedParams.localeCountry}/`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": isRTL ? "المتاجر" : "Stores",
+        "item": `https://tuut.shop/${resolvedParams.localeCountry}/stores/`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": storeName,
+        "item": `https://tuut.shop/${resolvedParams.localeCountry}/store/${resolvedParams.slug}/`
+      }
+    ]
+  };
+
   return (
-    <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd)
+        }}
+      />
+      <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         {/* Back Button */}
         <Link
@@ -310,7 +380,7 @@ export default async function StoreDetailPage({
             {store.profile_picture_url || store.logo_url ? (
               <img
                 src={store.profile_picture_url || store.logo_url}
-                alt={storeName}
+                alt={`${storeName} ${store_logo()}`}
                 className="h-24 w-24 object-contain rounded-xl bg-[#F9FAFB] p-4 border-2 border-[#E5E7EB]"
               />
             ) : (
@@ -394,5 +464,6 @@ export default async function StoreDetailPage({
         )}
       </div>
     </section>
+    </>
   );
 }

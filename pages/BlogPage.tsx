@@ -3,7 +3,6 @@ import { Search, Calendar, User, Clock, X, ChevronRight, BookOpen, Tag as TagIco
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import Link from "next/link";

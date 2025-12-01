@@ -3,7 +3,14 @@ import { Heart, Copy, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useLanguage } from "../contexts/LanguageContext";
+import {
+  FEATURED_DEALS,
+  EXCLUSIVE_OFFERS_YOU_WONT_WANT_TO_MISS,
+  VIEW_ALL,
+  DISCOUNT,
+  TERMS_AND_CONDITIONS,
+  APPLY_CODE
+} from "../src/paraglide/messages.js";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import { fetchFeaturedDeals } from "../utils/api";
@@ -55,7 +62,8 @@ interface Deal {
 }
 
 export function FeaturedDeals() {
-  const { t, isRTL, language } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
+const language = 'en'; // TODO: Replace with proper locale detection
   const { country } = useCountry();
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -475,10 +483,10 @@ export function FeaturedDeals() {
         <div className={`flex items-center justify-between mb-10 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div>
             <h2 className="mb-2 text-[#111827]" style={{ fontSize: '36px', fontWeight: 700 }}>
-              {t('featuredDeals.title')}
+              {FEATURED_DEALS()}
             </h2>
             <p className="text-[#6B7280]">
-              {t('featuredDeals.subtitle')}
+              {EXCLUSIVE_OFFERS_YOU_WONT_WANT_TO_MISS()}
             </p>
           </div>
           <Link href="/deals">
@@ -486,7 +494,7 @@ export function FeaturedDeals() {
               variant="outline" 
               className="hidden md:flex border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-white rounded-xl"
             >
-              {t('featuredDeals.viewAll')}
+              {VIEW_ALL()}
             </Button>
           </Link>
         </div>
@@ -572,7 +580,7 @@ export function FeaturedDeals() {
                     transform: 'rotate(180deg)',
                   }}
                 >
-                  {t('featuredDeals.discount')}
+                  {DISCOUNT()}
                 </div>
               </div>
 
@@ -621,7 +629,7 @@ export function FeaturedDeals() {
                     href="#" 
                     className="text-sm text-[#5FB57A] hover:underline inline-block mb-6"
                   >
-                    {t('featuredDeals.terms')}
+                    {TERMS_AND_CONDITIONS()}
                   </a>
                 </div>
 
@@ -632,7 +640,7 @@ export function FeaturedDeals() {
                   style={{ fontWeight: 600 }}
                 >
                   <Copy className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t('featuredDeals.applyCode')}
+                  {APPLY_CODE()}
                 </Button>
               </div>
             </Link>

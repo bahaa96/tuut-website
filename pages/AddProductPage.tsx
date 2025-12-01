@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 import { useRouter } from 'next/router';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,7 +14,7 @@ import { toast } from 'sonner';
 
 export default function AddProductPage() {
   const { isAuthenticated } = useAuth();
-  const { isRTL } = useLanguage();
+  const isRTL = false; // TODO: Replace with proper locale detection
   const router = useRouter();
 
   // Guard against SSR

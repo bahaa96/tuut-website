@@ -1,4 +1,3 @@
-import { useLanguage } from '../contexts/LanguageContext';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { 
@@ -11,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export function WhyDifferent() {
-  const { language } = useLanguage();
+  const language = 'en'; // TODO: Replace with proper locale detection
   const isRTL = language === 'ar';
 
   const features = [
