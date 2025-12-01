@@ -27,10 +27,14 @@ import { usePathname } from "next/navigation";
 import { SignInModal } from "./SignInModal";
 
 export function Header() {
-  const isRTL = false; // TODO: Replace with proper locale detection
+  const currentPath = usePathname();
+
+  // Extract language from pathname (e.g., /en-EG/deals -> en)
+  const language = currentPath?.match(/^\/([a-z]{2})-/)?.[1] || 'en';
+  const isRTL = language === 'ar';
+
   const { country, countries, setCountry } = useCountry();
   const { user, isAuthenticated, signOut } = useAuth();
-  const currentPath = usePathname();
   const [showSignIn, setShowSignIn] = useState(false);
   
   const navItems = [
@@ -128,7 +132,7 @@ export function Header() {
             {/* Language Switcher */}
             <Button
               variant="ghost"
-              onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+              // TODO: Implement language switching functionality
               className="hidden md:flex h-11 px-4 rounded-xl border-2 border-[#111827] hover:bg-[#E8F3E8]"
             >
               <Languages className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -221,7 +225,7 @@ export function Header() {
                   {/* Mobile Language Switcher */}
                   <Button
                     variant="outline"
-                    onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+                    // TODO: Implement language switching functionality
                     className="mt-2 border-2 border-[#111827] rounded-xl"
                   >
                     <Languages className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
