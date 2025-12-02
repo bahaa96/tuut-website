@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Deal, Category, Store } from "@/domain-models";
+import { useState, useCallback, useRef } from "react";
+import { Deal } from "@/domain-models";
 import { DealCard } from "@/components/DealCard";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  fetchDealsByCountrySlug,
-  fetchCategories as fetchCategoriesFromAPI,
-  fetchStores as fetchStoresFromAPI,
-} from "../../../lib/supabase-fetch";
+
+import { useAllCategories } from "./useAllCategories";
+import { useAllStores } from "./useAllStores";
+import { useAllDeals } from "./useAllDeals";
 
 interface DealsClientProps {
   initialDeals: Deal[];
@@ -41,211 +40,75 @@ export default function DealsClient({
   isRTL,
   country,
 }: DealsClientProps) {
-  const [deals, setDeals] = useState<Deal[]>(initialDeals);
-  const [filteredDeals, setFilteredDeals] = useState<Deal[]>(initialDeals);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
 
   // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedDiscount, setSelectedDiscount] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
 
   // Pagination states for filters
-  const [categoryPage, setCategoryPage] = useState(1);
-  const [storePage, setStorePage] = useState(1);
   const [hasMoreCategories, setHasMoreCategories] = useState(true);
   const [hasMoreStores, setHasMoreStores] = useState(true);
-  const [loadingCategories, setLoadingCategories] = useState(false);
-  const [loadingStores, setLoadingStores] = useState(false);
 
   const categoryObserver = useRef<IntersectionObserver>();
   const storeObserver = useRef<IntersectionObserver>();
 
   const isRTLDir = isRTL ? "rtl" : "ltr";
 
-  useEffect(() => {
-    applyFilters();
-  }, [
-    deals,
-    searchQuery,
-    selectedCategory,
-    selectedStore,
-    selectedDiscount,
-    sortBy,
-  ]);
+  const {
+    allCategories,
+    isLoadingAllCategories,
+    errorLoadingAllCategories,
+    allCategoriesChangePage,
+    allCategoriesCurrentPage,
+  } = useAllCategories();
+  const {
+    allStores,
+    isLoadingAllStores,
+    errorLoadingAllStores,
+    allStoresCurrentPage,
+    allStoresChangePage,
+    allStoresFilters,
+    allStoresChangeFilters,
+  } = useAllStores();
 
-  useEffect(() => {
-    // Load initial categories and stores
-    fetchCategories(1);
-    fetchStores(1);
-  }, [language]);
-
-  const fetchCategories = useCallback(
-    async (page: number, isLoadMore = false) => {
-      if (loadingCategories) return;
-
-      try {
-        setLoadingCategories(true);
-
-        const { data: categoriesData, error: categoriesError } =
-          await fetchCategoriesFromAPI();
-
-        if (!categoriesError && categoriesData) {
-          setCategories(categoriesData);
-        } else {
-          console.error("Error fetching categories:", categoriesError);
-        }
-
-        setHasMoreCategories(false);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    },
-    [loadingCategories]
-  );
-
-  const fetchStores = useCallback(
-    async (page: number, isLoadMore = false) => {
-      if (loadingStores) return;
-
-      try {
-        setLoadingStores(true);
-
-        const { data: storesData, error: storesError } =
-          await fetchStoresFromAPI();
-
-        if (!storesError && storesData) {
-          setStores(storesData);
-        } else {
-          console.error("Error fetching stores:", storesError);
-        }
-
-        setHasMoreStores(false);
-      } catch (error) {
-        console.error("Error fetching stores:", error);
-      } finally {
-        setLoadingStores(false);
-      }
-    },
-    [loadingStores]
-  );
+  const {
+    allDeals,
+    isLoadingAllDeals,
+    errorLoadingAllDeals,
+    allDealsCurrentPage,
+    allDealsChangePage,
+    allDealsFilters,
+    allDealsChangeFilters,
+  } = useAllDeals(initialDeals);
 
   const lastCategoryRef = useCallback(
     (node: HTMLDivElement) => {
-      if (loadingCategories) return;
+      if (isLoadingAllCategories) return;
       if (categoryObserver.current) categoryObserver.current.disconnect();
       categoryObserver.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMoreCategories) {
-          fetchCategories(categoryPage + 1, true);
+          allCategoriesChangePage(allCategoriesCurrentPage + 1);
         }
       });
       if (node) categoryObserver.current.observe(node);
     },
-    [loadingCategories, hasMoreCategories, categoryPage, fetchCategories]
+    [isLoadingAllCategories, hasMoreCategories, allCategoriesCurrentPage]
   );
 
   const lastStoreRef = useCallback(
     (node: HTMLDivElement) => {
-      if (loadingStores) return;
+      if (isLoadingAllStores) return;
       if (storeObserver.current) storeObserver.current.disconnect();
       storeObserver.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMoreStores) {
-          fetchStores(storePage + 1, true);
+          allStoresChangePage(allStoresCurrentPage + 1);
         }
       });
       if (node) storeObserver.current.observe(node);
     },
-    [loadingStores, hasMoreStores, storePage, fetchStores]
+    [isLoadingAllStores, hasMoreStores, allStoresCurrentPage]
   );
-
-  const refetchDeals = useCallback(async () => {
-    try {
-      console.log(
-        "🐛 DEBUG DealsClient - Refetching deals with country:",
-        country.toUpperCase()
-      );
-      const { data: dealsData, error: dealsError } =
-        await fetchDealsByCountrySlug(country.toUpperCase());
-
-      if (!dealsError && dealsData) {
-        console.log(
-          "🐛 DEBUG DealsClient - Refetched deals count:",
-          dealsData.length
-        );
-        setDeals(dealsData);
-      } else {
-        console.error("Error refetching deals:", dealsError);
-      }
-    } catch (error) {
-      console.error("Error refetching deals:", error);
-    }
-  }, [country]);
-
-  const applyFilters = () => {
-    let filtered = [...deals];
-
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((deal) => {
-        const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
-        const description =
-          isRTL && deal.description_ar ? deal.description_ar : deal.description;
-        return (
-          title?.toLowerCase().includes(query) ||
-          description?.toLowerCase().includes(query) ||
-          deal.store_name?.toLowerCase().includes(query) ||
-          deal.category_name?.toLowerCase().includes(query)
-        );
-      });
-    }
-
-    // Category filter
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(
-        (deal) => deal.category_name === selectedCategory
-      );
-    }
-
-    // Store filter
-    if (selectedStore !== "all") {
-      filtered = filtered.filter((deal) => deal.store_name === selectedStore);
-    }
-
-    // Discount filter
-    if (selectedDiscount !== "all") {
-      const discountValue = parseInt(selectedDiscount);
-      filtered = filtered.filter((deal) => {
-        const discount = deal.discount_percentage || 0;
-        return discount >= discountValue;
-      });
-    }
-
-    // Sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "discount-high":
-          return (b.discount_percentage || 0) - (a.discount_percentage || 0);
-        case "discount-low":
-          return (a.discount_percentage || 0) - (b.discount_percentage || 0);
-        case "price-high":
-          return (b.discounted_price || 0) - (a.discounted_price || 0);
-        case "price-low":
-          return (a.discounted_price || 0) - (b.discounted_price || 0);
-        case "newest":
-        default:
-          return 0; // Already sorted by created_at
-      }
-    });
-
-    setFilteredDeals(filtered);
-  };
 
   const toggleSave = (dealId: number) => {
     setSavedDeals((prev) => {
@@ -264,18 +127,18 @@ export default function DealsClient({
   };
 
   const clearFilters = () => {
-    setSearchQuery("");
-    setSelectedCategory("all");
-    setSelectedStore("all");
-    setSelectedDiscount("all");
-    setSortBy("newest");
+    allDealsChangeFilters({
+      searchText: "",
+      categoryId: "",
+      storeId: "",
+    });
   };
 
   const hasActiveFilters =
-    searchQuery ||
-    selectedCategory !== "all" ||
-    selectedStore !== "all" ||
-    selectedDiscount !== "all";
+    allDealsFilters.searchText ||
+    allDealsFilters.categoryId !== "" ||
+    allDealsFilters.storeId !== "" ||
+    allDealsFilters.discount !== "all";
 
   const FilterSection = () => (
     <div className="space-y-6">
@@ -296,8 +159,10 @@ export default function DealsClient({
           <Input
             type="text"
             placeholder={isRTL ? "ابحث عن عروض..." : "Search for deals..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={allDealsFilters.searchText}
+            onChange={(e) =>
+              allDealsChangeFilters({ searchText: e.target.value })
+            }
             className={`${
               isRTL ? "pr-10" : "pl-10"
             } border-2 border-[#111827] rounded-lg h-12`}
@@ -314,7 +179,12 @@ export default function DealsClient({
         >
           {isRTL ? "الفئة" : "Category"}
         </label>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+        <Select
+          value={allDealsFilters.categoryId}
+          onValueChange={(value) =>
+            allDealsChangeFilters({ categoryId: value })
+          }
+        >
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
@@ -322,18 +192,20 @@ export default function DealsClient({
             <SelectItem value="all">
               {isRTL ? "جميع الفئات" : "All Categories"}
             </SelectItem>
-            {categories.map((cat, index) => (
+            {allCategories.map((cat, index) => (
               <SelectItem
                 key={cat.id}
-                value={cat.name}
+                value={cat.id.toString()}
                 ref={
-                  index === categories.length - 1 ? lastCategoryRef : undefined
+                  index === allCategories.length - 1
+                    ? lastCategoryRef
+                    : undefined
                 }
               >
-                {cat.name}
+                {isRTL ? cat.title_ar : cat.title_en}
               </SelectItem>
             ))}
-            {loadingCategories && (
+            {isLoadingAllCategories && (
               <div className="p-2 text-center text-sm text-[#6B7280]">
                 {isRTL ? "جاري التحميل..." : "Loading..."}
               </div>
@@ -350,7 +222,10 @@ export default function DealsClient({
         >
           {isRTL ? "المتجر" : "Store"}
         </label>
-        <Select value={selectedStore} onValueChange={setSelectedStore}>
+        <Select
+          value={allDealsFilters.storeId}
+          onValueChange={(value) => allDealsChangeFilters({ storeId: value })}
+        >
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
@@ -358,16 +233,16 @@ export default function DealsClient({
             <SelectItem value="all">
               {isRTL ? "جميع المتاجر" : "All Stores"}
             </SelectItem>
-            {stores.map((store, index) => (
+            {allStores.map((store, index) => (
               <SelectItem
                 key={store.id}
-                value={store.name}
-                ref={index === stores.length - 1 ? lastStoreRef : undefined}
+                value={store.id.toString()}
+                ref={index === allStores.length - 1 ? lastStoreRef : undefined}
               >
-                {store.name}
+                {isRTL ? store.title_ar : store.title_en}
               </SelectItem>
             ))}
-            {loadingStores && (
+            {isLoadingAllStores && (
               <div className="p-2 text-center text-sm text-[#6B7280]">
                 {isRTL ? "جاري التحميل..." : "Loading..."}
               </div>
@@ -504,7 +379,7 @@ export default function DealsClient({
 
       {/* Deals Grid */}
       <div className="lg:col-span-3">
-        {filteredDeals.length === 0 ? (
+        {allDeals.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)]">
             <p className="text-[#6B7280] mb-4" style={{ fontSize: "18px" }}>
               {isRTL ? "لم يتم العثور على عروض" : "No deals found"}
@@ -520,7 +395,7 @@ export default function DealsClient({
           </div>
         ) : (
           <div className="grid sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
-            {filteredDeals.map((deal) => (
+            {allDeals.map((deal) => (
               <DealCard
                 key={deal.id}
                 deal={deal}

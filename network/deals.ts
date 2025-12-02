@@ -16,7 +16,7 @@ const requestFetchAllDeals = async ({
   const offset = (currentPage - 1) * pageSize;
   const { data, error } = await supabase
     .from("deals")
-    .select("*, stores(*)")
+    .select("*, stores!deals_store_id_fkey(*)")
     .eq("country_slug", countrySlug)
     .range(offset, offset + pageSize - 1);
 

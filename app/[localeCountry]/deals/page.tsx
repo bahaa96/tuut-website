@@ -118,7 +118,7 @@ export default async function DealsPage({ params }: DealsPageProps) {
 
   try {
     const { data: allDeals } = await requestFetchAllDeals({
-      countrySlug: country.toUpperCase(),
+      countrySlug: "EG", // TODO: Replace with country slug
       currentPage: 1,
       pageSize: 20,
     });

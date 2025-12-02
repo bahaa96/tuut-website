@@ -64,8 +64,6 @@ const Footer = async ({ isRTL }: FooterProps) => {
     pageSize: 10,
   });
 
-  console.log("featuredArticles:", bestSellingProducts);
-
   const footerLinks = {
     company: [
       { label: m.ABOUT(), href: "#" },
