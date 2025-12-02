@@ -30,12 +30,17 @@ export function proxy(request) {
     if (url.search) {
       newUrl.search = url.search;
     }
-
-    return NextResponse.redirect(newUrl);
   }
+
+  const localeCountry = request.nextUrl.pathname.split("/")[1];
+  const locale = localeCountry?.split("-")[0];
+
+  console.log("foo:", locale);
 
   const response = NextResponse.next();
   response.headers.set("x-pathname", request.nextUrl.pathname);
+  response.headers.set("x-paraglide-locale", locale);
+  response.headers.set("x-paraglide-request-url", request.url);
   return response;
 }
 

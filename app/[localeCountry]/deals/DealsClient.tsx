@@ -26,6 +26,7 @@ import {
 import { useAllCategories } from "./useAllCategories";
 import { useAllStores } from "./useAllStores";
 import { useAllDeals } from "./useAllDeals";
+import * as m from "@/src/paraglide/messages";
 
 interface DealsClientProps {
   initialDeals: Deal[];
@@ -115,12 +116,10 @@ export default function DealsClient({
       const newSet = new Set(prev);
       if (newSet.has(dealId)) {
         newSet.delete(dealId);
-        toast.success(
-          isRTL ? "تمت إزالة العرض من المحفوظات" : "Deal removed from saved"
-        );
+        toast.success(m.DEAL_REMOVED_FROM_SAVED());
       } else {
         newSet.add(dealId);
-        toast.success(isRTL ? "تم حفظ العرض" : "Deal saved successfully");
+        toast.success(m.DEAL_SAVED_SUCCESSFULLY());
       }
       return newSet;
     });
@@ -137,8 +136,7 @@ export default function DealsClient({
   const hasActiveFilters =
     allDealsFilters.searchText ||
     allDealsFilters.categoryId !== "" ||
-    allDealsFilters.storeId !== "" ||
-    allDealsFilters.discount !== "all";
+    allDealsFilters.storeId !== "";
 
   const FilterSection = () => (
     <div className="space-y-6">
@@ -148,7 +146,7 @@ export default function DealsClient({
           className="block mb-2 text-[#111827]"
           style={{ fontSize: "14px", fontWeight: 600 }}
         >
-          {isRTL ? "البحث" : "Search"}
+          {m.SEARCH()}
         </label>
         <div className="relative">
           <Search
@@ -158,7 +156,7 @@ export default function DealsClient({
           />
           <Input
             type="text"
-            placeholder={isRTL ? "ابحث عن عروض..." : "Search for deals..."}
+            placeholder={m.SEARCH_FOR_DEALS()}
             value={allDealsFilters.searchText}
             onChange={(e) =>
               allDealsChangeFilters({ searchText: e.target.value })
@@ -177,7 +175,7 @@ export default function DealsClient({
           className="block mb-2 text-[#111827]"
           style={{ fontSize: "14px", fontWeight: 600 }}
         >
-          {isRTL ? "الفئة" : "Category"}
+          {m.CATEGORY()}
         </label>
         <Select
           value={allDealsFilters.categoryId}
@@ -189,12 +187,10 @@ export default function DealsClient({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">
-              {isRTL ? "جميع الفئات" : "All Categories"}
-            </SelectItem>
+            <SelectItem value="all">{m.ALL_CATEGORIES()}</SelectItem>
             {allCategories.map((cat, index) => (
               <SelectItem
-                key={cat.id}
+                key={`filter-category-${cat.id}`}
                 value={cat.id.toString()}
                 ref={
                   index === allCategories.length - 1
@@ -207,7 +203,7 @@ export default function DealsClient({
             ))}
             {isLoadingAllCategories && (
               <div className="p-2 text-center text-sm text-[#6B7280]">
-                {isRTL ? "جاري التحميل..." : "Loading..."}
+                {m.LOADING()}
               </div>
             )}
           </SelectContent>
@@ -220,7 +216,7 @@ export default function DealsClient({
           className="block mb-2 text-[#111827]"
           style={{ fontSize: "14px", fontWeight: 600 }}
         >
-          {isRTL ? "المتجر" : "Store"}
+          {m.STORE()}
         </label>
         <Select
           value={allDealsFilters.storeId}
@@ -230,12 +226,10 @@ export default function DealsClient({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">
-              {isRTL ? "جميع المتاجر" : "All Stores"}
-            </SelectItem>
+            <SelectItem value="all">{m.ALL_STORES()}</SelectItem>
             {allStores.map((store, index) => (
               <SelectItem
-                key={store.id}
+                key={`filter-store-${store.id}`}
                 value={store.id.toString()}
                 ref={index === allStores.length - 1 ? lastStoreRef : undefined}
               >
@@ -244,7 +238,7 @@ export default function DealsClient({
             ))}
             {isLoadingAllStores && (
               <div className="p-2 text-center text-sm text-[#6B7280]">
-                {isRTL ? "جاري التحميل..." : "Loading..."}
+                {m.LOADING()}
               </div>
             )}
           </SelectContent>
@@ -257,28 +251,18 @@ export default function DealsClient({
           className="block mb-2 text-[#111827]"
           style={{ fontSize: "14px", fontWeight: 600 }}
         >
-          {isRTL ? "نسبة الخصم" : "Discount"}
+          {m.DISCOUNT()}
         </label>
         <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">
-              {isRTL ? "أي خصم" : "Any Discount"}
-            </SelectItem>
-            <SelectItem value="10">
-              {isRTL ? "10% فأكثر" : "10% or more"}
-            </SelectItem>
-            <SelectItem value="25">
-              {isRTL ? "25% فأكثر" : "25% or more"}
-            </SelectItem>
-            <SelectItem value="50">
-              {isRTL ? "50% فأكثر" : "50% or more"}
-            </SelectItem>
-            <SelectItem value="75">
-              {isRTL ? "75% فأكثر" : "75% or more"}
-            </SelectItem>
+            <SelectItem value="all">{m.ANY_DISCOUNT()}</SelectItem>
+            <SelectItem value="10">{m.TEN_OR_MORE()}</SelectItem>
+            <SelectItem value="25">{m.TWENTY_FIVE_OR_MORE()}</SelectItem>
+            <SelectItem value="50">{m.FIFTY_OR_MORE()}</SelectItem>
+            <SelectItem value="75">{m.SEVENTY_FIVE_OR_MORE()}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -289,28 +273,20 @@ export default function DealsClient({
           className="block mb-2 text-[#111827]"
           style={{ fontSize: "14px", fontWeight: 600 }}
         >
-          {isRTL ? "ترتيب حسب" : "Sort By"}
+          {m.SORT_BY()}
         </label>
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">
-              {isRTL ? "الأحدث" : "Newest"}
-            </SelectItem>
+            <SelectItem value="newest">{m.NEWEST_FIRST()}</SelectItem>
             <SelectItem value="discount-high">
-              {isRTL ? "أعلى خصم" : "Highest Discount"}
+              {m.HIGHEST_DISCOUNT()}
             </SelectItem>
-            <SelectItem value="discount-low">
-              {isRTL ? "أقل خصم" : "Lowest Discount"}
-            </SelectItem>
-            <SelectItem value="price-high">
-              {isRTL ? "أعلى سعر" : "Highest Price"}
-            </SelectItem>
-            <SelectItem value="price-low">
-              {isRTL ? "أقل سعر" : "Lowest Price"}
-            </SelectItem>
+            <SelectItem value="discount-low">{m.LOWEST_DISCOUNT()}</SelectItem>
+            <SelectItem value="price-high">{m.HIGHEST_PRICE()}</SelectItem>
+            <SelectItem value="price-low">{m.LOWEST_PRICE()}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -323,7 +299,7 @@ export default function DealsClient({
           className="w-full border-2 border-[#111827] rounded-lg h-12"
         >
           <X className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`} />
-          {isRTL ? "إزالة الفلاتر" : "Clear Filters"}
+          {m.CLEAR_FILTERS()}
         </Button>
       )}
     </div>
@@ -339,7 +315,7 @@ export default function DealsClient({
               className="text-[#111827]"
               style={{ fontSize: "20px", fontWeight: 700 }}
             >
-              {isRTL ? "الفلاتر" : "Filters"}
+              {m.FILTERS()}
             </h3>
             <SlidersHorizontal className="h-5 w-5 text-[#5FB57A]" />
           </div>
@@ -355,10 +331,10 @@ export default function DealsClient({
               <SlidersHorizontal
                 className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`}
               />
-              {isRTL ? "الفلاتر" : "Filters"}
+              {m.FILTERS()}
               {hasActiveFilters && (
                 <Badge className="bg-[#5FB57A] text-white ml-2 mr-2">
-                  {isRTL ? "نشط" : "Active"}
+                  {m.ACTIVE()}
                 </Badge>
               )}
             </Button>
@@ -368,7 +344,7 @@ export default function DealsClient({
             className="w-[300px] sm:w-[400px]"
           >
             <SheetHeader>
-              <SheetTitle>{isRTL ? "الفلاتر" : "Filters"}</SheetTitle>
+              <SheetTitle>{m.FILTERS()}</SheetTitle>
             </SheetHeader>
             <div className="mt-6">
               <FilterSection />
@@ -382,14 +358,14 @@ export default function DealsClient({
         {allDeals.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)]">
             <p className="text-[#6B7280] mb-4" style={{ fontSize: "18px" }}>
-              {isRTL ? "لم يتم العثور على عروض" : "No deals found"}
+              {m.NO_DEALS_FOUND()}
             </p>
             {hasActiveFilters && (
               <Button
                 onClick={clearFilters}
                 className="bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg"
               >
-                {isRTL ? "إزالة الفلاتر" : "Clear Filters"}
+                {m.CLEAR_FILTERS()}
               </Button>
             )}
           </div>

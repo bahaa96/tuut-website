@@ -2,41 +2,59 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "../index.css";
 import "./globals.css";
-import { getLocale } from "../src/paraglide/runtime.js";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CountryProvider } from "../contexts/CountryContext";
+import { headers } from "next/headers";
+import { cache, use } from "react";
+import {
+  assertIsLocale,
+  baseLocale,
+  Locale,
+  overwriteGetLocale,
+  overwriteGetUrlOrigin,
+} from "@/src/paraglide/runtime";
 
 export const metadata: Metadata = {
   title: "Tuut - Mobile App Home Screen",
   description: "Discover amazing products and deals",
 };
 
-export default function RootLayout({
+const ssrLocale = cache(() => ({
+  locale: baseLocale,
+  origin: "http://localhost",
+}));
+// overwrite the getLocale function to use the locale from the request
+overwriteGetLocale(() => assertIsLocale(ssrLocale().locale));
+overwriteGetUrlOrigin(() => ssrLocale().origin);
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Extract locale from URL headers if available, fallback to getLocale()
-  const getLanguageFromHeaders = () => {
-    if (typeof window !== 'undefined') {
-      // Client-side: extract from URL path
-      const pathSegments = window.location.pathname.split('/').filter(Boolean);
-      if (pathSegments.length > 0 && pathSegments[0].includes('-')) {
-        return pathSegments[0].split('-')[0]; // Extract language from localeCountry
-      }
-    }
-    return getLocale();
-  };
+  const headersList = await headers();
+  const locale = headersList?.get("x-paraglide-locale") as Locale;
+  const isRTL = locale === "ar";
 
-  const locale = getLanguageFromHeaders();
-  const language = locale.includes('-') ? locale.split('-')[0] : locale;
+  // @ts-expect-error - headers must be sync
+  // https://github.com/opral/inlang-paraglide-js/issues/245#issuecomment-2608727658
+  ssrLocale().locale = locale;
+
+  // @ts-expect-error - headers must be sync
+  ssrLocale().origin = new URL(
+    headersList?.get("x-paraglide-request-url") as string
+  ).origin;
 
   return (
-    <html lang={locale}>
+    <html lang={locale} dir={isRTL ? "rtl" : "ltr"}>
       <head>
         {/* Font Preloading and Preconnect for Performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
 
         {/* Readex Pro font for both English and Arabic */}
         <link

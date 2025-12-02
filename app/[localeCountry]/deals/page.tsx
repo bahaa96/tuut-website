@@ -1,4 +1,3 @@
-import { fetchDealsByCountrySlug } from "../../../lib/supabase-fetch";
 import DealsClientPage from "./DealsClient";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -6,6 +5,8 @@ import { Deal } from "@/domain-models";
 import { Metadata } from "next";
 import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
 import { requestFetchAllDeals } from "@/network/deals";
+import { setLocale } from "@/src/paraglide/runtime";
+import * as m from "@/src/paraglide/messages";
 
 interface DealsPageProps {
   params: Promise<{
@@ -169,8 +170,8 @@ export default async function DealsPage({ params }: DealsPageProps) {
           seller: {
             "@type": "Store",
             name:
-              language === "ar" ? deal.stores.title_ar : deal.stores.title_en,
-            image: deal.stores.logo_url,
+              language === "ar" ? deal.stores?.title_ar : deal.stores?.title_en,
+            image: deal.stores?.logo_url,
           },
         },
       })),
@@ -218,20 +219,20 @@ export default async function DealsPage({ params }: DealsPageProps) {
             <div className={`mb-8 ${isRTL ? "text-right" : "text-left"}`}>
               <Link
                 href="/"
-                className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors"
+                className={`inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors gap-2 ${
+                  isRTL ? "flex-row-reverse" : "flex-row"
+                }`}
               >
                 <ArrowLeft
                   className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
                 />
-                {language === "ar"
-                  ? "العودة إلى الصفحة الرئيسية"
-                  : "Back to Home"}
+                {m.BACK_TO_HOME()}
               </Link>
               <h1
                 className="text-[#111827] mb-4"
                 style={{ fontSize: "36px", fontWeight: 700 }}
               >
-                {language === "ar" ? "جميع العروض" : "All Deals"}
+                {m.ALL_DEALS()}
               </h1>
             </div>
 

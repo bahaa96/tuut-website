@@ -60,13 +60,12 @@ const actionHandlers: ActionHandlers = {
   FETCH_ALL_DEALS_START: (state, _action) => ({
     ...state,
     isLoading: true,
-    data: [],
     error: null,
   }),
   FETCH_ALL_DEALS_SUCCESS: (state, { data }) => ({
     ...state,
     isLoading: false,
-    data,
+    data: [...state.data, ...data],
   }),
   FETCH_ALL_DEALS_ERROR: (state, { error }) => ({
     ...state,
@@ -95,6 +94,7 @@ const useAllDeals = (initialDeals: Deal[]) => {
     useReducer(reducer, {
       ...initialState,
       data: initialDeals,
+      currentPage: initialDeals.length / initialState.pageSize,
     });
 
   useEffect(() => {
@@ -106,6 +106,9 @@ const useAllDeals = (initialDeals: Deal[]) => {
       countrySlug: "EG", // TODO: Replace with country slug
       currentPage: currentPage,
       pageSize: pageSize,
+      searchText: filters.searchText,
+      categoryId: filters.categoryId,
+      storeId: filters.storeId,
     })
       .then(({ data }) => {
         dispatch({

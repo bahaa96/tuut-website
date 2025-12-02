@@ -25,7 +25,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
-import * as m from "../src/paraglide/messages.js";
 import { useCountry } from "../contexts/CountryContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -37,13 +36,17 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignInModal } from "./SignInModal";
+import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
+import * as m from "@/src/paraglide/messages";
+import { setLocale } from "@/src/paraglide/runtime";
 
 export function Header() {
   const currentPath = usePathname();
 
   // Extract language from pathname (e.g., /en-EG/deals -> en)
-  const language = currentPath?.match(/^\/([a-z]{2})-/)?.[1] || "en";
-  const isRTL = language === "ar";
+  const localeCountry = currentPath?.split("/")[1];
+  const locale = localeCountry?.split("-")[0];
+  const isRTL = locale === "ar";
 
   const { country, countries, setCountry } = useCountry();
   const { user, isAuthenticated, signOut } = useAuth();
@@ -53,7 +56,7 @@ export function Header() {
     { key: "deals", label: m.DEALS(), href: "/deals" },
     { key: "stores", label: m.STORES(), href: "/stores" },
     { key: "shop", label: m.SHOP(), href: "/products" },
-    { key: "guides", label: m.BLOG(), href: "/guides" },
+    { key: "guides", label: m.SHOPPING_GUIDES(), href: "/guides" },
   ];
 
   const handleStartSaving = () => {
@@ -118,17 +121,17 @@ export function Header() {
                     <>
                       <ImageWithFallback
                         src={getCountryImage(country)}
-                        alt={getCountryName(country, language)}
+                        alt={getCountryNameFromCode(country.slug)}
                         className={`w-6 h-6 rounded-full object-cover ${
                           isRTL ? "ml-2" : "mr-2"
                         }`}
                       />
-                      <span>{getCountryName(country, language)}</span>
+                      <span>{getCountryNameFromCode(country.slug)}</span>
                     </>
                   ) : (
                     <>
                       <Globe className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                      {language === "en" ? "Select Country" : "اختر الدولة"}
+                      {m.SELECT_COUNTRY()}
                     </>
                   )}
                 </Button>
@@ -149,12 +152,12 @@ export function Header() {
                   >
                     <ImageWithFallback
                       src={getCountryImage(c)}
-                      alt={getCountryName(c, language)}
+                      alt={getCountryNameFromCode(c.slug)}
                       className={`w-6 h-6 rounded-full object-cover ${
                         isRTL ? "ml-2" : "mr-2"
                       }`}
                     />
-                    <span>{getCountryName(c, language)}</span>
+                    <span>{getCountryNameFromCode(c.slug)}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -167,7 +170,7 @@ export function Header() {
               className="hidden md:flex h-11 px-4 rounded-xl border-2 border-[#111827] hover:bg-[#E8F3E8]"
             >
               <Languages className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {language === "en" ? "عربي" : "English"}
+              {locale === "en" ? "عربي" : "English"}
             </Button>
 
             {/* User Menu or RADAR Button */}
@@ -178,7 +181,7 @@ export function Header() {
                     className="hidden md:flex bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all h-11 px-6"
                     style={{ fontWeight: 600 }}
                   >
-                    {language === "en" ? "RADAR" : "الرادار"}
+                    {m.RADAR()}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -189,7 +192,7 @@ export function Header() {
                     href="/wishlist"
                     className="block w-full px-2 py-1.5 text-sm cursor-pointer hover:bg-accent"
                   >
-                    {language === "en" ? "My Wishlist" : "قائمتي"}
+                    {m.MY_WISHLIST()}
                   </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -197,7 +200,7 @@ export function Header() {
                     className="text-red-600"
                   >
                     <LogOut className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                    {language === "en" ? "Sign Out" : "تسجيل الخروج"}
+                    {m.SIGN_OUT()}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -208,7 +211,7 @@ export function Header() {
                 style={{ fontWeight: 600 }}
               >
                 <PiggyBank className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                {language === "en" ? "Start Saving" : "ابدأ التوفير"}
+                {m.START_SAVING()}
               </Button>
             )}
 
@@ -224,9 +227,7 @@ export function Header() {
                 className="w-[300px] sm:w-[400px]"
               >
                 <SheetHeader>
-                  <SheetTitle>
-                    {language === "en" ? "Menu" : "القائمة"}
-                  </SheetTitle>
+                  <SheetTitle>{m.MENU()}</SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-8">
                   {navItems.map((item) => (
@@ -246,7 +247,7 @@ export function Header() {
                       className="text-[#111827] mb-2"
                       style={{ fontWeight: 500 }}
                     >
-                      {language === "en" ? "Country" : "الدولة"}
+                      {m.COUNTRY()}
                     </div>
                     <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto border-2 border-[#111827] rounded-xl p-2">
                       {countries.map((c) => (
@@ -263,10 +264,10 @@ export function Header() {
                         >
                           <ImageWithFallback
                             src={getCountryImage(c)}
-                            alt={getCountryName(c, language)}
+                            alt={getCountryNameFromCode(c.slug)}
                             className="w-6 h-6 rounded-full object-cover"
                           />
-                          <span>{getCountryName(c, language)}</span>
+                          <span>{getCountryNameFromCode(c.slug)}</span>
                         </button>
                       ))}
                     </div>
@@ -281,7 +282,7 @@ export function Header() {
                     <Languages
                       className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
                     />
-                    {language === "en" ? "العربية" : "English"}
+                    {locale === "en" ? "العربية" : "English"}
                   </Button>
 
                   {/* Mobile Start Saving / Account Button */}
@@ -291,9 +292,7 @@ export function Header() {
                         href="/tracked-products"
                         className="mt-4 block w-full text-center border-2 border-[#111827] rounded-xl px-4 py-2 hover:bg-accent"
                       >
-                        {language === "en"
-                          ? "Tracked Products"
-                          : "المنتجات المتتبعة"}
+                        {m.TRACKED_PRODUCTS()}
                       </Link>
                       <Button
                         onClick={handleSignOut}
@@ -303,7 +302,7 @@ export function Header() {
                         <LogOut
                           className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
                         />
-                        {language === "en" ? "Sign Out" : "تسجيل الخروج"}
+                        {m.SIGN_OUT()}
                       </Button>
                     </>
                   ) : (
@@ -315,7 +314,7 @@ export function Header() {
                       <PiggyBank
                         className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
                       />
-                      {language === "en" ? "Start Saving" : "ابدأ التوفير"}
+                      {m.START_SAVING()}
                     </Button>
                   )}
                 </nav>

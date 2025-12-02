@@ -2,7 +2,7 @@
 import { Store as StoreIcon, ArrowRight, Tag } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
-import { logo, deals } from "../src/paraglide/messages.js";
+import * as m from "../src/paraglide/messages.js";
 import { useCountry } from "../contexts/CountryContext";
 import { getCountryValue } from "../utils/countryHelpers";
 import Link from "next/link";
@@ -31,7 +31,7 @@ interface Store {
 
 export function PopularStores() {
   const isRTL = false; // TODO: Replace with proper locale detection
-const language = 'en'; // TODO: Replace with proper locale detection
+  const language = "en"; // TODO: Replace with proper locale detection
   const { country } = useCountry();
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,16 +44,18 @@ const language = 'en'; // TODO: Replace with proper locale detection
     try {
       setLoading(true);
       const countryValue = getCountryValue(country);
-      
-      const { projectId, publicAnonKey } = await import('../utils/supabase/info');
-      
-      const url = countryValue 
+
+      const { projectId, publicAnonKey } = await import(
+        "../utils/supabase/info"
+      );
+
+      const url = countryValue
         ? `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/stores?country=${countryValue}&limit=8`
         : `https://${projectId}.supabase.co/functions/v1/make-server-4f34ef25/stores?limit=8`;
-      
+
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
+          Authorization: `Bearer ${publicAnonKey}`,
         },
       });
 
@@ -67,54 +69,85 @@ const language = 'en'; // TODO: Replace with proper locale detection
         setStores(result.stores);
       }
     } catch (err) {
-      console.error('Error fetching stores:', err);
+      console.error("Error fetching stores:", err);
     } finally {
       setLoading(false);
     }
   };
 
   function getStoreName(store: Store): string {
-    if (language === 'ar') {
-      return store.name_ar || store.store_name_ar || store.name || store.store_name || store.title || 'Store';
+    if (language === "ar") {
+      return (
+        store.name_ar ||
+        store.store_name_ar ||
+        store.name ||
+        store.store_name ||
+        store.title ||
+        "Store"
+      );
     }
-    return store.name || store.store_name || store.title || 'Store';
+    return store.name || store.store_name || store.title || "Store";
   }
 
   function getStoreLogo(store: Store): string {
-    return store.profile_picture_url || store.logo || store.logo_url || store.image_url || '';
+    return (
+      store.profile_picture_url ||
+      store.logo ||
+      store.logo_url ||
+      store.image_url ||
+      ""
+    );
   }
 
   function getStoreSlug(store: Store): string {
-    const name = store.name || store.store_name || store.title || '';
-    return store.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const name = store.name || store.store_name || store.title || "";
+    return (
+      store.slug ||
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+    );
   }
 
   function getDealsCount(store: Store): number {
-    return store.total_offers || store.active_deals_count || store.deals_count || 0;
+    return (
+      store.total_offers || store.active_deals_count || store.deals_count || 0
+    );
   }
 
   return (
     <section className="py-12 md:py-16 bg-white">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
-        <div className={`flex items-center justify-between mb-10 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div
+          className={`flex items-center justify-between mb-10 ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
           <div>
-            <h2 className="mb-2 text-[#111827]" style={{ fontSize: '36px', fontWeight: 700 }}>
-              {language === 'en' ? 'Popular Stores' : 'المتاجر الشائعة'}
+            <h2
+              className="mb-2 text-[#111827]"
+              style={{ fontSize: "36px", fontWeight: 700 }}
+            >
+              {language === "en" ? "Popular Stores" : "المتاجر الشائعة"}
             </h2>
             <p className="text-[#6B7280]">
-              {language === 'en' 
-                ? 'Shop from your favorite brands and save more'
-                : 'تسوق من علاماتك التجارية المفضلة ووفر أكثر'
-              }
+              {language === "en"
+                ? "Shop from your favorite brands and save more"
+                : "تسوق من علاماتك التجارية المفضلة ووفر أكثر"}
             </p>
           </div>
           <Link href="/stores">
-            <Button 
-              variant="outline" 
-              className={`hidden md:flex border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-white rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
+            <Button
+              variant="outline"
+              className={`hidden md:flex border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-white rounded-xl ${
+                isRTL ? "flex-row-reverse" : ""
+              }`}
             >
-              {language === 'en' ? 'View All Stores' : 'عرض جميع المتاجر'}
-              <ArrowRight className={`h-4 w-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
+              {language === "en" ? "View All Stores" : "عرض جميع المتاجر"}
+              <ArrowRight
+                className={`h-4 w-4 ${isRTL ? "mr-2 rotate-180" : "ml-2"}`}
+              />
             </Button>
           </Link>
         </div>
@@ -132,7 +165,9 @@ const language = 'en'; // TODO: Replace with proper locale detection
           <div className="text-center py-12">
             <StoreIcon className="h-12 w-12 text-[#9CA3AF] mx-auto mb-4" />
             <p className="text-[#6B7280]">
-              {language === 'en' ? 'No stores available' : 'لا توجد متاجر متاحة'}
+              {language === "en"
+                ? "No stores available"
+                : "لا توجد متاجر متاحة"}
             </p>
           </div>
         ) : (
@@ -151,19 +186,22 @@ const language = 'en'; // TODO: Replace with proper locale detection
                         {logo ? (
                           <ImageWithFallback
                             src={logo}
-                            alt={`${name} ${logo()} - ${dealsCount} ${deals()}`}
+                            alt={`${name} ${m.LOGO()} - ${dealsCount} ${m.DEALS()}`}
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           <StoreIcon className="h-8 w-8 text-[#9CA3AF]" />
                         )}
                       </div>
-                      <div style={{ fontSize: '16px', fontWeight: 600 }} className="text-[#111827] mb-2 line-clamp-1">
+                      <div
+                        style={{ fontSize: "16px", fontWeight: 600 }}
+                        className="text-[#111827] mb-2 line-clamp-1"
+                      >
                         {name}
                       </div>
                       <div className="text-xs text-[#5FB57A] flex items-center justify-center gap-1">
                         <Tag className="h-3 w-3" />
-                        {dealsCount} {language === 'en' ? 'deals' : 'عروض'}
+                        {dealsCount} {language === "en" ? "deals" : "عروض"}
                       </div>
                     </div>
                   </Link>
@@ -174,12 +212,16 @@ const language = 'en'; // TODO: Replace with proper locale detection
             {/* Mobile View All Button */}
             <div className="mt-8 flex justify-center md:hidden">
               <Link href="/stores">
-                <Button 
-                  variant="outline" 
-                  className={`border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-white rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
+                <Button
+                  variant="outline"
+                  className={`border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-white rounded-xl ${
+                    isRTL ? "flex-row-reverse" : ""
+                  }`}
                 >
-                  {language === 'en' ? 'View All Stores' : 'عرض جميع المتاجر'}
-                  <ArrowRight className={`h-4 w-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
+                  {language === "en" ? "View All Stores" : "عرض جميع المتاجر"}
+                  <ArrowRight
+                    className={`h-4 w-4 ${isRTL ? "mr-2 rotate-180" : "ml-2"}`}
+                  />
                 </Button>
               </Link>
             </div>

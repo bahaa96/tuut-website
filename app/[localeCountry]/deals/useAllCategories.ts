@@ -46,13 +46,12 @@ const actionHandlers: ActionHandlers = {
   FETCH_ALL_CATEGORIES_START: (state, _action) => ({
     ...state,
     isLoading: true,
-    data: [],
     error: null,
   }),
   FETCH_ALL_CATEGORIES_SUCCESS: (state, { data }) => ({
     ...state,
     isLoading: false,
-    data,
+    data: [...state.data, ...data],
   }),
   FETCH_ALL_CATEGORIES_ERROR: (state, { error }) => ({
     ...state,
