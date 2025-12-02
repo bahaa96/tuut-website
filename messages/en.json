@@ -115,5 +115,14 @@
   "START_SAVING": "Start Saving",
   "MENU": "Menu",
   "COUNTRY": "Country",
-  "TRACKED_PRODUCTS": "Tracked Products"
+  "TRACKED_PRODUCTS": "Tracked Products",
+  "UNKNOWN_CURRENCY": "Unknown Currency",
+  "EGP": "EGP",
+  "SAR": "SAR",
+  "JOD": "JOD",
+  "KWD": "KWD",
+  "MAD": "MAD",
+  "OMR": "OMR",
+  "QAR": "QAR",
+  "AED": "AED"
 }

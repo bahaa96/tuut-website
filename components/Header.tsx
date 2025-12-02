@@ -39,6 +39,7 @@ import { SignInModal } from "./SignInModal";
 import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
 import * as m from "@/src/paraglide/messages";
 import { setLocale } from "@/src/paraglide/runtime";
+import changeURLLocale from "@/utils/changeURLLocale";
 
 export function Header() {
   const currentPath = usePathname();
@@ -48,8 +49,12 @@ export function Header() {
   const locale = localeCountry?.split("-")[0];
   const isRTL = locale === "ar";
 
+  // this is a global setter for all files with "use client" to have the proper locale in the SSR mode
+  setLocale(locale as "ar" | "en");
+
   const { country, countries, setCountry } = useCountry();
-  const { user, isAuthenticated, signOut } = useAuth();
+  // const { user, isAuthenticated, signOut } = useAuth();
+  const isAuthenticated = false;
   const [showSignIn, setShowSignIn] = useState(false);
 
   const navItems = [
@@ -64,7 +69,7 @@ export function Header() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    signOut();
   };
 
   return (
@@ -72,11 +77,7 @@ export function Header() {
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between gap-4">
           {/* Logo */}
-          <div
-            className={`flex items-center gap-8 ${
-              isRTL ? "flex-row-reverse" : ""
-            }`}
-          >
+          <div className={`flex items-center gap-8`}>
             <a href="/" className="flex items-center">
               <img
                 src="https://i.ibb.co/XZV7bXh3/Tuut.png"
@@ -105,11 +106,7 @@ export function Header() {
           </div>
 
           {/* CTA Button & Language Switcher & Country Selector */}
-          <div
-            className={`flex items-center gap-3 ${
-              isRTL ? "flex-row-reverse" : ""
-            }`}
-          >
+          <div className={`flex items-center gap-3`}>
             {/* Country Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -143,7 +140,9 @@ export function Header() {
                 {countries.map((c) => (
                   <DropdownMenuItem
                     key={getCountryId(c)}
-                    onClick={() => setCountry(c)}
+                    onClick={() => {
+                      window.location.pathname = `${locale}-${c.slug}`;
+                    }}
                     className={`cursor-pointer ${
                       getCountryId(country) === getCountryId(c)
                         ? "bg-[#E8F3E8]"
@@ -164,14 +163,23 @@ export function Header() {
             </DropdownMenu>
 
             {/* Language Switcher */}
-            <Button
-              variant="ghost"
-              // TODO: Implement language switching functionality
-              className="hidden md:flex h-11 px-4 rounded-xl border-2 border-[#111827] hover:bg-[#E8F3E8]"
+            <a
+              href={changeURLLocale(
+                typeof window !== "undefined"
+                  ? window.location.href
+                  : `http://localhost:3000${currentPath}`,
+                locale === "en" ? "ar" : "en"
+              )}
             >
-              <Languages className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {locale === "en" ? "عربي" : "English"}
-            </Button>
+              <Button
+                variant="ghost"
+                // TODO: Implement language switching functionality
+                className="hidden md:flex h-11 px-4 rounded-xl border-2 border-[#111827] hover:bg-[#E8F3E8] cursor-pointer"
+              >
+                <Languages className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+                {locale === "en" ? "عربي" : "English"}
+              </Button>
+            </a>
 
             {/* User Menu or RADAR Button */}
             {isAuthenticated ? (
@@ -274,16 +282,24 @@ export function Header() {
                   </div>
 
                   {/* Mobile Language Switcher */}
-                  <Button
-                    variant="outline"
-                    // TODO: Implement language switching functionality
-                    className="mt-2 border-2 border-[#111827] rounded-xl"
+                  <a
+                    href={changeURLLocale(
+                      typeof window !== "undefined"
+                        ? window.location.href
+                        : `http://localhost:3000${currentPath}`,
+                      locale === "en" ? "ar" : "en"
+                    )}
                   >
-                    <Languages
-                      className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
-                    />
-                    {locale === "en" ? "العربية" : "English"}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      className="mt-2 border-2 border-[#111827] rounded-xl"
+                    >
+                      <Languages
+                        className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                      />
+                      {locale === "en" ? "العربية" : "English"}
+                    </Button>
+                  </a>
 
                   {/* Mobile Start Saving / Account Button */}
                   {isAuthenticated ? (

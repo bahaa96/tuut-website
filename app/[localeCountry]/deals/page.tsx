@@ -5,8 +5,8 @@ import { Deal } from "@/domain-models";
 import { Metadata } from "next";
 import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
 import { requestFetchAllDeals } from "@/network/deals";
-import { setLocale } from "@/src/paraglide/runtime";
 import * as m from "@/src/paraglide/messages";
+import getCurrencyFromCountryCode from "@/utils/getCurrencyFromCountryCode";
 
 interface DealsPageProps {
   params: Promise<{
@@ -162,8 +162,7 @@ export default async function DealsPage({ params }: DealsPageProps) {
             ? `${deal.discount_percentage}%`
             : undefined,
           price: deal.discounted_price,
-          priceCurrency:
-            country === "EG" ? "EGP" : country === "SA" ? "SAR" : "USD",
+          priceCurrency: getCurrencyFromCountryCode(country),
           category: deal.category_name,
           availability: "https://schema.org/InStock",
           validThrough: deal.expires_at,
