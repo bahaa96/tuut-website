@@ -76,5 +76,14 @@
   "BEST_SELLING_PRODUCTS": "Best Selling Products",
   "ADD_TO": "Add to",
   "CHROME": "Chrome",
-  "SHOP": "Shop"
+  "SHOP": "Shop",
+  "EGYPT": "Egypt",
+  "SAUDI_ARABIA": "Saudi Arabia",
+  "JORDAN": "Jordan",
+  "KUWAIT": "Kuwait",
+  "MOROCCO": "Morocco",
+  "OMAN": "Oman",
+  "QATAR": "Qatar",
+  "UNITED_ARAB_EMIRATES": "United Arab Emirates",
+  "UNKNOWN_COUNTRY": "Unknown Country"
 }

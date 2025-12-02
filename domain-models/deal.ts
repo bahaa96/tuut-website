@@ -1,3 +1,5 @@
+import { Store } from "./Store";
+
 export interface Deal {
   id: number;
   slug_en?: string;
@@ -11,15 +13,13 @@ export interface Deal {
   original_price?: number;
   discounted_price?: number;
   code?: string;
-  store_id?: string;
-  store_slug_en?: string;
-  store_name?: string;
-  store_logo?: string;
   category_name?: string;
   expires_at?: string;
   is_verified?: boolean;
   featured?: boolean;
   created_at?: string;
+  store_id?: string;
+  stores: Store;
 }
 
 export interface DealFilters {

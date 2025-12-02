@@ -1,4 +1,8 @@
-export { requestFetchAllDeals, requestFetchAllFeaturedDeals } from "./deals";
+export {
+  requestFetchAllDeals,
+  requestFetchAllFeaturedDeals,
+  requestFetchAllDealsLite,
+} from "./deals";
 export { requestFetchAllStores } from "./stores";
 export { requestFetchAllArticles } from "./articles";
 export { requestFetchAllCategories } from "./categories";

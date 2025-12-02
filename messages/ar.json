@@ -76,5 +76,14 @@
   "BEST_SELLING_PRODUCTS": "أفضل المنتجات مبيعًا",
   "ADD_TO": "أضف إلى",
   "CHROME": "Chrome",
-  "SHOP": "المتجر"
+  "SHOP": "المتجر",
+  "EGYPT": "مصر",
+  "SAUDI_ARABIA": "السعودية",
+  "JORDAN": "الأردن",
+  "KUWAIT": "الكويت",
+  "MOROCCO": "المغرب",
+  "OMAN": "عمان",
+  "QATAR": "قطر",
+  "UNITED_ARAB_EMIRATES": "الإمارات العربية المتحدة",
+  "UNKNOWN_COUNTRY": "دولة غير معروفة"
 }

@@ -1,5 +1,6 @@
 import { Deal, FeaturedDeal } from "@/domain-models";
 import { supabase } from "./instance";
+import { DealWithStore } from "@/domain-models/deal";
 
 interface RequestFetchAllDealsArgs {
   countrySlug: string;
@@ -15,7 +16,7 @@ const requestFetchAllDeals = async ({
   const offset = (currentPage - 1) * pageSize;
   const { data, error } = await supabase
     .from("deals")
-    .select("*")
+    .select("*, stores(*)")
     .eq("country_slug", countrySlug)
     .range(offset, offset + pageSize - 1);
 
@@ -49,4 +50,33 @@ const requestFetchAllFeaturedDeals = async ({
 
   return { data };
 };
-export { requestFetchAllDeals, requestFetchAllFeaturedDeals };
+
+interface RequestFetchAllDealsLiteArgs {
+  countrySlug: string;
+  currentPage: number;
+  pageSize: number;
+}
+const requestFetchAllDealsLite = async ({
+  countrySlug,
+  currentPage,
+  pageSize,
+}: RequestFetchAllDealsLiteArgs): Promise<{ data: Deal[] }> => {
+  const offset = (currentPage - 1) * pageSize;
+  const { data, error } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("country_slug", countrySlug)
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+};
+
+export {
+  requestFetchAllDeals,
+  requestFetchAllFeaturedDeals,
+  requestFetchAllDealsLite,
+};

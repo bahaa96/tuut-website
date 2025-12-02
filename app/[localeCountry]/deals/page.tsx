@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Deal } from "@/domain-models";
 import { Metadata } from "next";
+import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
+import { requestFetchAllDeals } from "@/network/deals";
 
 interface DealsPageProps {
   params: Promise<{
@@ -25,24 +27,18 @@ export async function generateMetadata({
   // Fetch deals count for metadata
   let dealsCount = 0;
   try {
-    const dealsResult = await fetchDealsByCountrySlug(country.toUpperCase());
-    if (!dealsResult.error && dealsResult.data) {
-      dealsCount = dealsResult.data.length;
-    }
+    const { data: allDeals } = await requestFetchAllDeals({
+      countrySlug: country.toUpperCase(),
+      currentPage: 1,
+      pageSize: 20,
+    });
+
+    dealsCount = allDeals.length;
   } catch (error) {
     console.error("Error fetching deals count for metadata:", error);
   }
 
-  const countryName =
-    country === "EG"
-      ? isArabic
-        ? "مصر"
-        : "Egypt"
-      : country === "SA"
-      ? isArabic
-        ? "السعودية"
-        : "Saudi Arabia"
-      : country;
+  const countryName = getCountryNameFromCode(country);
 
   const title = isArabic
     ? `جميع العروض في ${countryName} | الخصومات والكوبونات | Tuut`
@@ -113,48 +109,21 @@ export default async function DealsPage({ params }: DealsPageProps) {
   // Await params as required by Next.js 15
   const resolvedParams = await params;
 
-  // DEBUG: Log the raw localeCountry parameter
-  console.log(
-    "🐛 DEBUG /deals page.tsx - Raw localeCountry param:",
-    resolvedParams.localeCountry
-  );
-
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
   const country = resolvedParams.localeCountry.split("-")[1];
   const language = resolvedParams.localeCountry.split("-")[0];
   const isRTL = language === "ar";
 
-  // DEBUG: Log the extracted country and language
-  console.log("🐛 DEBUG /deals page.tsx - Extracted country:", country);
-  console.log("🐛 DEBUG /deals page.tsx - Extracted language:", language);
-  console.log(
-    "🐛 DEBUG /deals page.tsx - Country to be used for filtering:",
-    country.toUpperCase()
-  );
-
-  // Fetch deals data server-side using supabase-fetch with country_slug filter
   let deals: Deal[] = [];
 
   try {
-    console.log(
-      "🐛 DEBUG /deals page.tsx - About to call fetchDealsByCountrySlug with:",
-      country.toUpperCase()
-    );
-    const dealsResult = await fetchDealsByCountrySlug(country.toUpperCase());
+    const { data: allDeals } = await requestFetchAllDeals({
+      countrySlug: country.toUpperCase(),
+      currentPage: 1,
+      pageSize: 20,
+    });
 
-    if (!dealsResult.error && dealsResult.data) {
-      deals = dealsResult.data;
-      console.log(
-        "🐛 DEBUG /deals page.tsx - Fetched deals count:",
-        deals.length
-      );
-      console.log(
-        "🐛 DEBUG /deals page.tsx - Sample deal country_slugs:",
-        deals.slice(0, 3).map((d) => d.country_slug)
-      );
-    } else {
-      console.error("Error fetching deals data:", dealsResult.error);
-    }
+    deals = allDeals;
   } catch (error) {
     console.error("Error fetching deals data:", error);
   }
@@ -182,16 +151,11 @@ export default async function DealsPage({ params }: DealsPageProps) {
         item: {
           "@type": "Offer",
           "@id": `https://tuut.shop/${resolvedParams.localeCountry}/deal/${
-            deal.slug_en || deal.slug
+            language === "ar" ? deal.slug_ar : deal.slug_en
           }/`,
-          name:
-            language === "ar"
-              ? deal.title_ar || deal.title_en
-              : deal.title_en || deal.title,
+          name: language === "ar" ? deal.title_ar : deal.title_en,
           description:
-            language === "ar"
-              ? deal.description_ar || deal.description_en
-              : deal.description_en || deal.description,
+            language === "ar" ? deal.description_ar : deal.description_en,
           image: deal.featured_image_url || deal.image_url,
           discount: deal.discount_percentage
             ? `${deal.discount_percentage}%`
@@ -205,10 +169,8 @@ export default async function DealsPage({ params }: DealsPageProps) {
           seller: {
             "@type": "Store",
             name:
-              language === "ar"
-                ? deal.store_name_ar || deal.store_name
-                : deal.store_name,
-            image: deal.store_logo,
+              language === "ar" ? deal.stores.title_ar : deal.stores.title_en,
+            image: deal.stores.logo_url,
           },
         },
       })),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Deal, Category, Store } from "../../../../domain-models";
+import { Deal, Category, Store } from "@/domain-models";
 import { DealCard } from "@/components/DealCard";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { fetchDealsByCountrySlug, fetchCategories as fetchCategoriesFromAPI, fetchStores as fetchStoresFromAPI } from "../../../lib/supabase-fetch";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  fetchDealsByCountrySlug,
+  fetchCategories as fetchCategoriesFromAPI,
+  fetchStores as fetchStoresFromAPI,
+} from "../../../lib/supabase-fetch";
 
 interface DealsClientProps {
   initialDeals: Deal[];
@@ -29,7 +39,7 @@ export default function DealsClient({
   initialDeals,
   language,
   isRTL,
-  country
+  country,
 }: DealsClientProps) {
   const [deals, setDeals] = useState<Deal[]>(initialDeals);
   const [filteredDeals, setFilteredDeals] = useState<Deal[]>(initialDeals);
@@ -55,11 +65,18 @@ export default function DealsClient({
   const categoryObserver = useRef<IntersectionObserver>();
   const storeObserver = useRef<IntersectionObserver>();
 
-  const isRTLDir = isRTL ? 'rtl' : 'ltr';
+  const isRTLDir = isRTL ? "rtl" : "ltr";
 
   useEffect(() => {
     applyFilters();
-  }, [deals, searchQuery, selectedCategory, selectedStore, selectedDiscount, sortBy]);
+  }, [
+    deals,
+    searchQuery,
+    selectedCategory,
+    selectedStore,
+    selectedDiscount,
+    sortBy,
+  ]);
 
   useEffect(() => {
     // Load initial categories and stores
@@ -67,85 +84,106 @@ export default function DealsClient({
     fetchStores(1);
   }, [language]);
 
-  const fetchCategories = useCallback(async (page: number, isLoadMore = false) => {
-    if (loadingCategories) return;
+  const fetchCategories = useCallback(
+    async (page: number, isLoadMore = false) => {
+      if (loadingCategories) return;
 
-    try {
-      setLoadingCategories(true);
+      try {
+        setLoadingCategories(true);
 
-      const { data: categoriesData, error: categoriesError } = await fetchCategoriesFromAPI();
+        const { data: categoriesData, error: categoriesError } =
+          await fetchCategoriesFromAPI();
 
-      if (!categoriesError && categoriesData) {
-        setCategories(categoriesData);
-      } else {
-        console.error('Error fetching categories:', categoriesError);
+        if (!categoriesError && categoriesData) {
+          setCategories(categoriesData);
+        } else {
+          console.error("Error fetching categories:", categoriesError);
+        }
+
+        setHasMoreCategories(false);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoadingCategories(false);
       }
+    },
+    [loadingCategories]
+  );
 
-      setHasMoreCategories(false);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setLoadingCategories(false);
-    }
-  }, [loadingCategories]);
+  const fetchStores = useCallback(
+    async (page: number, isLoadMore = false) => {
+      if (loadingStores) return;
 
-  const fetchStores = useCallback(async (page: number, isLoadMore = false) => {
-    if (loadingStores) return;
+      try {
+        setLoadingStores(true);
 
-    try {
-      setLoadingStores(true);
+        const { data: storesData, error: storesError } =
+          await fetchStoresFromAPI();
 
-      const { data: storesData, error: storesError } = await fetchStoresFromAPI();
+        if (!storesError && storesData) {
+          setStores(storesData);
+        } else {
+          console.error("Error fetching stores:", storesError);
+        }
 
-      if (!storesError && storesData) {
-        setStores(storesData);
-      } else {
-        console.error('Error fetching stores:', storesError);
+        setHasMoreStores(false);
+      } catch (error) {
+        console.error("Error fetching stores:", error);
+      } finally {
+        setLoadingStores(false);
       }
+    },
+    [loadingStores]
+  );
 
-      setHasMoreStores(false);
-    } catch (error) {
-      console.error('Error fetching stores:', error);
-    } finally {
-      setLoadingStores(false);
-    }
-  }, [loadingStores]);
+  const lastCategoryRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (loadingCategories) return;
+      if (categoryObserver.current) categoryObserver.current.disconnect();
+      categoryObserver.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMoreCategories) {
+          fetchCategories(categoryPage + 1, true);
+        }
+      });
+      if (node) categoryObserver.current.observe(node);
+    },
+    [loadingCategories, hasMoreCategories, categoryPage, fetchCategories]
+  );
 
-  const lastCategoryRef = useCallback((node: HTMLDivElement) => {
-    if (loadingCategories) return;
-    if (categoryObserver.current) categoryObserver.current.disconnect();
-    categoryObserver.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMoreCategories) {
-        fetchCategories(categoryPage + 1, true);
-      }
-    });
-    if (node) categoryObserver.current.observe(node);
-  }, [loadingCategories, hasMoreCategories, categoryPage, fetchCategories]);
-
-  const lastStoreRef = useCallback((node: HTMLDivElement) => {
-    if (loadingStores) return;
-    if (storeObserver.current) storeObserver.current.disconnect();
-    storeObserver.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMoreStores) {
-        fetchStores(storePage + 1, true);
-      }
-    });
-    if (node) storeObserver.current.observe(node);
-  }, [loadingStores, hasMoreStores, storePage, fetchStores]);
+  const lastStoreRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (loadingStores) return;
+      if (storeObserver.current) storeObserver.current.disconnect();
+      storeObserver.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMoreStores) {
+          fetchStores(storePage + 1, true);
+        }
+      });
+      if (node) storeObserver.current.observe(node);
+    },
+    [loadingStores, hasMoreStores, storePage, fetchStores]
+  );
 
   const refetchDeals = useCallback(async () => {
     try {
-      console.log('🐛 DEBUG DealsClient - Refetching deals with country:', country.toUpperCase());
-      const { data: dealsData, error: dealsError } = await fetchDealsByCountrySlug(country.toUpperCase());
+      console.log(
+        "🐛 DEBUG DealsClient - Refetching deals with country:",
+        country.toUpperCase()
+      );
+      const { data: dealsData, error: dealsError } =
+        await fetchDealsByCountrySlug(country.toUpperCase());
 
       if (!dealsError && dealsData) {
-        console.log('🐛 DEBUG DealsClient - Refetched deals count:', dealsData.length);
+        console.log(
+          "🐛 DEBUG DealsClient - Refetched deals count:",
+          dealsData.length
+        );
         setDeals(dealsData);
       } else {
-        console.error('Error refetching deals:', dealsError);
+        console.error("Error refetching deals:", dealsError);
       }
     } catch (error) {
-      console.error('Error refetching deals:', error);
+      console.error("Error refetching deals:", error);
     }
   }, [country]);
 
@@ -155,9 +193,10 @@ export default function DealsClient({
     // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(deal => {
+      filtered = filtered.filter((deal) => {
         const title = isRTL && deal.title_ar ? deal.title_ar : deal.title;
-        const description = isRTL && deal.description_ar ? deal.description_ar : deal.description;
+        const description =
+          isRTL && deal.description_ar ? deal.description_ar : deal.description;
         return (
           title?.toLowerCase().includes(query) ||
           description?.toLowerCase().includes(query) ||
@@ -169,18 +208,20 @@ export default function DealsClient({
 
     // Category filter
     if (selectedCategory !== "all") {
-      filtered = filtered.filter(deal => deal.category_name === selectedCategory);
+      filtered = filtered.filter(
+        (deal) => deal.category_name === selectedCategory
+      );
     }
 
     // Store filter
     if (selectedStore !== "all") {
-      filtered = filtered.filter(deal => deal.store_name === selectedStore);
+      filtered = filtered.filter((deal) => deal.store_name === selectedStore);
     }
 
     // Discount filter
     if (selectedDiscount !== "all") {
       const discountValue = parseInt(selectedDiscount);
-      filtered = filtered.filter(deal => {
+      filtered = filtered.filter((deal) => {
         const discount = deal.discount_percentage || 0;
         return discount >= discountValue;
       });
@@ -207,11 +248,13 @@ export default function DealsClient({
   };
 
   const toggleSave = (dealId: number) => {
-    setSavedDeals(prev => {
+    setSavedDeals((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(dealId)) {
         newSet.delete(dealId);
-        toast.success(isRTL ? "تمت إزالة العرض من المحفوظات" : "Deal removed from saved");
+        toast.success(
+          isRTL ? "تمت إزالة العرض من المحفوظات" : "Deal removed from saved"
+        );
       } else {
         newSet.add(dealId);
         toast.success(isRTL ? "تم حفظ العرض" : "Deal saved successfully");
@@ -228,23 +271,36 @@ export default function DealsClient({
     setSortBy("newest");
   };
 
-  const hasActiveFilters = searchQuery || selectedCategory !== "all" || selectedStore !== "all" || selectedDiscount !== "all";
+  const hasActiveFilters =
+    searchQuery ||
+    selectedCategory !== "all" ||
+    selectedStore !== "all" ||
+    selectedDiscount !== "all";
 
   const FilterSection = () => (
     <div className="space-y-6">
       {/* Search */}
       <div>
-        <label className="block mb-2 text-[#111827]" style={{ fontSize: '14px', fontWeight: 600 }}>
-          {isRTL ? 'البحث' : 'Search'}
+        <label
+          className="block mb-2 text-[#111827]"
+          style={{ fontSize: "14px", fontWeight: 600 }}
+        >
+          {isRTL ? "البحث" : "Search"}
         </label>
         <div className="relative">
-          <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-5 w-5 text-[#6B7280]`} />
+          <Search
+            className={`absolute ${
+              isRTL ? "right-3" : "left-3"
+            } top-1/2 -translate-y-1/2 h-5 w-5 text-[#6B7280]`}
+          />
           <Input
             type="text"
-            placeholder={isRTL ? 'ابحث عن عروض...' : 'Search for deals...'}
+            placeholder={isRTL ? "ابحث عن عروض..." : "Search for deals..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`${isRTL ? 'pr-10' : 'pl-10'} border-2 border-[#111827] rounded-lg h-12`}
+            className={`${
+              isRTL ? "pr-10" : "pl-10"
+            } border-2 border-[#111827] rounded-lg h-12`}
             dir={isRTLDir}
           />
         </div>
@@ -252,23 +308,34 @@ export default function DealsClient({
 
       {/* Category Filter with Pagination */}
       <div>
-        <label className="block mb-2 text-[#111827]" style={{ fontSize: '14px', fontWeight: 600 }}>
-          {isRTL ? 'الفئة' : 'Category'}
+        <label
+          className="block mb-2 text-[#111827]"
+          style={{ fontSize: "14px", fontWeight: 600 }}
+        >
+          {isRTL ? "الفئة" : "Category"}
         </label>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isRTL ? 'جميع الفئات' : 'All Categories'}</SelectItem>
+            <SelectItem value="all">
+              {isRTL ? "جميع الفئات" : "All Categories"}
+            </SelectItem>
             {categories.map((cat, index) => (
-              <SelectItem key={cat.id} value={cat.name} ref={index === categories.length - 1 ? lastCategoryRef : undefined}>
+              <SelectItem
+                key={cat.id}
+                value={cat.name}
+                ref={
+                  index === categories.length - 1 ? lastCategoryRef : undefined
+                }
+              >
                 {cat.name}
               </SelectItem>
             ))}
             {loadingCategories && (
               <div className="p-2 text-center text-sm text-[#6B7280]">
-                {isRTL ? 'جاري التحميل...' : 'Loading...'}
+                {isRTL ? "جاري التحميل..." : "Loading..."}
               </div>
             )}
           </SelectContent>
@@ -277,23 +344,32 @@ export default function DealsClient({
 
       {/* Store Filter with Pagination */}
       <div>
-        <label className="block mb-2 text-[#111827]" style={{ fontSize: '14px', fontWeight: 600 }}>
-          {isRTL ? 'المتجر' : 'Store'}
+        <label
+          className="block mb-2 text-[#111827]"
+          style={{ fontSize: "14px", fontWeight: 600 }}
+        >
+          {isRTL ? "المتجر" : "Store"}
         </label>
         <Select value={selectedStore} onValueChange={setSelectedStore}>
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isRTL ? 'جميع المتاجر' : 'All Stores'}</SelectItem>
+            <SelectItem value="all">
+              {isRTL ? "جميع المتاجر" : "All Stores"}
+            </SelectItem>
             {stores.map((store, index) => (
-              <SelectItem key={store.id} value={store.name} ref={index === stores.length - 1 ? lastStoreRef : undefined}>
+              <SelectItem
+                key={store.id}
+                value={store.name}
+                ref={index === stores.length - 1 ? lastStoreRef : undefined}
+              >
                 {store.name}
               </SelectItem>
             ))}
             {loadingStores && (
               <div className="p-2 text-center text-sm text-[#6B7280]">
-                {isRTL ? 'جاري التحميل...' : 'Loading...'}
+                {isRTL ? "جاري التحميل..." : "Loading..."}
               </div>
             )}
           </SelectContent>
@@ -302,38 +378,64 @@ export default function DealsClient({
 
       {/* Discount Filter */}
       <div>
-        <label className="block mb-2 text-[#111827]" style={{ fontSize: '14px', fontWeight: 600 }}>
-          {isRTL ? 'نسبة الخصم' : 'Discount'}
+        <label
+          className="block mb-2 text-[#111827]"
+          style={{ fontSize: "14px", fontWeight: 600 }}
+        >
+          {isRTL ? "نسبة الخصم" : "Discount"}
         </label>
         <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{isRTL ? 'أي خصم' : 'Any Discount'}</SelectItem>
-            <SelectItem value="10">{isRTL ? '10% فأكثر' : '10% or more'}</SelectItem>
-            <SelectItem value="25">{isRTL ? '25% فأكثر' : '25% or more'}</SelectItem>
-            <SelectItem value="50">{isRTL ? '50% فأكثر' : '50% or more'}</SelectItem>
-            <SelectItem value="75">{isRTL ? '75% فأكثر' : '75% or more'}</SelectItem>
+            <SelectItem value="all">
+              {isRTL ? "أي خصم" : "Any Discount"}
+            </SelectItem>
+            <SelectItem value="10">
+              {isRTL ? "10% فأكثر" : "10% or more"}
+            </SelectItem>
+            <SelectItem value="25">
+              {isRTL ? "25% فأكثر" : "25% or more"}
+            </SelectItem>
+            <SelectItem value="50">
+              {isRTL ? "50% فأكثر" : "50% or more"}
+            </SelectItem>
+            <SelectItem value="75">
+              {isRTL ? "75% فأكثر" : "75% or more"}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Sort By */}
       <div>
-        <label className="block mb-2 text-[#111827]" style={{ fontSize: '14px', fontWeight: 600 }}>
-          {isRTL ? 'ترتيب حسب' : 'Sort By'}
+        <label
+          className="block mb-2 text-[#111827]"
+          style={{ fontSize: "14px", fontWeight: 600 }}
+        >
+          {isRTL ? "ترتيب حسب" : "Sort By"}
         </label>
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="border-2 border-[#111827] rounded-lg h-12">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
-            <SelectItem value="discount-high">{isRTL ? 'أعلى خصم' : 'Highest Discount'}</SelectItem>
-            <SelectItem value="discount-low">{isRTL ? 'أقل خصم' : 'Lowest Discount'}</SelectItem>
-            <SelectItem value="price-high">{isRTL ? 'أعلى سعر' : 'Highest Price'}</SelectItem>
-            <SelectItem value="price-low">{isRTL ? 'أقل سعر' : 'Lowest Price'}</SelectItem>
+            <SelectItem value="newest">
+              {isRTL ? "الأحدث" : "Newest"}
+            </SelectItem>
+            <SelectItem value="discount-high">
+              {isRTL ? "أعلى خصم" : "Highest Discount"}
+            </SelectItem>
+            <SelectItem value="discount-low">
+              {isRTL ? "أقل خصم" : "Lowest Discount"}
+            </SelectItem>
+            <SelectItem value="price-high">
+              {isRTL ? "أعلى سعر" : "Highest Price"}
+            </SelectItem>
+            <SelectItem value="price-low">
+              {isRTL ? "أقل سعر" : "Lowest Price"}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -345,8 +447,8 @@ export default function DealsClient({
           variant="outline"
           className="w-full border-2 border-[#111827] rounded-lg h-12"
         >
-          <X className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-          {isRTL ? 'إزالة الفلاتر' : 'Clear Filters'}
+          <X className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`} />
+          {isRTL ? "إزالة الفلاتر" : "Clear Filters"}
         </Button>
       )}
     </div>
@@ -358,8 +460,11 @@ export default function DealsClient({
       <aside className="hidden lg:block">
         <div className="bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] p-6 sticky top-24">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-[#111827]" style={{ fontSize: '20px', fontWeight: 700 }}>
-              {isRTL ? 'الفلاتر' : 'Filters'}
+            <h3
+              className="text-[#111827]"
+              style={{ fontSize: "20px", fontWeight: 700 }}
+            >
+              {isRTL ? "الفلاتر" : "Filters"}
             </h3>
             <SlidersHorizontal className="h-5 w-5 text-[#5FB57A]" />
           </div>
@@ -372,18 +477,23 @@ export default function DealsClient({
         <Sheet>
           <SheetTrigger asChild>
             <Button className="w-full bg-white border-2 border-[#111827] text-[#111827] rounded-lg h-12 shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)]">
-              <SlidersHorizontal className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {isRTL ? 'الفلاتر' : 'Filters'}
+              <SlidersHorizontal
+                className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`}
+              />
+              {isRTL ? "الفلاتر" : "Filters"}
               {hasActiveFilters && (
                 <Badge className="bg-[#5FB57A] text-white ml-2 mr-2">
-                  {isRTL ? 'نشط' : 'Active'}
+                  {isRTL ? "نشط" : "Active"}
                 </Badge>
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side={isRTL ? "right" : "left"} className="w-[300px] sm:w-[400px]">
+          <SheetContent
+            side={isRTL ? "right" : "left"}
+            className="w-[300px] sm:w-[400px]"
+          >
             <SheetHeader>
-              <SheetTitle>{isRTL ? 'الفلاتر' : 'Filters'}</SheetTitle>
+              <SheetTitle>{isRTL ? "الفلاتر" : "Filters"}</SheetTitle>
             </SheetHeader>
             <div className="mt-6">
               <FilterSection />
@@ -396,15 +506,15 @@ export default function DealsClient({
       <div className="lg:col-span-3">
         {filteredDeals.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)]">
-            <p className="text-[#6B7280] mb-4" style={{ fontSize: '18px' }}>
-              {isRTL ? 'لم يتم العثور على عروض' : 'No deals found'}
+            <p className="text-[#6B7280] mb-4" style={{ fontSize: "18px" }}>
+              {isRTL ? "لم يتم العثور على عروض" : "No deals found"}
             </p>
             {hasActiveFilters && (
               <Button
                 onClick={clearFilters}
                 className="bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg"
               >
-                {isRTL ? 'إزالة الفلاتر' : 'Clear Filters'}
+                {isRTL ? "إزالة الفلاتر" : "Clear Filters"}
               </Button>
             )}
           </div>
