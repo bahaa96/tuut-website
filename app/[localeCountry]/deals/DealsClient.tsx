@@ -27,20 +27,13 @@ import { useAllCategories } from "./useAllCategories";
 import { useAllStores } from "./useAllStores";
 import { useAllDeals } from "./useAllDeals";
 import * as m from "@/src/paraglide/messages";
+import { getLocale } from "@/src/paraglide/runtime";
 
 interface DealsClientProps {
   initialDeals: Deal[];
-  language: string;
-  isRTL: boolean;
-  country: string;
 }
 
-export default function DealsClient({
-  initialDeals,
-  language,
-  isRTL,
-  country,
-}: DealsClientProps) {
+export default function DealsClient({ initialDeals }: DealsClientProps) {
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
 
   // Filter states
@@ -54,7 +47,8 @@ export default function DealsClient({
   const categoryObserver = useRef<IntersectionObserver>();
   const storeObserver = useRef<IntersectionObserver>();
 
-  const isRTLDir = isRTL ? "rtl" : "ltr";
+  const isRTLDir = getLocale() === "ar" ? "rtl" : "ltr";
+  const isRTL = getLocale() === "ar";
 
   const {
     allCategories,

@@ -10,6 +10,8 @@ export interface Store {
   website?: string;
   verified?: boolean;
   created_at?: string;
+  profile_picture_url?: string;
+  redirect_url?: string;
 }
 
 export interface StoreFilters {

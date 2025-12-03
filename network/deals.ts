@@ -1,7 +1,5 @@
 import { Deal, FeaturedDeal } from "@/domain-models";
 import { supabase } from "./instance";
-import { DealWithStore } from "@/domain-models/deal";
-import { edgeServerAppPaths } from "next/dist/build/webpack/plugins/pages-manifest-plugin";
 
 interface RequestFetchAllDealsArgs {
   countrySlug: string;
@@ -23,7 +21,7 @@ const requestFetchAllDeals = async ({
   const offset = currentPage * pageSize;
   let query = supabase
     .from("deals")
-    .select("*, stores!deals_store_id_fkey(*)")
+    .select("*, store:store_id(*)")
     .eq("country_slug", countrySlug)
     .range(offset, offset + pageSize - 1);
 
@@ -95,8 +93,28 @@ const requestFetchAllDealsLite = async ({
   return { data };
 };
 
+interface RequestFetchSingleDealArgs {
+  slug: string;
+}
+const requestFetchSingleDeal = async ({
+  slug,
+}: RequestFetchSingleDealArgs): Promise<{ data: Deal | null }> => {
+  // this decode is needed as most slugs are in Arabic
+  const decodedSlug = decodeURIComponent(slug);
+  const { data, error } = await supabase
+    .from("deals")
+    .select("*, store:store_id(*)")
+    .or(`slug_en.eq.${decodedSlug},slug_ar.eq.${decodedSlug}`)
+    .single();
+  if (error) {
+    throw new Error(error.message);
+  }
+  return { data };
+};
+
 export {
   requestFetchAllDeals,
   requestFetchAllFeaturedDeals,
   requestFetchAllDealsLite,
+  requestFetchSingleDeal,
 };

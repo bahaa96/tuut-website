@@ -22,14 +22,14 @@ export async function generateMetadata({
 
   // Extract language and country from localeCountry (e.g., "en-EG" -> "en", "EG")
   const language = localeCountry.split("-")[0];
-  const country = localeCountry.split("-")[1];
+  const countrySlug = localeCountry.split("-")[1];
   const isArabic = language === "ar";
 
   // Fetch deals count for metadata
   let dealsCount = 0;
   try {
     const { data: allDeals } = await requestFetchAllDeals({
-      countrySlug: country.toUpperCase(),
+      countrySlug: countrySlug,
       currentPage: 1,
       pageSize: 20,
     });
@@ -39,7 +39,7 @@ export async function generateMetadata({
     console.error("Error fetching deals count for metadata:", error);
   }
 
-  const countryName = getCountryNameFromCode(country);
+  const countryName = getCountryNameFromCode(countrySlug);
 
   const title = isArabic
     ? `جميع العروض في ${countryName} | الخصومات والكوبونات | Tuut`
@@ -111,7 +111,7 @@ export default async function DealsPage({ params }: DealsPageProps) {
   const resolvedParams = await params;
 
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
-  const country = resolvedParams.localeCountry.split("-")[1];
+  const countrySlug = resolvedParams.localeCountry.split("-")[1];
   const language = resolvedParams.localeCountry.split("-")[0];
   const isRTL = language === "ar";
 
@@ -119,7 +119,7 @@ export default async function DealsPage({ params }: DealsPageProps) {
 
   try {
     const { data: allDeals } = await requestFetchAllDeals({
-      countrySlug: "EG", // TODO: Replace with country slug
+      countrySlug: countrySlug,
       currentPage: 1,
       pageSize: 20,
     });
@@ -129,6 +129,8 @@ export default async function DealsPage({ params }: DealsPageProps) {
     console.error("Error fetching deals data:", error);
   }
 
+  const countryName = getCountryNameFromCode(countrySlug);
+
   // Generate JSON-LD structured data for deals listing
   const jsonLd = {
     "@context": "https://schema.org",
@@ -136,12 +138,12 @@ export default async function DealsPage({ params }: DealsPageProps) {
     "@id": `https://tuut.shop/${resolvedParams.localeCountry}/deals`,
     name:
       language === "ar"
-        ? `جميع العروض في ${country}`
-        : `All Deals in ${country}`,
+        ? `جميع العروض في ${countryName}`
+        : `All Deals in ${countryName}`,
     description:
       language === "ar"
-        ? `استعرض ${deals.length} عرض في ${country}. اكتشف أفضل الخصومات والعروض الحصرية.`
-        : `Browse ${deals.length} deals in ${country}. Discover the best discounts and exclusive offers.`,
+        ? `استعرض ${deals.length} عرض في ${countryName}. اكتشف أفضل الخصومات والعروض الحصرية.`
+        : `Browse ${deals.length} deals in ${countryName}. Discover the best discounts and exclusive offers.`,
     url: `https://tuut.shop/${resolvedParams.localeCountry}/deals`,
     mainEntity: {
       "@type": "ItemList",
@@ -162,7 +164,7 @@ export default async function DealsPage({ params }: DealsPageProps) {
             ? `${deal.discount_percentage}%`
             : undefined,
           price: deal.discounted_price,
-          priceCurrency: getCurrencyFromCountryCode(country),
+          priceCurrency: getCurrencyFromCountryCode(countrySlug),
           category: deal.category_name,
           availability: "https://schema.org/InStock",
           validThrough: deal.expires_at,
@@ -235,12 +237,7 @@ export default async function DealsPage({ params }: DealsPageProps) {
               </h1>
             </div>
 
-            <DealsClientPage
-              initialDeals={deals}
-              language={language}
-              isRTL={isRTL}
-              country={country}
-            />
+            <DealsClientPage initialDeals={deals} />
           </div>
         </section>
       </main>

@@ -19,7 +19,7 @@ export interface Deal {
   featured?: boolean;
   created_at?: string;
   store_id?: string;
-  stores: Store;
+  store?: Store;
 }
 
 export interface DealFilters {

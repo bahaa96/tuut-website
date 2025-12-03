@@ -2,6 +2,7 @@ export {
   requestFetchAllDeals,
   requestFetchAllFeaturedDeals,
   requestFetchAllDealsLite,
+  requestFetchSingleDeal,
 } from "./deals";
 export { requestFetchAllStores } from "./stores";
 export { requestFetchAllArticles } from "./articles";

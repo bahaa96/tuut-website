@@ -1,6 +1,5 @@
-import { fetchDealBySlug } from "../../../../lib/supabase-fetch";
 import DealClientInteractions from "./DealClientInteractions";
-import DealSidebar from "./DealSidebar";
+import DealSidebar from "./DealSharingBox";
 import Link from "next/link";
 import { Deal } from "../../../../domain-models";
 import { Metadata } from "next";
@@ -13,6 +12,9 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../../../../components/figma/ImageWithFallback";
 import RelatedDealsSection from "./RelatedDealsSection";
+import { requestFetchAllDeals, requestFetchSingleDeal } from "@/network";
+import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
+import * as m from "@/src/paraglide/messages";
 
 interface DealDetailPageProps {
   params: Promise<{
@@ -21,48 +23,67 @@ interface DealDetailPageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: DealDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: DealDetailPageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const { localeCountry, slug } = resolvedParams;
 
   // Extract language from localeCountry (e.g., "en-EG" -> "en")
-  const language = localeCountry.split('-')[0];
-  const country = localeCountry.split('-')[1];
-  const isArabic = language === 'ar';
+  const language = localeCountry.split("-")[0];
+  const countrySlug = localeCountry.split("-")[1];
+  const isArabic = language === "ar";
 
   // Fetch deal data for metadata
-  const { data: deal } = await fetchDealBySlug(slug);
+  const { data: deal } = await requestFetchSingleDeal({ slug });
 
   if (!deal) {
     return {
-      title: isArabic ? 'العرض غير موجود | Tuut' : 'Deal Not Found | Tuut',
-      description: isArabic ? 'هذا العرض غير متوفر حالياً' : 'This deal is currently unavailable',
+      title: isArabic ? "العرض غير موجود | Tuut" : "Deal Not Found | Tuut",
+      description: isArabic
+        ? "هذا العرض غير متوفر حالياً"
+        : "This deal is currently unavailable",
     };
   }
 
-  const dealTitle = isArabic && deal.title_ar ? deal.title_ar : deal.title_en;
-  const dealDescription = isArabic && deal.description_ar ? deal.description_ar : deal.description_en;
-  const storeName = isArabic && deal.store_name_ar ? deal.store_name_ar : deal.store_name;
+  const dealTitle = isArabic ? deal.title_ar : deal.title_en;
+  const dealDescription = isArabic ? deal.description_ar : deal.description_en;
+  const storeName = isArabic ? deal.store?.title_ar : deal.store?.title_en;
+  const storeSlug = isArabic ? deal.store?.slug_ar : deal.store?.slug_en;
+  const countryName = getCountryNameFromCode(countrySlug);
 
   // Create SEO-optimized title
   const title = dealTitle
-    ? `${dealTitle} | ${storeName || 'Tuut'} ${isArabic ? 'العروض' : 'Deals'} | Tuut`
-    : `${isArabic ? 'عرض خاص' : 'Special Deal'} | ${isArabic ? 'العروض' : 'Deals'} | Tuut`;
+    ? `${dealTitle} | ${storeName || "Tuut"} ${
+        isArabic ? "العروض" : "Deals"
+      } | Tuut`
+    : `${isArabic ? "عرض خاص" : "Special Deal"} | ${
+        isArabic ? "العروض" : "Deals"
+      } | Tuut`;
 
   // Create SEO-optimized description
-  let description = '';
+  let description = "";
   if (dealDescription) {
-    description = dealDescription.length > 160
-      ? dealDescription.substring(0, 157) + '...'
-      : dealDescription;
+    description =
+      dealDescription.length > 160
+        ? dealDescription.substring(0, 157) + "..."
+        : dealDescription;
   } else if (dealTitle) {
     description = isArabic
-      ? `استمتع بخصم مميز على ${dealTitle} من ${storeName || 'Tuut'}. افضل العروض والخصومات في ${country}.`
-      : `Enjoy amazing discount on ${dealTitle} from ${storeName || 'Tuut'}. Best deals and offers in ${country}.`;
+      ? `استمتع بخصم مميز على ${dealTitle} من ${
+          storeName || "Tuut"
+        }. افضل العروض والخصومات في ${countryName}.`
+      : `Enjoy amazing discount on ${dealTitle} from ${
+          storeName || "Tuut"
+        }. Best deals and offers in ${countryName}.`;
   } else {
     description = isArabic
-      ? `اكتشف أحدث العروض والخصومات من ${storeName || 'Tuut'}. افضل الصفقات في ${country}.`
-      : `Discover latest deals and discounts from ${storeName || 'Tuut'}. Best offers in ${country}.`;
+      ? `اكتشف أحدث العروض والخصومات من ${
+          storeName || "Tuut"
+        }. افضل الصفقات في ${countryName}.`
+      : `Discover latest deals and discounts from ${
+          storeName || "Tuut"
+        }. Best offers in ${countryName}.`;
   }
 
   return {
@@ -71,31 +92,37 @@ export async function generateMetadata({ params }: DealDetailPageProps): Promise
     keywords: [
       dealTitle,
       storeName,
-      isArabic ? 'عروض' : 'deals',
-      isArabic ? 'خصومات' : 'discounts',
-      isArabic ? 'توفير' : 'savings',
-      isArabic ? 'تسوق' : 'shopping',
-      isArabic ? 'عروض خاصة' : 'special offers',
-      country,
-      isArabic ? 'تخفيضات' : 'coupons',
-      isArabic ? 'صفقات' : 'bargains'
-    ].filter(Boolean).join(', '),
+      isArabic ? "عروض" : "deals",
+      isArabic ? "خصومات" : "discounts",
+      isArabic ? "توفير" : "savings",
+      isArabic ? "تسوق" : "shopping",
+      isArabic ? "عروض خاصة" : "special offers",
+      countryName,
+      isArabic ? "تخفيضات" : "coupons",
+      isArabic ? "صفقات" : "bargains",
+    ]
+      .filter(Boolean)
+      .join(", "),
     openGraph: {
       title,
       description,
-      type: 'website',
+      type: "website",
       url: `https://tuut.shop/${localeCountry}/deal/${slug}/`,
-      siteName: 'Tuut',
-      images: deal.featured_image_url ? [{
-        url: deal.featured_image_url,
-        width: 1200,
-        height: 630,
-        alt: dealTitle || `${storeName} ${isArabic ? 'عرض' : 'deal'}`,
-      }] : [],
+      siteName: "Tuut",
+      images: deal.featured_image_url
+        ? [
+            {
+              url: deal.featured_image_url,
+              width: 1200,
+              height: 630,
+              alt: dealTitle || `${storeName} ${isArabic ? "عرض" : "deal"}`,
+            },
+          ]
+        : [],
       locale: localeCountry,
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title,
       description,
       images: deal.featured_image_url ? [deal.featured_image_url] : [],
@@ -112,9 +139,9 @@ export async function generateMetadata({ params }: DealDetailPageProps): Promise
       googleBot: {
         index: true,
         follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
       },
     },
   };
@@ -125,61 +152,37 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const resolvedParams = await params;
 
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
-  const country = resolvedParams.localeCountry.split('-')[1];
-  const language = resolvedParams.localeCountry.split('-')[0];
-  const isRTL = language === 'ar';
+  const countrySlug = resolvedParams.localeCountry.split("-")[1];
+  const language = resolvedParams.localeCountry.split("-")[0];
+  const isRTL = language === "ar";
   const dealSlug = resolvedParams.slug;
 
   // Fetch deal data server-side
   let deal: Deal | null = null;
-  let store: any = null;
   let relatedDeals: Deal[] = [];
 
   try {
     // Fetch deal details
-    const dealResult = await fetchDealBySlug(dealSlug);
+    const { data: dealDetails } = await requestFetchSingleDeal({
+      slug: dealSlug,
+    });
 
-    if (!dealResult.error && dealResult.data) {
-      deal = dealResult.data;
+    if (dealDetails) {
+      deal = dealDetails;
 
-      // Fetch store details if store_id exists
-      if (dealResult.data?.store_id) {
-        const { createClient } = await import("../../../../utils/supabase/client");
-        const supabase = createClient();
+      // Fetch related deals from the same store
+      const { data: allRelatedDeals } = await requestFetchAllDeals({
+        countrySlug: countrySlug,
+        currentPage: 1,
+        pageSize: 4,
+        storeId: dealDetails.store_id,
+      });
 
-        // Fetch store details
-        const { data: storeData } = await supabase
-          .from('stores')
-          .select('*')
-          .eq('id', dealResult.data.store_id)
-          .single();
-
-        if (storeData) {
-          store = storeData;
-        }
-
-        // Fetch related deals from the same store
-        const { data: relatedData } = await supabase
-          .from('deals')
-          .select('*')
-          .eq('store_id', dealResult.data.store_id)
-          .neq('slug_en', dealSlug)
-          .neq('slug_ar', dealSlug)
-          .limit(4);
-
-        if (relatedData) {
-          relatedDeals = relatedData.map((d: any) => ({
-            ...d,
-            store_name: store?.title || store?.store_name || dealResult.data.store_name,
-            store_name_ar: store?.title_ar || store?.store_name_ar || dealResult.data.store_name_ar,
-            store_logo: store?.profile_picture_url || store?.logo_url || dealResult.data.store_logo,
-          }));
-        }
-      }
+      relatedDeals = allRelatedDeals;
+      console.log("relatedDeals", relatedDeals);
     }
-
   } catch (error) {
-    console.error('Error fetching deal data:', error);
+    console.error("Error fetching deal data:", error);
   }
 
   // If no deal found, show 404
@@ -189,11 +192,17 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
         <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
           <div className="text-center py-12">
             <Tag className="h-16 w-16 text-[#6B7280] mx-auto mb-4" />
-            <h2 className="text-[#111827] mb-4" style={{ fontSize: '24px', fontWeight: 700 }}>
-              {isRTL ? 'العرض غير موجود' : 'Deal not found'}
+            <h2
+              className="text-[#111827] mb-4"
+              style={{ fontSize: "24px", fontWeight: 700 }}
+            >
+              {m.DEAL_NOT_FOUND()}
             </h2>
-            <Link href={`/${resolvedParams.localeCountry}/deals`} className="inline-flex items-center bg-white text-[#111827] border-2 border-[#111827] hover:bg-[#F0F7F0] px-6 py-3 rounded-xl font-medium transition-all shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)]">
-              {isRTL ? 'العودة إلى العروض' : 'Back to Deals'}
+            <Link
+              href={`/${resolvedParams.localeCountry}/deals`}
+              className="inline-flex items-center bg-white text-[#111827] border-2 border-[#111827] hover:bg-[#F0F7F0] px-6 py-3 rounded-xl font-medium transition-all shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)]"
+            >
+              {m.BACK_TO_ALL_DEALS()}
             </Link>
           </div>
         </div>
@@ -201,50 +210,28 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     );
   }
 
-  const dealTitle = isRTL && deal.title_ar ? deal.title_ar : deal.title_en;
-  const dealDescription = isRTL && deal.description_ar ? deal.description_ar : deal.description_en;
+  const dealTitle = isRTL ? deal.title_ar : deal.title_en;
+  const dealDescription = isRTL ? deal.description_ar : deal.description_en;
+  const storeName = isRTL ? deal.store?.title_ar : deal.store?.title_en;
+  const storeSlug = isRTL ? deal.store?.slug_ar : deal.store?.slug_en;
 
-  // Get store name with proper fallbacks
-  const getStoreName = (): string => {
-    if (store) {
-      if (isRTL) {
-        return store.title_ar || store.name_ar || store.store_name_ar || store.title_en || store.title || store.store_name || store.name || 'Store';
-      }
-      return store.title_en || store.title || store.store_name || store.name || 'Store';
-    }
-    if (isRTL) {
-      return deal.store_name_ar || deal.store_name || 'Store';
-    }
-    return deal.store_name || 'Store';
-  };
-
-  const storeName = getStoreName();
-
-  // Get store slug for navigation
-  const getStoreSlug = (): string => {
-    // Use localized slug based on language
-    if (isRTL && store?.slug_ar) return store.slug_ar;
-    if (!isRTL && store?.slug_en) return store.slug_en;
-
-    // Fallback to any available slug
-    if (store?.slug_en) return store.slug_en;
-    if (store?.slug_ar) return store.slug_ar;
-    if (deal.store_slug) return deal.store_slug;
-
-    const fallbackName = storeName || store?.title_en || store?.title || '';
-    return fallbackName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  };
-
-  const storeSlug = getStoreSlug();
-  const termsConditions = isRTL && deal.terms_conditions_ar ? deal.terms_conditions_ar : deal.terms_conditions;
+  const termsConditions =
+    isRTL && deal.terms_conditions_ar
+      ? deal.terms_conditions_ar
+      : deal.terms_conditions;
 
   return (
     <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
         {/* Back Button */}
-        <Link href={`/${resolvedParams.localeCountry}/deals`} className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-8 transition-colors">
-          <ArrowLeft className={`h-5 w-5 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
-          {isRTL ? 'العودة إلى جميع العروض' : 'Back to All Deals'}
+        <Link
+          href={`/${resolvedParams.localeCountry}/deals`}
+          className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-8 transition-colors"
+        >
+          <ArrowLeft
+            className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
+          />
+          {m.BACK_TO_ALL_DEALS()}
         </Link>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -255,12 +242,14 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               {/* Store Header */}
               <Link
                 href={`/${resolvedParams.localeCountry}/store/${storeSlug}`}
-                className={`flex items-center gap-4 mb-6 pb-6 border-b-2 border-[#E5E7EB] ${isRTL ? 'flex-row-reverse' : ''} group cursor-pointer hover:bg-[#F9FAFB] -mx-8 -mt-8 px-8 pt-8 rounded-t-2xl transition-colors`}
+                className={`flex items-center gap-4 mb-6 pb-6 border-b-2 border-[#E5E7EB] ${
+                  isRTL ? "flex-row-reverse" : ""
+                } group cursor-pointer hover:bg-[#F9FAFB] -mx-8 -mt-8 px-8 pt-8 rounded-t-2xl transition-colors`}
               >
-                {store && store.profile_picture_url ? (
+                {deal.store?.profile_picture_url ? (
                   <ImageWithFallback
-                    src={store.profile_picture_url}
-                    alt={storeName || ''}
+                    src={deal.store?.profile_picture_url}
+                    alt={storeName || ""}
                     className="h-16 w-16 object-contain rounded-lg border-2 border-[#E5E7EB] p-2 group-hover:border-[#5FB57A] transition-colors"
                   />
                 ) : (
@@ -268,31 +257,45 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                     <StoreIcon className="h-8 w-8 text-[#5FB57A]" />
                   </div>
                 )}
-                <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <div className="text-[#6B7280] text-sm mb-1">
-                    {isRTL ? 'متجر' : 'Store'}
-                  </div>
-                  <div className="text-[#111827] group-hover:text-[#5FB57A] transition-colors" style={{ fontSize: '20px', fontWeight: 700 }}>
-                    {storeName}
+                <div className={`flex-1 ${isRTL ? "text-right" : "text-left"}`}>
+                  <div className="text-[#6B7280] text-sm mb-1">{m.STORE()}</div>
+                  <div
+                    className="text-[#111827] group-hover:text-[#5FB57A] transition-colors"
+                    style={{ fontSize: "20px", fontWeight: 700 }}
+                  >
+                    {isRTL ? deal.store?.title_ar : deal.store?.title_en}
                   </div>
                 </div>
-                <div className={`h-5 w-5 text-[#6B7280] group-hover:text-[#5FB57A] transition-colors ${isRTL ? 'mr-2' : 'ml-2'}`} style={{ transform: 'rotate(-45deg)' }}>
+                <div
+                  className={`h-5 w-5 text-[#6B7280] group-hover:text-[#5FB57A] transition-colors ${
+                    isRTL ? "mr-2" : "ml-2"
+                  }`}
+                  style={{ transform: "rotate(-45deg)" }}
+                >
                   →
                 </div>
               </Link>
 
               {/* Badges */}
-              <div className={`flex flex-wrap gap-2 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div
+                className={`flex flex-wrap gap-2 mb-6 ${
+                  isRTL ? "flex-row-reverse" : ""
+                }`}
+              >
                 {deal.is_verified && (
                   <span className="inline-flex items-center px-3 py-1 rounded-lg bg-[#E8F3E8] text-[#5FB57A] text-sm border-2 border-[#5FB57A]">
-                    <BadgeCheck className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {isRTL ? 'موثوق' : 'Verified'}
+                    <BadgeCheck
+                      className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                    />
+                    {m.VERIFIED()}
                   </span>
                 )}
                 {deal.featured && (
                   <span className="inline-flex items-center px-3 py-1 rounded-lg bg-[#FEF3C7] text-[#F59E0B] text-sm border-2 border-[#F59E0B]">
-                    <TrendingUp className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {isRTL ? 'مميز' : 'Featured'}
+                    <TrendingUp
+                      className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`}
+                    />
+                    {m.FEATURED()}
                   </span>
                 )}
                 {deal.category_name && (
@@ -303,13 +306,21 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               </div>
 
               {/* Title */}
-              <h1 className="text-[#111827] mb-4" style={{ fontSize: '32px', fontWeight: 700 }} dir={isRTL ? 'rtl' : 'ltr'}>
+              <h1
+                className="text-[#111827] mb-4"
+                style={{ fontSize: "32px", fontWeight: 700 }}
+                dir={isRTL ? "rtl" : "ltr"}
+              >
                 {dealTitle}
               </h1>
 
               {/* Description */}
               {dealDescription && (
-                <p className="text-[#6B7280] mb-6" style={{ fontSize: '18px' }} dir={isRTL ? 'rtl' : 'ltr'}>
+                <p
+                  className="text-[#6B7280] mb-6"
+                  style={{ fontSize: "18px" }}
+                  dir={isRTL ? "rtl" : "ltr"}
+                >
                   {dealDescription}
                 </p>
               )}
@@ -318,11 +329,17 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               {deal.discount_percentage && (
                 <div className="bg-[#E8F3E8] rounded-xl border-2 border-[#5FB57A] p-6 mb-6">
                   <div className="text-center">
-                    <div className="text-[#5FB57A]" style={{ fontSize: '48px', fontWeight: 700 }}>
+                    <div
+                      className="text-[#5FB57A]"
+                      style={{ fontSize: "48px", fontWeight: 700 }}
+                    >
                       {deal.discount_percentage}%
                     </div>
-                    <div className="text-[#111827]" style={{ fontSize: '20px', fontWeight: 600 }}>
-                      {isRTL ? 'خصم' : 'OFF'}
+                    <div
+                      className="text-[#111827]"
+                      style={{ fontSize: "20px", fontWeight: 600 }}
+                    >
+                      {m.OFF()}
                     </div>
                   </div>
                 </div>
@@ -331,7 +348,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               {/* Client-side interactive components */}
               <DealClientInteractions
                 deal={deal}
-                store={store}
+                store={deal.store}
                 isRTL={isRTL}
                 language={language}
               />
@@ -339,10 +356,18 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               {/* Terms & Conditions */}
               {termsConditions && (
                 <div className="mt-8 pt-6 border-t-2 border-[#E5E7EB]">
-                  <h3 className={`text-[#111827] mb-3 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontSize: '18px', fontWeight: 700 }}>
-                    {isRTL ? 'الشروط والأحكام' : 'Terms & Conditions'}
+                  <h3
+                    className={`text-[#111827] mb-3 ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                    style={{ fontSize: "18px", fontWeight: 700 }}
+                  >
+                    {m.TERMS_AND_CONDITIONS()}
                   </h3>
-                  <p className="text-[#6B7280] text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <p
+                    className="text-[#6B7280] text-sm"
+                    dir={isRTL ? "rtl" : "ltr"}
+                  >
                     {termsConditions}
                   </p>
                 </div>
@@ -354,7 +379,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
           <div className="lg:col-span-1">
             <DealSidebar
               deal={deal}
-              store={store}
+              store={deal.store}
               isRTL={isRTL}
               language={language}
             />
@@ -364,8 +389,13 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
         {/* Related Deals */}
         {relatedDeals.length > 0 && (
           <div className="mt-12">
-            <h2 className={`text-[#111827] mb-6 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontSize: '28px', fontWeight: 700 }}>
-              {isRTL ? 'عروض ذات صلة من نفس المتجر' : 'More Deals from This Store'}
+            <h2
+              className={`text-[#111827] mb-6 ${
+                isRTL ? "text-right" : "text-left"
+              }`}
+              style={{ fontSize: "28px", fontWeight: 700 }}
+            >
+              {m.MORE_DEALS_FROM_THIS_STORE()}
             </h2>
             <RelatedDealsSection deals={relatedDeals} isRTL={isRTL} />
           </div>
