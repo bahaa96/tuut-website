@@ -15,8 +15,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import * as m from "../src/paraglide/messages.js";
-import DealsClient from "@/app/[localeCountry]/deals/DealsClient.js";
 import { localizedRoute } from "@/utils/localizedRoute";
+import { setLocale } from "@/src/paraglide/runtime";
+import { headers } from "next/headers";
 
 // TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -31,24 +32,28 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 );
 
 interface FooterProps {
-  isRTL: boolean;
+  countrySlug: string;
 }
 
-const Footer = async ({ isRTL }: FooterProps) => {
+const Footer = async ({ countrySlug }: FooterProps) => {
+  const headersList = await headers();
+  const locale = headersList?.get("x-paraglide-locale") as "ar" | "en";
+  const isRTL = locale === "ar";
+
   const { data: featuredDeals } = await requestFetchAllFeaturedDeals({
-    countrySlug: "EG", // TODO: Replace with countrySlug
+    countrySlug: countrySlug,
     currentPage: 1,
     pageSize: 5,
   });
 
   const { data: topStores } = await requestFetchAllStores({
-    countrySlug: "EG", // TODO: Replace with countrySlug
+    countrySlug: countrySlug,
     currentPage: 1,
     pageSize: 10,
   });
 
   const { data: featuredArticles } = await requestFetchAllArticles({
-    countrySlug: "EG", // TODO: Replace with countrySlug
+    countrySlug: countrySlug,
     currentPage: 1,
     pageSize: 5,
   });
@@ -59,10 +64,12 @@ const Footer = async ({ isRTL }: FooterProps) => {
   });
 
   const { data: bestSellingProducts } = await requestFetchAllProducts({
-    countrySlug: "EG", // TODO: Replace with countrySlug
+    countrySlug: countrySlug,
     currentPage: 1,
     pageSize: 10,
   });
+
+  setLocale(locale);
 
   const footerLinks = {
     company: [
@@ -104,11 +111,19 @@ const Footer = async ({ isRTL }: FooterProps) => {
           <div className="flex flex-col lg:flex-row gap-8 mb-12">
             <div className="lg:w-1/4">
               <div className={`mb-4 ${isRTL ? "flex justify-end" : ""}`}>
-                <img
-                  src="https://i.ibb.co/XZV7bXh3/Tuut.png"
-                  alt={m.TUUT()}
-                  className="h-12 w-auto"
-                />
+                {locale === "ar" ? (
+                  <img
+                    src="/assets/images/tuut-logo-ar-min.png"
+                    alt={m.TUUT_LOGO()}
+                    className="h-12 w-auto"
+                  />
+                ) : (
+                  <img
+                    src="https://i.ibb.co/XZV7bXh3/Tuut.png"
+                    alt={m.TUUT_LOGO()}
+                    className="h-12 w-auto"
+                  />
+                )}
               </div>
               <p className="text-[#6B7280] mb-6 max-w-[280px]">
                 {m.DISCOVER_THE_BEST_DEALS_AND_DISCOUNTS_AT_YOUR_FAVORITE_STORES()}
@@ -200,12 +215,12 @@ const Footer = async ({ isRTL }: FooterProps) => {
                         <Link
                           href={localizedRoute(
                             `/deal/${
-                              isRTL ? deal.deals.slug_ar : deal.deals.slug_en
+                              isRTL ? deal.deal.slug_ar : deal.deal.slug_en
                             }`
                           )}
                           className="text-[#6B7280] hover:text-[#111827] transition-colors text-sm hover:underline"
                         >
-                          {isRTL ? deal.deals.title_ar : deal.deals.title_en}
+                          {isRTL ? deal.deal.title_ar : deal.deal.title_en}
                         </Link>
                       </li>
                     );

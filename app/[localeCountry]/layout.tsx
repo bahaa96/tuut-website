@@ -13,7 +13,7 @@ export default async function LocaleLayout({
   const resolvedParams = await params;
 
   const language = resolvedParams.localeCountry.split("-")[0];
-  const isRTL = language === "ar";
+  const countrySlug = resolvedParams.localeCountry.split("-")[1];
 
   return (
     <div
@@ -22,7 +22,7 @@ export default async function LocaleLayout({
     >
       <Header />
       <main className="flex-1">{children}</main>
-      <Footer isRTL={isRTL} />
+      <Footer countrySlug={countrySlug} />
       <Toaster />
     </div>
   );

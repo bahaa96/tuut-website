@@ -1,13 +1,17 @@
 "use client";
 
-import { DealCard } from "../../../../components/DealCard";
+import { DealCard } from "@/components/DealCard";
+import { Deal } from "@/domain-models";
 
 interface RelatedDealsSectionProps {
-  deals: any[];
+  deals: Deal[];
   isRTL: boolean;
 }
 
-export default function RelatedDealsSection({ deals, isRTL }: RelatedDealsSectionProps) {
+export default function RelatedDealsSection({
+  deals,
+  isRTL,
+}: RelatedDealsSectionProps) {
   const handleToggleSave = (dealId: number) => {
     // TODO: Implement save functionality
     console.log("Toggle save for deal:", dealId);

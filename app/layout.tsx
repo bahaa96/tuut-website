@@ -12,6 +12,7 @@ import {
   Locale,
   overwriteGetLocale,
   overwriteGetUrlOrigin,
+  setLocale,
 } from "@/src/paraglide/runtime";
 
 export const metadata: Metadata = {

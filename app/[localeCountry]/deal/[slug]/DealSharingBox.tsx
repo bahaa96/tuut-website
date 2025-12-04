@@ -100,7 +100,7 @@ const DealSharingBox = ({ deal, store }: DealSharingBoxProps) => {
 
   const shareOnWhatsApp = () => {
     const url = window.location.href;
-    const text = deal?.title || "Check out this deal!";
+    const text = language === "ar" ? deal?.title_ar : deal?.title_en;
     window.open(
       `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`,
       "_blank"

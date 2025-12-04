@@ -35,8 +35,6 @@ export function proxy(request) {
   const localeCountry = request.nextUrl.pathname.split("/")[1];
   const locale = localeCountry?.split("-")[0];
 
-  console.log("foo:", locale);
-
   const response = NextResponse.next();
   response.headers.set("x-pathname", request.nextUrl.pathname);
   response.headers.set("x-paraglide-locale", locale);

@@ -7,6 +7,7 @@ import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
 import { requestFetchAllDeals } from "@/network/deals";
 import * as m from "@/src/paraglide/messages";
 import getCurrencyFromCountryCode from "@/utils/getCurrencyFromCountryCode";
+import { headers } from "next/headers";
 
 interface DealsPageProps {
   params: Promise<{
@@ -107,7 +108,6 @@ export async function generateMetadata({
 }
 
 export default async function DealsPage({ params }: DealsPageProps) {
-  // Await params as required by Next.js 15
   const resolvedParams = await params;
 
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
@@ -171,8 +171,8 @@ export default async function DealsPage({ params }: DealsPageProps) {
           seller: {
             "@type": "Store",
             name:
-              language === "ar" ? deal.stores?.title_ar : deal.stores?.title_en,
-            image: deal.stores?.logo_url,
+              language === "ar" ? deal.store?.title_ar : deal.store?.title_en,
+            image: deal.store?.profile_picture_url,
           },
         },
       })),

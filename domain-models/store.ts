@@ -4,7 +4,6 @@ export interface Store {
   title_ar?: string;
   slug_en?: string;
   slug_ar?: string;
-  logo_url?: string;
   description_en?: string;
   description_ar?: string;
   website?: string;

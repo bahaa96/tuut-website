@@ -18,7 +18,7 @@ const requestFetchAllDeals = async ({
   categoryId,
   storeId,
 }: RequestFetchAllDealsArgs): Promise<{ data: Deal[] }> => {
-  const offset = currentPage * pageSize;
+  const offset = (currentPage - 1) * pageSize;
   let query = supabase
     .from("deals")
     .select("*, store:store_id(*)")
@@ -55,34 +55,10 @@ const requestFetchAllFeaturedDeals = async ({
   currentPage,
   pageSize,
 }: RequestFetchAllFeaturedDealsArgs): Promise<{ data: FeaturedDeal[] }> => {
-  const offset = currentPage * pageSize;
-  const { data, error } = await supabase
-    .from("featured_deals")
-    .select("*, deals(*)")
-    .eq("country_slug", countrySlug)
-    .range(offset, offset + pageSize);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return { data };
-};
-
-interface RequestFetchAllDealsLiteArgs {
-  countrySlug: string;
-  currentPage: number;
-  pageSize: number;
-}
-const requestFetchAllDealsLite = async ({
-  countrySlug,
-  currentPage,
-  pageSize,
-}: RequestFetchAllDealsLiteArgs): Promise<{ data: Deal[] }> => {
   const offset = (currentPage - 1) * pageSize;
   const { data, error } = await supabase
-    .from("deals")
-    .select("*")
+    .from("featured_deals")
+    .select("*, deal:deal_id(*)")
     .eq("country_slug", countrySlug)
     .range(offset, offset + pageSize - 1);
 
@@ -115,6 +91,5 @@ const requestFetchSingleDeal = async ({
 export {
   requestFetchAllDeals,
   requestFetchAllFeaturedDeals,
-  requestFetchAllDealsLite,
   requestFetchSingleDeal,
 };

@@ -58,10 +58,14 @@ export function Header() {
   const [showSignIn, setShowSignIn] = useState(false);
 
   const navItems = [
-    { key: "deals", label: m.DEALS(), href: "/deals" },
-    { key: "stores", label: m.STORES(), href: "/stores" },
-    { key: "shop", label: m.SHOP(), href: "/products" },
-    { key: "guides", label: m.SHOPPING_GUIDES(), href: "/guides" },
+    { key: "deals", label: m.DEALS(), href: `/${localeCountry}/deals` },
+    { key: "stores", label: m.STORES(), href: `/${localeCountry}/stores` },
+    { key: "shop", label: m.SHOP(), href: `/${localeCountry}/products` },
+    {
+      key: "guides",
+      label: m.SHOPPING_GUIDES(),
+      href: `/${localeCountry}/guides`,
+    },
   ];
 
   const handleStartSaving = () => {
@@ -79,11 +83,19 @@ export function Header() {
           {/* Logo */}
           <div className={`flex items-center gap-8`}>
             <a href="/" className="flex items-center">
-              <img
-                src="https://i.ibb.co/XZV7bXh3/Tuut.png"
-                alt="Tuut"
-                className="h-12 w-auto"
-              />
+              {locale === "ar" ? (
+                <img
+                  src="/assets/images/tuut-logo-ar-min.png"
+                  alt={m.TUUT_LOGO()}
+                  className="h-12 w-auto"
+                />
+              ) : (
+                <img
+                  src="https://i.ibb.co/XZV7bXh3/Tuut.png"
+                  alt={m.TUUT_LOGO()}
+                  className="h-12 w-auto"
+                />
+              )}
             </a>
 
             {/* Desktop Navigation */}

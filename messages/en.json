@@ -156,5 +156,12 @@
   "SHARE_ON_WHATSAPP": "Share on WhatsApp",
   "COPY_LINK": "Copy Link",
   "WHATSAPP": "WhatsApp",
-  "LINKEDIN": "LinkedIn"
+  "LINKEDIN": "LinkedIn",
+  "SEARCH_STORES": "Search Stores...",
+  "NAME_A_Z": "Name (A-Z)",
+  "MOST_DEALS": "Most Deals",
+  "SEARCHING_FOR": "Searching for:",
+  "NO_STORES_FOUND": "No stores found",
+  "TRY_ADJUSTING_YOUR_SEARCH_OR_FILTERS": "Try adjusting your search or filters",
+  "TUUT_LOGO": "Tuut Logo"
 }
