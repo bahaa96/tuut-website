@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const { paraglideWebpackPlugin } = require("@inlang/paraglide-js");
+const createMDX = require("@next/mdx");
 
 const nextConfig = {
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   trailingSlash: true,
   images: {
     unoptimized: true,
@@ -29,4 +31,8 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+const withMDX = createMDX({
+  // Add markdown plugins here, as desired
+});
+
+module.exports = withMDX(nextConfig);

@@ -5,7 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CountryProvider } from "../contexts/CountryContext";
 import { headers } from "next/headers";
-import { cache, use } from "react";
+import { cache } from "react";
 import {
   assertIsLocale,
   baseLocale,
@@ -66,9 +66,9 @@ export default async function RootLayout({
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-QQQYHWZVFE"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}

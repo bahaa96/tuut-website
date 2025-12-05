@@ -466,8 +466,9 @@
   }
 
   html[lang="ar"] body {
-    font-family: "Noto Sans Arabic", "Readex Pro", system-ui, -apple-system, BlinkMacSystemFont,
-      "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: "Noto Sans Arabic", "Readex Pro", system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+      sans-serif;
   }
 
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) h1 {
@@ -4302,9 +4303,9 @@ html[dir="rtl"] .text-left {
   text-align: right !important;
 }
 
-html[dir="rtl"] .text-right {
+/* html[dir="rtl"] .text-right {
   text-align: left !important;
-}
+} */
 
 html[dir="rtl"] .text-center {
   text-align: center !important;

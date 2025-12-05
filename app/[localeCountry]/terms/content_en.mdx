@@ -1,14 +1,3 @@
-import { useEffect } from "react";
-
-export default function TermsPage() {
-  const language = "en"; // TODO: Replace with proper locale detection
-  const isRTL = language === "ar";
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  const englishContent = `
 ### Accepting Terms of Use
 
 Use of this Website tuut.shop ("tuut" "we" "our" "us") or any Website that replaces it or is added to it, including in the smartphone-enabled app (the "Website"), by you -the End User (the "End User" or "you"), submitting an offer to purchase, registering for the Website and/or opening an account on the Website constitutes an agreement to the following Terms of Use.
@@ -203,43 +192,3 @@ If you have any questions about these Terms and Conditions, please contact us at
 • Website: tuut.shop
 
 Last updated: ${new Date().toLocaleDateString()}
-  `;
-
-  const arabicContent = ``;
-
-  const content = isRTL ? arabicContent : englishContent;
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            {isRTL ? "الشروط والأحكام" : "Terms and Conditions"}
-          </h1>
-          <div
-            className={`prose max-w-none text-gray-700 leading-relaxed ${
-              isRTL ? "text-right" : "text-left"
-            }`}
-            dangerouslySetInnerHTML={{
-              __html: content
-                .replace(/\n/g, "<br />")
-                .replace(
-                  /### (.*)/g,
-                  '<h3 class="text-xl font-semibold mt-6 mb-3 text-gray-900">$1</h3>'
-                )
-                .replace(
-                  /#### (.*)/g,
-                  '<h4 class="text-lg font-medium mt-4 mb-2 text-gray-800">$1</h4>'
-                )
-                .replace(/• (.*)/g, '<li class="ml-4">$1</li>')
-                .replace(
-                  /^(\d+)\.\s/gm,
-                  '<div class="font-medium mt-3">$1.</div>'
-                ),
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
