@@ -3,7 +3,7 @@ export {
   requestFetchAllFeaturedDeals,
   requestFetchSingleDeal,
 } from "./deals";
-export { requestFetchAllStores } from "./stores";
-export { requestFetchAllArticles } from "./articles";
+export { requestFetchAllStores, requestFetchSingleStore } from "./stores";
+export { requestFetchAllArticles, requestFetchSingleArticle } from "./articles";
 export { requestFetchAllCategories } from "./categories";
-export { requestFetchAllProducts } from "./products";
+export { requestFetchAllProducts, requestFetchSingleProduct } from "./products";

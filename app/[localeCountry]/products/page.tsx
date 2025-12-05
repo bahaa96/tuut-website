@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { fetchProducts } from "@/utils/api";
 import { Product } from "../types";
 import { requestFetchAllProducts } from "@/network";
+import * as m from "@/src/paraglide/messages";
 
 interface ProductsPageProps {
   params: Promise<{
@@ -31,26 +32,6 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
 
     products = allProducts;
 
-    console.log(`Fetched ${products.length} products for country: ${country}`);
-
-    // Additional client-side filtering to ensure products match the current country
-    // This is a fallback in case backend filtering doesn't work properly
-    const filteredProducts = products.filter(
-      (product) => product.country_slug === country
-    );
-    console.log(
-      `Filtered to ${filteredProducts.length} products matching country_slug: ${country}`
-    );
-
-    // Only apply filtering if we have products after filtering, otherwise show all fetched products
-    if (filteredProducts.length > 0) {
-      products = filteredProducts;
-    }
-  } catch (error) {
-    console.error("Failed to fetch products:", error);
-    products = [];
-  }
-
   return (
     <main className="min-h-screen">
       <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
@@ -64,15 +45,10 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
               <ArrowLeft
                 className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
               />
-              {language === "ar"
-                ? "العودة إلى الصفحة الرئيسية"
-                : "Back to Home"}
+              {m.BACK_TO_HOME()}
             </Link>
-            <h1
-              className="text-[#111827] mb-4"
-              style={{ fontSize: "36px", fontWeight: 700 }}
-            >
-              {language === "ar" ? "جميع المنتجات" : "All Products"}
+            <h1 className="text-[#111827] mb-4" style={{ fontSize: "36px", fontWeight: 700 }}>
+              {m.ALL_PRODUCTS()}
             </h1>
           </div>
 

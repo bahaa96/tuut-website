@@ -26,4 +26,24 @@ const requestFetchAllArticles = async ({
   return { data };
 };
 
-export { requestFetchAllArticles };
+interface RequestFetchSingleArticleArgs {
+  slug: string;
+}
+
+const requestFetchSingleArticle = async ({
+  slug,
+}: RequestFetchSingleArticleArgs): Promise<{ data: Article }> => {
+  const { data, error } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+};
+
+export { requestFetchAllArticles, requestFetchSingleArticle };

@@ -39,4 +39,24 @@ const requestFetchAllProducts = async ({
   return { data };
 };
 
-export { requestFetchAllProducts };
+interface RequestFetchSingleProductArgs {
+  slug: string;
+}
+
+const requestFetchSingleProduct = async ({
+  slug,
+}: RequestFetchSingleProductArgs): Promise<{ data: Product }> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+};
+
+export { requestFetchAllProducts, requestFetchSingleProduct };
