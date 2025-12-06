@@ -13,7 +13,6 @@ interface ProductsPageProps {
 }
 
 export default async function ProductsPage({ params }: ProductsPageProps) {
-  // Await params as required by Next.js 15
   const resolvedParams = await params;
 
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
@@ -31,6 +30,9 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
     });
 
     products = allProducts;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+  }
 
   return (
     <main className="min-h-screen">
@@ -47,17 +49,15 @@ export default async function ProductsPage({ params }: ProductsPageProps) {
               />
               {m.BACK_TO_HOME()}
             </Link>
-            <h1 className="text-[#111827] mb-4" style={{ fontSize: "36px", fontWeight: 700 }}>
+            <h1
+              className="text-[#111827] mb-4"
+              style={{ fontSize: "36px", fontWeight: 700 }}
+            >
               {m.ALL_PRODUCTS()}
             </h1>
           </div>
 
-          <ProductsClientPage
-            initialProducts={products}
-            language={language}
-            isRTL={isRTL}
-            country={country}
-          />
+          <ProductsClientPage initialProducts={products} />
         </div>
       </section>
     </main>

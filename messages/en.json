@@ -165,5 +165,17 @@
   "TRY_ADJUSTING_YOUR_SEARCH_OR_FILTERS": "Try adjusting your search or filters",
   "TUUT_LOGO": "Tuut Logo",
   "ALL_PRODUCTS": "All Products",
-  "BACK_TO_ALL_PRODUCTS": "Back to All Products"
+  "BACK_TO_ALL_PRODUCTS": "Back to All Products",
+  "LOADING_PRODUCTS": "Loading products...",
+  "NO_PRODUCTS_FOUND_MATCHING_SEARCH": "No products found matching your search",
+  "$amount_SAR": "{amount} SAR",
+  "$amount_EGP": "{amount} EGP",
+  "$amount_JOD": "{amount} JOD",
+  "$amount_KWD": "{amount} KWD",
+  "$amount_MAD": "{amount} MAD",
+  "$amount_OMR": "{amount} OMR",
+  "$amount_QAR": "{amount} QAR",
+  "$amount_AED": "{amount} AED",
+  "$amount_UNKNOWN_CURRENCY": "{amount} UNKNOWN_CURRENCY",
+  "VIEW_PRODUCT": "View Product"
 }

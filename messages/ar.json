@@ -165,5 +165,17 @@
   "TRY_ADJUSTING_YOUR_SEARCH_OR_FILTERS": "حاول تعديل البحث أو الفلاتر",
   "TUUT_LOGO": "شعار توت",
   "ALL_PRODUCTS": "جميع المنتجات",
-  "BACK_TO_ALL_PRODUCTS": "العودة إلى جميع المنتجات"
+  "BACK_TO_ALL_PRODUCTS": "العودة إلى جميع المنتجات",
+  "LOADING_PRODUCTS": "جاري تحميل المنتجات...",
+  "NO_PRODUCTS_FOUND_MATCHING_SEARCH": "لم يتم العثور على منتجات مطابقة للبحث",
+  "$amount_SAR": "{amount} جنيه",
+  "$amount_EGP": "{amount} جنيه",
+  "$amount_JOD": "{amount} دينار",
+  "$amount_KWD": "{amount} دينار",
+  "$amount_MAD": "{amount} درهم",
+  "$amount_OMR": "{amount} ريال",
+  "$amount_QAR": "{amount} ريال",
+  "$amount_AED": "{amount} درهم",
+  "$amount_UNKNOWN_CURRENCY": "{amount} عملة غير معروفة",
+  "VIEW_PRODUCT": "عرض المنتج"
 }

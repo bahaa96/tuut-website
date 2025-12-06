@@ -4,46 +4,37 @@ import { ExternalLink, Star, ShoppingCart } from "lucide-react";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { Product } from "../app/[localeCountry]/types";
+import { useParams } from "next/navigation";
+import * as m from "@/src/paraglide/messages";
+import priceWithCurrency from "@/utils/priceWithCurrency";
 
 interface ProductCardProps {
   product: Product;
-  language: string;
-  isRTL: boolean;
 }
 
-export default function ProductCard({ product, language, isRTL }: ProductCardProps) {
-  const title = product.title || 'Product';
-  const description = product.description || '';
-  const storeName = product.store || 'Store';
-  const imageUrl = product.images && product.images.length > 0 ? product.images[0] : null;
+export default function ProductCard({ product }: ProductCardProps) {
+  const params = useParams();
+  const localeCountry = params?.localeCountry as string;
+  const language = localeCountry.split("-")[0];
+  const isRTL = language === "ar";
+
+  const title = product.title || "Product";
+  const description = product.description || "";
+  const storeName = product.store || "Store";
+  const imageUrl =
+    product.images && product.images.length > 0 ? product.images[0] : null;
 
   // Calculate discount percentage
-  const discountPercentage = product.price && product.original_price
-    ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-    : 0;
+  const discountPercentage =
+    product.price && product.original_price
+      ? Math.round(
+          ((product.original_price - product.price) / product.original_price) *
+            100
+        )
+      : 0;
   const hasDiscount = discountPercentage > 0;
 
-  function getPriceText(product: Product): string {
-    if (!product.price) return '';
-    const currency = product.currency || 'USD';
-    if (currency === 'USD' || currency === '$') return `$${product.price}`;
-    if (currency === 'EUR' || currency === '€') return `€${product.price}`;
-    if (currency === 'GBP' || currency === '£') return `£${product.price}`;
-    if (currency === 'SAR' || currency === 'ر.س') return `${product.price} ر.س`;
-    if (currency === 'AED' || currency === 'د.إ') return `${product.price} د.إ`;
-    return `${product.price} ${currency}`;
-  }
-
-  function getOriginalPriceText(product: Product): string {
-    if (!product.original_price) return '';
-    const currency = product.currency || 'USD';
-    if (currency === 'USD' || currency === '$') return `$${product.original_price}`;
-    if (currency === 'EUR' || currency === '€') return `€${product.original_price}`;
-    if (currency === 'GBP' || currency === '£') return `£${product.original_price}`;
-    if (currency === 'SAR' || currency === 'ر.س') return `${product.original_price} ر.س`;
-    if (currency === 'AED' || currency === 'د.إ') return `${product.original_price} د.إ`;
-    return `${product.original_price} ${currency}`;
-  }
+  console.log("foo:", product);
 
   return (
     <div className="group bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] transition-all overflow-hidden flex flex-col h-full">
@@ -56,13 +47,17 @@ export default function ProductCard({ product, language, isRTL }: ProductCardPro
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-4"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
+              target.style.display = "none";
               const fallback = target.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = 'flex';
+              if (fallback) fallback.style.display = "flex";
             }}
           />
         ) : null}
-        <div className={`w-full h-full flex items-center justify-center ${imageUrl ? 'hidden' : ''}`}>
+        <div
+          className={`w-full h-full flex items-center justify-center ${
+            imageUrl ? "hidden" : ""
+          }`}
+        >
           <ShoppingCart className="h-16 w-16 text-[#5FB57A] opacity-50" />
         </div>
 
@@ -75,10 +70,18 @@ export default function ProductCard({ product, language, isRTL }: ProductCardPro
       </div>
 
       {/* Content */}
-      <div className={`p-5 flex-1 flex flex-col ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div
+        className={`p-5 flex-1 flex flex-col ${
+          isRTL ? "text-right" : "text-left"
+        }`}
+      >
         {/* Store Name */}
         {storeName && (
-          <div className={`text-sm text-[#6B7280] mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+          <div
+            className={`text-sm text-[#6B7280] mb-2 ${
+              isRTL ? "text-right" : "text-left"
+            }`}
+          >
             {storeName}
           </div>
         )}
@@ -86,7 +89,7 @@ export default function ProductCard({ product, language, isRTL }: ProductCardPro
         {/* Product Name */}
         <h3
           className="mb-2 text-[#111827] line-clamp-2 flex-1 min-h-[3rem]"
-          style={{ fontSize: '18px', fontWeight: 600, lineHeight: '1.5' }}
+          style={{ fontSize: "18px", fontWeight: 600, lineHeight: "1.5" }}
           title={title}
         >
           {title}
@@ -101,23 +104,40 @@ export default function ProductCard({ product, language, isRTL }: ProductCardPro
 
         {/* Rating */}
         {product.rating && (
-          <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div
+            className={`flex items-center gap-2 mb-3 ${
+              isRTL ? "flex-row-reverse" : ""
+            }`}
+          >
+            <div
+              className={`flex items-center gap-1 ${
+                isRTL ? "flex-row-reverse" : ""
+              }`}
+            >
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span style={{ fontWeight: 600 }}>{product.rating.toFixed(1)}</span>
+              <span style={{ fontWeight: 600 }}>
+                {product.rating.toFixed(1)}
+              </span>
             </div>
           </div>
         )}
 
         {/* Price */}
-        <div className={`mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          <div className={`flex items-baseline gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <span className="text-[#5FB57A]" style={{ fontSize: '24px', fontWeight: 700 }}>
-              {getPriceText(product)}
+        <div className={`mb-4 ${isRTL ? "text-right" : "text-left"}`}>
+          <div
+            className={`flex items-baseline gap-2 ${
+              isRTL ? "flex-row-reverse" : ""
+            }`}
+          >
+            <span
+              className="text-[#5FB57A]"
+              style={{ fontSize: "24px", fontWeight: 700 }}
+            >
+              {product.price} {product.currency}
             </span>
             {hasDiscount && product.original_price && (
               <span className="text-[#6B7280] line-through">
-                {getOriginalPriceText(product)}
+                {product.original_price} {product.currency}
               </span>
             )}
           </div>
@@ -132,11 +152,13 @@ export default function ProductCard({ product, language, isRTL }: ProductCardPro
             className="w-full"
           >
             <Button
-              className={`w-full bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`w-full bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all ${
+                isRTL ? "flex-row-reverse" : ""
+              }`}
               style={{ fontWeight: 600 }}
             >
-              <ExternalLink className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {language === 'ar' ? 'عرض المنتج' : 'View Product'}
+              <ExternalLink className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+              {m.VIEW_PRODUCT()}
             </Button>
           </Link>
         )}
