@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "../types";
 import ProductCard from "@/components/ProductCard";
 import FilterSection from "@/components/FilterSection";
@@ -20,13 +20,24 @@ import useAllProducts from "./useAllProducts";
 
 interface ProductsClientPageProps {
   initialProducts: Product[];
+  initialSearchParams?: {
+    search?: string;
+    category?: string;
+    store?: string;
+    discount?: string;
+    min_price?: string;
+    max_price?: string;
+    sort?: string;
+    page?: string;
+  };
 }
 
 export default function ProductsClientPage({
   initialProducts,
+  initialSearchParams,
 }: ProductsClientPageProps) {
-  const [selectedDiscount, setSelectedDiscount] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
+  const [selectedDiscount, setSelectedDiscount] = useState(initialSearchParams?.discount || "all");
+  const [sortBy, setSortBy] = useState(initialSearchParams?.sort || "newest");
 
   const params = useParams();
   const localeCountry = params?.localeCountry as string;
@@ -44,6 +55,24 @@ export default function ProductsClientPage({
     allProductsChangePage,
     allProductsChangeFilters,
   } = useAllProducts(initialProducts);
+
+  // Initialize filters from URL params
+  useEffect(() => {
+    if (initialSearchParams) {
+      allProductsChangeFilters({
+        searchText: initialSearchParams.search || "",
+        categoryId: initialSearchParams.category || "",
+      });
+
+      // Set sort and discount from URL params
+      if (initialSearchParams.sort) {
+        setSortBy(initialSearchParams.sort);
+      }
+      if (initialSearchParams.discount) {
+        setSelectedDiscount(initialSearchParams.discount);
+      }
+    }
+  }, [initialSearchParams, allProductsChangeFilters]);
 
   const clearFilters = () => {
     allProductsChangeFilters({

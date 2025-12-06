@@ -13,12 +13,23 @@ interface DealsPageProps {
   params: Promise<{
     localeCountry: string;
   }>;
+  searchParams: Promise<{
+    search?: string;
+    category?: string;
+    store?: string;
+    sort?: string;
+    min_discount?: string;
+    max_discount?: string;
+    page?: string;
+  }>;
 }
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: DealsPageProps): Promise<Metadata> {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const localeCountry = resolvedParams.localeCountry;
 
   // Extract language and country from localeCountry (e.g., "en-EG" -> "en", "EG")
@@ -41,58 +52,136 @@ export async function generateMetadata({
   }
 
   const countryName = getCountryNameFromCode(countrySlug);
+  const currentPage = parseInt(resolvedSearchParams.page || "1");
 
-  const title = isArabic
-    ? `جميع العروض في ${countryName} | الخصومات والكوبونات | Tuut`
-    : `All Deals in ${countryName} | Discounts and Coupons | Tuut`;
+  // Build page title and description based on filters
+  let title: string;
+  let description: string;
 
-  const description = isArabic
+  const baseTitle = isArabic ? "جميع العروض" : "All Deals";
+  const siteName = "Tuut";
+
+  // Create filter descriptions
+  const filterParts: string[] = [];
+
+  if (resolvedSearchParams.search) {
+    filterParts.push(isArabic ? `بحث: "${resolvedSearchParams.search}"` : `Search: "${resolvedSearchParams.search}"`);
+  }
+
+  if (resolvedSearchParams.category) {
+    filterParts.push(isArabic ? `الفئة: ${resolvedSearchParams.category}` : `Category: ${resolvedSearchParams.category}`);
+  }
+
+  if (resolvedSearchParams.store) {
+    filterParts.push(isArabic ? `المتجر: ${resolvedSearchParams.store}` : `Store: ${resolvedSearchParams.store}`);
+  }
+
+  if (resolvedSearchParams.min_discount) {
+    filterParts.push(isArabic ? `خصم من: ${resolvedSearchParams.min_discount}%` : `Min Discount: ${resolvedSearchParams.min_discount}%`);
+  }
+
+  if (resolvedSearchParams.max_discount) {
+    filterParts.push(isArabic ? `خصم حتى: ${resolvedSearchParams.max_discount}%` : `Max Discount: ${resolvedSearchParams.max_discount}%`);
+  }
+
+  // Build title
+  if (filterParts.length > 0) {
+    const filterString = filterParts.join(" | ");
+    title = isArabic
+      ? `${filterString} | ${baseTitle} في ${countryName} | ${siteName}`
+      : `${filterString} | ${baseTitle} in ${countryName} | ${siteName}`;
+  } else {
+    title = isArabic
+      ? `${baseTitle} في ${countryName} | ${siteName}`
+      : `${baseTitle} in ${countryName} | ${siteName}`;
+  }
+
+  // Add pagination to title
+  if (currentPage > 1) {
+    title = isArabic
+      ? `${title} - الصفحة ${currentPage}`
+      : `${title} - Page ${currentPage}`;
+  }
+
+  // Build description
+  description = isArabic
     ? `استعرض ${dealsCount} عرض في ${countryName}. اكتشف أفضل الخصومات والكوبونات والعروض الحصرية. وفّر المال مع Tuut.`
     : `Browse ${dealsCount} deals in ${countryName}. Discover the best discounts, coupons, and exclusive offers. Save money with Tuut.`;
+
+  // Add filter context to description
+  if (filterParts.length > 0) {
+    const filterContext = isArabic
+      ? `النتائج لـ: ${filterParts.join(", ")}`
+      : `Results for: ${filterParts.join(", ")}`;
+    description = `${filterContext}. ${description}`;
+  }
+
+  // Build canonical URL
+  const baseUrl = `https://tuut.shop/${localeCountry}/deals`;
+  const searchParamsString = new URLSearchParams(resolvedSearchParams).toString();
+  const canonicalUrl = searchParamsString
+    ? `${baseUrl}?${searchParamsString}`
+    : baseUrl;
+
+  // Generate keywords
+  const baseKeywords = [
+    isArabic ? "عروض" : "deals",
+    isArabic ? "خصومات" : "discounts",
+    isArabic ? "كوبونات" : "coupons",
+    isArabic ? "عروض حصرية" : "exclusive offers",
+    isArabic ? "توفير المال" : "save money",
+    isArabic ? "تسوق" : "shopping",
+    countryName,
+    isArabic ? "صفقات" : "bargains",
+    isArabic ? "عروض مميزة" : "special deals",
+  ];
+
+  // Add filter-specific keywords
+  if (resolvedSearchParams.category) {
+    baseKeywords.push(resolvedSearchParams.category);
+  }
+  if (resolvedSearchParams.store) {
+    baseKeywords.push(resolvedSearchParams.store);
+  }
+  if (resolvedSearchParams.search) {
+    baseKeywords.push(resolvedSearchParams.search);
+  }
+
+  // Build pagination rel tags
+  const other: Record<string, { rel: string; href: string }> = {};
+  const pageSize = 20;
+  const totalPages = Math.ceil(dealsCount / pageSize);
+
+  if (currentPage > 1) {
+    const prevSearchParams = { ...resolvedSearchParams };
+    if (currentPage === 2) {
+      delete prevSearchParams.page;
+    } else {
+      prevSearchParams.page = (currentPage - 1).toString();
+    }
+    const prevQueryString = new URLSearchParams(prevSearchParams).toString();
+    other.prev = {
+      rel: "prev",
+      href: prevQueryString ? `${baseUrl}?${prevQueryString}` : baseUrl,
+    };
+  }
+
+  if (currentPage < totalPages) {
+    const nextSearchParams = { ...resolvedSearchParams, page: (currentPage + 1).toString() };
+    const nextQueryString = new URLSearchParams(nextSearchParams).toString();
+    other.next = {
+      rel: "next",
+      href: `${baseUrl}?${nextQueryString}`,
+    };
+  }
 
   return {
     title,
     description,
-    keywords: [
-      isArabic ? "عروض" : "deals",
-      isArabic ? "خصومات" : "discounts",
-      isArabic ? "كوبونات" : "coupons",
-      isArabic ? "عروض حصرية" : "exclusive offers",
-      isArabic ? "توفير المال" : "save money",
-      isArabic ? "تسوق" : "shopping",
-      countryName,
-      isArabic ? "صفقات" : "bargains",
-      isArabic ? "عروض مميزة" : "special deals",
-      isArabic ? "تخفيضات" : "price reductions",
-    ].join(", "),
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      url: `https://tuut.shop/${localeCountry}/deals`,
-      siteName: "Tuut",
-      images: [
-        {
-          url: "https://tuut.shop/og-image.jpg",
-          width: 1200,
-          height: 630,
-          alt: isArabic ? "جميع العروض في Tuut" : "All Deals on Tuut",
-        },
-      ],
-      locale: localeCountry,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ["https://tuut.shop/og-image.jpg"],
-    },
-    alternates: {
-      canonical: `https://tuut.shop/${localeCountry}/deals`,
-      languages: {
-        [localeCountry]: `https://tuut.shop/${localeCountry}/deals`,
-      },
-    },
+    keywords: baseKeywords.join(", "),
+    authors: [{ name: "Tuut" }],
+    creator: "Tuut",
+    publisher: "Tuut",
     robots: {
       index: true,
       follow: true,
@@ -104,11 +193,63 @@ export async function generateMetadata({
         "max-snippet": -1,
       },
     },
+    alternates: {
+      canonical: canonicalUrl,
+      languages: generateHreflangTags(localeCountry, resolvedSearchParams),
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: canonicalUrl,
+      siteName: "Tuut",
+      images: [
+        {
+          url: "https://tuut.shop/og-deals.jpg",
+          width: 1200,
+          height: 630,
+          alt: isArabic ? "جميع العروض في Tuut" : "All Deals on Tuut",
+          type: "image/jpeg",
+        },
+      ],
+      locale: localeCountry,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["https://tuut.shop/og-deals.jpg"],
+      creator: "@tuutapp",
+      site: "@tuutapp",
+    },
+    other: Object.keys(other).length > 0 ? other : undefined,
   };
 }
 
-export default async function DealsPage({ params }: DealsPageProps) {
+function generateHreflangTags(
+  localeCountry: string,
+  searchParams: Record<string, string | undefined>
+): Record<string, string> {
+  const languages = ["en", "ar"];
+  const hreflangs: Record<string, string> = {};
+
+  const searchParamsString = new URLSearchParams(searchParams).toString();
+
+  // Generate combinations for the current country
+  languages.forEach(lang => {
+    const locale = `${lang}-${localeCountry.split("-")[1]}`;
+    hreflangs[locale] = `https://tuut.shop/${locale}/deals${searchParamsString ? `?${searchParamsString}` : ''}`;
+  });
+
+  // Default language
+  hreflangs["x-default"] = `https://tuut.shop/en-${localeCountry.split("-")[1]}/deals${searchParamsString ? `?${searchParamsString}` : ''}`;
+
+  return hreflangs;
+}
+
+export default async function DealsPage({ params, searchParams }: DealsPageProps) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
 
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
   const countrySlug = resolvedParams.localeCountry.split("-")[1];
@@ -237,7 +378,7 @@ export default async function DealsPage({ params }: DealsPageProps) {
               </h1>
             </div>
 
-            <DealsClientPage initialDeals={deals} />
+            <DealsClientPage initialDeals={deals} initialSearchParams={resolvedSearchParams} />
           </div>
         </section>
       </main>

@@ -9,12 +9,21 @@ interface StoresPageProps {
   params: Promise<{
     localeCountry: string;
   }>;
+  searchParams: Promise<{
+    search?: string;
+    category?: string;
+    city?: string;
+    sort?: string;
+    page?: string;
+  }>;
 }
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: StoresPageProps): Promise<Metadata> {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const localeCountry = resolvedParams.localeCountry;
 
   // Extract language and country from localeCountry (e.g., "en-EG" -> "en", "EG")
@@ -36,57 +45,128 @@ export async function generateMetadata({
   }
 
   const countryName = getCountryNameFromCode(country);
+  const currentPage = parseInt(resolvedSearchParams.page || "1");
 
-  const title = isArabic
-    ? `جميع المتاجر في ${countryName} | العروض والخصومات | Tuut`
-    : `All Stores in ${countryName} | Deals and Discounts | Tuut`;
+  // Build page title and description based on filters
+  let title: string;
+  let description: string;
 
-  const description = isArabic
+  const baseTitle = isArabic ? "جميع المتاجر" : "All Stores";
+  const siteName = "Tuut";
+
+  // Create filter descriptions
+  const filterParts: string[] = [];
+
+  if (resolvedSearchParams.search) {
+    filterParts.push(isArabic ? `بحث: "${resolvedSearchParams.search}"` : `Search: "${resolvedSearchParams.search}"`);
+  }
+
+  if (resolvedSearchParams.category) {
+    filterParts.push(isArabic ? `الفئة: ${resolvedSearchParams.category}` : `Category: ${resolvedSearchParams.category}`);
+  }
+
+  if (resolvedSearchParams.city) {
+    filterParts.push(isArabic ? `المدينة: ${resolvedSearchParams.city}` : `City: ${resolvedSearchParams.city}`);
+  }
+
+  // Build title
+  if (filterParts.length > 0) {
+    const filterString = filterParts.join(" | ");
+    title = isArabic
+      ? `${filterString} | ${baseTitle} في ${countryName} | ${siteName}`
+      : `${filterString} | ${baseTitle} in ${countryName} | ${siteName}`;
+  } else {
+    title = isArabic
+      ? `${baseTitle} في ${countryName} | ${siteName}`
+      : `${baseTitle} in ${countryName} | ${siteName}`;
+  }
+
+  // Add pagination to title
+  if (currentPage > 1) {
+    title = isArabic
+      ? `${title} - الصفحة ${currentPage}`
+      : `${title} - Page ${currentPage}`;
+  }
+
+  // Build description
+  description = isArabic
     ? `استعرض ${storesCount} متجر في ${countryName}. اكتشف أفضل العروض والخصومات والكوبونات من المتاجر الرائدة. وفّر المال مع Tuut.`
     : `Browse ${storesCount} stores in ${countryName}. Discover the best deals, discounts, and coupons from leading retailers. Save money with Tuut.`;
+
+  // Add filter context to description
+  if (filterParts.length > 0) {
+    const filterContext = isArabic
+      ? `النتائج لـ: ${filterParts.join(", ")}`
+      : `Results for: ${filterParts.join(", ")}`;
+    description = `${filterContext}. ${description}`;
+  }
+
+  // Build canonical URL
+  const baseUrl = `https://tuut.shop/${localeCountry}/stores`;
+  const searchParamsString = new URLSearchParams(resolvedSearchParams).toString();
+  const canonicalUrl = searchParamsString
+    ? `${baseUrl}?${searchParamsString}`
+    : baseUrl;
+
+  // Generate keywords
+  const baseKeywords = [
+    isArabic ? "متاجر" : "stores",
+    isArabic ? "عروض" : "deals",
+    isArabic ? "خصومات" : "discounts",
+    isArabic ? "كوبونات" : "coupons",
+    isArabic ? "تسوق" : "shopping",
+    isArabic ? "توفير المال" : "save money",
+    countryName,
+    isArabic ? "عروض حصرية" : "exclusive offers",
+    isArabic ? "متاجر رائدة" : "leading retailers",
+  ];
+
+  // Add filter-specific keywords
+  if (resolvedSearchParams.category) {
+    baseKeywords.push(resolvedSearchParams.category);
+  }
+  if (resolvedSearchParams.city) {
+    baseKeywords.push(resolvedSearchParams.city);
+  }
+  if (resolvedSearchParams.search) {
+    baseKeywords.push(resolvedSearchParams.search);
+  }
+
+  // Build pagination rel tags
+  const other: Record<string, { rel: string; href: string }> = {};
+  const pageSize = 20;
+  const totalPages = Math.ceil(storesCount / pageSize);
+
+  if (currentPage > 1) {
+    const prevSearchParams = { ...resolvedSearchParams };
+    if (currentPage === 2) {
+      delete prevSearchParams.page;
+    } else {
+      prevSearchParams.page = (currentPage - 1).toString();
+    }
+    const prevQueryString = new URLSearchParams(prevSearchParams).toString();
+    other.prev = {
+      rel: "prev",
+      href: prevQueryString ? `${baseUrl}?${prevQueryString}` : baseUrl,
+    };
+  }
+
+  if (currentPage < totalPages) {
+    const nextSearchParams = { ...resolvedSearchParams, page: (currentPage + 1).toString() };
+    const nextQueryString = new URLSearchParams(nextSearchParams).toString();
+    other.next = {
+      rel: "next",
+      href: `${baseUrl}?${nextQueryString}`,
+    };
+  }
 
   return {
     title,
     description,
-    keywords: [
-      isArabic ? "متاجر" : "stores",
-      isArabic ? "عروض" : "deals",
-      isArabic ? "خصومات" : "discounts",
-      isArabic ? "كوبونات" : "coupons",
-      isArabic ? "تسوق" : "shopping",
-      isArabic ? "توفير المال" : "save money",
-      countryName,
-      isArabic ? "عروض حصرية" : "exclusive offers",
-      isArabic ? "متاجر رائدة" : "leading retailers",
-    ].join(", "),
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      url: `https://tuut.shop/${localeCountry}/stores`,
-      siteName: "Tuut",
-      images: [
-        {
-          url: "https://tuut.shop/og-image.jpg",
-          width: 1200,
-          height: 630,
-          alt: isArabic ? "جميع المتاجر في Tuut" : "All Stores on Tuut",
-        },
-      ],
-      locale: localeCountry,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ["https://tuut.shop/og-image.jpg"],
-    },
-    alternates: {
-      canonical: `https://tuut.shop/${localeCountry}/stores`,
-      languages: {
-        [localeCountry]: `https://tuut.shop/${localeCountry}/stores`,
-      },
-    },
+    keywords: baseKeywords.join(", "),
+    authors: [{ name: "Tuut" }],
+    creator: "Tuut",
+    publisher: "Tuut",
     robots: {
       index: true,
       follow: true,
@@ -98,12 +178,64 @@ export async function generateMetadata({
         "max-snippet": -1,
       },
     },
+    alternates: {
+      canonical: canonicalUrl,
+      languages: generateHreflangTags(localeCountry, resolvedSearchParams),
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: canonicalUrl,
+      siteName: "Tuut",
+      images: [
+        {
+          url: "https://tuut.shop/og-stores.jpg",
+          width: 1200,
+          height: 630,
+          alt: isArabic ? "جميع المتاجر في Tuut" : "All Stores on Tuut",
+          type: "image/jpeg",
+        },
+      ],
+      locale: localeCountry,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["https://tuut.shop/og-stores.jpg"],
+      creator: "@tuutapp",
+      site: "@tuutapp",
+    },
+    other: Object.keys(other).length > 0 ? other : undefined,
   };
 }
 
-export default async function StoresPage({ params }: StoresPageProps) {
+function generateHreflangTags(
+  localeCountry: string,
+  searchParams: Record<string, string | undefined>
+): Record<string, string> {
+  const languages = ["en", "ar"];
+  const hreflangs: Record<string, string> = {};
+
+  const searchParamsString = new URLSearchParams(searchParams).toString();
+
+  // Generate combinations for the current country
+  languages.forEach(lang => {
+    const locale = `${lang}-${localeCountry.split("-")[1]}`;
+    hreflangs[locale] = `https://tuut.shop/${locale}/stores${searchParamsString ? `?${searchParamsString}` : ''}`;
+  });
+
+  // Default language
+  hreflangs["x-default"] = `https://tuut.shop/en-${localeCountry.split("-")[1]}/stores${searchParamsString ? `?${searchParamsString}` : ''}`;
+
+  return hreflangs;
+}
+
+export default async function StoresPage({ params, searchParams }: StoresPageProps) {
   // Await params as required by Next.js 15
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
 
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
   const country = resolvedParams.localeCountry.split("-")[1];
@@ -226,7 +358,7 @@ export default async function StoresPage({ params }: StoresPageProps) {
               </p>
             </div>
 
-            <StoresClientPage initialStores={stores} />
+            <StoresClientPage initialStores={stores} initialSearchParams={resolvedSearchParams} />
           </div>
         </section>
       </main>

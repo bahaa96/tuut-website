@@ -7,6 +7,12 @@ import { fetchArticles } from "../../../lib/supabase-fetch";
 import { ImageWithFallback } from "../../../components/figma/ImageWithFallback";
 import Link from "next/link";
 import { Metadata } from "next";
+import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
+import {
+  CollectionStructuredData,
+  BreadcrumbStructuredData,
+  WebsiteStructuredData
+} from "@/components/StructuredData";
 
 interface Article {
   id: string;
@@ -36,20 +42,123 @@ interface GuidesPageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: GuidesPageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: GuidesPageProps): Promise<Metadata> {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const { localeCountry } = resolvedParams;
+  const { search } = resolvedSearchParams;
 
-  // Extract language for localeCountry (e.g., "en-EG" -> "en") - same pattern as other pages
+  // Extract language and country from localeCountry
   const language = localeCountry.split('-')[0];
+  const country = localeCountry.split('-')[1];
   const isArabic = language === 'ar';
+  const countryName = getCountryNameFromCode(country);
+
+  // Build title
+  const baseTitle = isArabic ? 'أدلة التسوق' : 'Shopping Guides';
+  const siteName = 'Tuut';
+
+  let title = isArabic
+    ? `${baseTitle} في ${countryName} | ${siteName}`
+    : `${baseTitle} in ${countryName} | ${siteName}`;
+
+  if (search) {
+    title = isArabic
+      ? `البحث: "${search}" | ${title}`
+      : `Search: "${search}" | ${title}`;
+  }
+
+  // Build description
+  let description = isArabic
+    ? `اكتشف نصائح الخبراء والحيل والرؤى لمساعدتك على توفير المزيد في ${countryName}. أدلة التسوق الشاملة والعروض الحصرية.`
+    : `Discover expert tips, tricks, and insights to help you save more in ${countryName}. Comprehensive shopping guides and exclusive deals.`;
+
+  if (search) {
+    description = isArabic
+      ? `نتائج البحث عن "${search}" في أدلة التسوق. ${description}`
+      : `Search results for "${search}" in shopping guides. ${description}`;
+  }
+
+  // Build canonical URL
+  const baseUrl = `https://tuut.shop/${localeCountry}/guides`;
+  const canonicalUrl = search ? `${baseUrl}?search=${encodeURIComponent(search)}` : baseUrl;
 
   return {
-    title: isArabic ? 'أدلة التسوق | Tuut' : 'Shopping Guides | Tuut',
-    description: isArabic
-      ? 'نصائح الخبراء والحيل والرؤى لمساعدتك على توفير المزيد'
-      : 'Expert tips, tricks, and insights to help you save more',
+    title,
+    description,
+    keywords: [
+      isArabic ? 'أدلة التسوق' : 'shopping guides',
+      isArabic ? 'نصائح التسوق' : 'shopping tips',
+      isArabic ? 'عروض' : 'deals',
+      isArabic ? 'خصومات' : 'discounts',
+      isArabic ? 'توفير المال' : 'save money',
+      isArabic ? 'نصائح الخبراء' : 'expert tips',
+      isArabic ? 'أفضل الصفقات' : 'best deals',
+      countryName,
+      search && search.toLowerCase(),
+    ].filter(Boolean).join(", "),
+    authors: [{ name: "Tuut" }],
+    creator: "Tuut",
+    publisher: "Tuut",
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    alternates: {
+      canonical: canonicalUrl,
+      languages: generateHreflangTags(localeCountry, search),
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: canonicalUrl,
+      siteName: "Tuut",
+      images: [
+        {
+          url: "https://tuut.shop/og-guides.jpg",
+          width: 1200,
+          height: 630,
+          alt: isArabic ? "أدلة التسوق في Tuut" : "Shopping Guides on Tuut",
+          type: "image/jpeg",
+        },
+      ],
+      locale: localeCountry,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["https://tuut.shop/og-guides.jpg"],
+      creator: "@tuutapp",
+      site: "@tuutapp",
+    },
   };
+}
+
+function generateHreflangTags(localeCountry: string, search?: string): Record<string, string> {
+  const languages = ["en", "ar"];
+  const hreflangs: Record<string, string> = {};
+
+  const searchParam = search ? `?search=${encodeURIComponent(search)}` : '';
+
+  // Generate combinations for the current country
+  languages.forEach(lang => {
+    const locale = `${lang}-${localeCountry.split("-")[1]}`;
+    hreflangs[locale] = `https://tuut.shop/${locale}/guides${searchParam}`;
+  });
+
+  // Default language
+  hreflangs["x-default"] = `https://tuut.shop/en-${localeCountry.split("-")[1]}/guides${searchParam}`;
+
+  return hreflangs;
 }
 
 async function getArticles(countryValue: string, searchQuery?: string): Promise<Article[]> {
@@ -131,9 +240,63 @@ export default async function GuidesPage({ params, searchParams }: GuidesPagePro
     });
   }
 
+  // Build structured data
+  const baseUrl = `https://tuut.shop/${localeCountry}/guides`;
+  const searchParam = search ? `?search=${encodeURIComponent(search)}` : '';
+  const currentUrl = `${baseUrl}${searchParam}`;
+
+  const pageTitle = isArabic ? 'أدلة التسوق' : 'Shopping Guides';
+  const pageDescription = isArabic
+    ? 'نصائح الخبراء والحيل والرؤى لمساعدتك على توفير المزيد'
+    : 'Expert tips, tricks, and insights to help you save more';
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { name: isArabic ? 'الرئيسية' : 'Home', url: `https://tuut.shop/${localeCountry}` },
+    {
+      name: isArabic ? 'أدلة التسوق' : 'Shopping Guides',
+      url: currentUrl
+    },
+  ];
+
+  // Add search to breadcrumb
+  if (search) {
+    breadcrumbItems.push({
+      name: isArabic ? `بحث: ${search}` : `Search: ${search}`,
+      url: currentUrl,
+    });
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 py-8 md:py-12">
+    <>
+      {/* Structured Data */}
+      <CollectionStructuredData
+        items={filteredArticles.map(article => ({
+          name: article.title || 'Article',
+          description: article.excerpt || '',
+          url: `https://tuut.shop/${localeCountry}/guides/${article.slug || article.id}`,
+          image: article.featured_image_url,
+          datePublished: article.published_at || article.created_at,
+          author: article.author_name || (isArabic ? 'فريق توت' : 'Tuut Team'),
+        }))}
+        url={currentUrl}
+        name={pageTitle}
+        description={pageDescription}
+        language={language}
+        country={countryName}
+        itemType="Article"
+      />
+
+      <BreadcrumbStructuredData items={breadcrumbItems} />
+
+      <WebsiteStructuredData
+        url={`https://tuut.shop/${localeCountry}`}
+        name="Tuut"
+        description={isArabic ? 'اكتشف أفضل المنتجات والعروض' : 'Discover the best products and deals'}
+      />
+
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
         <div className={`mb-8 ${isRTL ? 'text-right' : 'text-left'}`}>
           <h1 className="mb-3 text-[#111827]" style={{ fontSize: '48px', fontWeight: 700 }}>
@@ -242,6 +405,7 @@ export default async function GuidesPage({ params, searchParams }: GuidesPagePro
         )}
       </div>
     </div>
+    </>
   );
 }
 
