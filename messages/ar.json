@@ -177,5 +177,7 @@
   "$amount_QAR": "{amount} ريال",
   "$amount_AED": "{amount} درهم",
   "$amount_UNKNOWN_CURRENCY": "{amount} عملة غير معروفة",
-  "VIEW_PRODUCT": "عرض المنتج"
+  "VIEW_PRODUCT": "عرض المنتج",
+  "TERMS_OF_USE_CONTENT": "محتوى شروط الاستخدام",
+  "PRIVACY_POLICY_CONTENT": "محتوى سياسة الخصوصية"
 }
