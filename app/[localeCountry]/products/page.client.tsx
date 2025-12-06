@@ -36,7 +36,9 @@ export default function ProductsClientPage({
   initialProducts,
   initialSearchParams,
 }: ProductsClientPageProps) {
-  const [selectedDiscount, setSelectedDiscount] = useState(initialSearchParams?.discount || "all");
+  const [selectedDiscount, setSelectedDiscount] = useState(
+    initialSearchParams?.discount || "all"
+  );
   const [sortBy, setSortBy] = useState(initialSearchParams?.sort || "newest");
 
   const params = useParams();
@@ -72,7 +74,7 @@ export default function ProductsClientPage({
         setSelectedDiscount(initialSearchParams.discount);
       }
     }
-  }, [initialSearchParams, allProductsChangeFilters]);
+  }, [initialSearchParams]);
 
   const clearFilters = () => {
     allProductsChangeFilters({
@@ -99,10 +101,8 @@ export default function ProductsClientPage({
             <SlidersHorizontal className="h-5 w-5 text-[#5FB57A]" />
           </div>
           <FilterSection
-            language={language}
-            isRTL={isRTL}
             searchQuery={allProductsFilters.searchText}
-            selectedCategory={allProductsFilters.categoryId}
+            selectedCategoryId={allProductsFilters.categoryId}
             selectedDiscount={selectedDiscount}
             sortBy={sortBy}
             onSearchChange={(value) =>
@@ -143,10 +143,8 @@ export default function ProductsClientPage({
             </SheetHeader>
             <div className="mt-6">
               <FilterSection
-                language={language}
-                isRTL={isRTL}
                 searchQuery={allProductsFilters.searchText}
-                selectedCategory={allProductsFilters.categoryId}
+                selectedCategoryId={allProductsFilters.categoryId}
                 selectedDiscount={selectedDiscount}
                 sortBy={sortBy}
                 onSearchChange={(value) =>

@@ -179,5 +179,6 @@
   "$amount_UNKNOWN_CURRENCY": "{amount} UNKNOWN_CURRENCY",
   "VIEW_PRODUCT": "View Product",
   "TERMS_OF_USE_CONTENT": "Terms of Use Content",
-  "PRIVACY_POLICY_CONTENT": "Privacy Policy Content"
+  "PRIVACY_POLICY_CONTENT": "Privacy Policy Content",
+  "SEARCH_FOR_PRODUCTS": "Search for products..."
 }

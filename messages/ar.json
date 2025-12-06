@@ -179,5 +179,6 @@
   "$amount_UNKNOWN_CURRENCY": "{amount} عملة غير معروفة",
   "VIEW_PRODUCT": "عرض المنتج",
   "TERMS_OF_USE_CONTENT": "محتوى شروط الاستخدام",
-  "PRIVACY_POLICY_CONTENT": "محتوى سياسة الخصوصية"
+  "PRIVACY_POLICY_CONTENT": "محتوى سياسة الخصوصية",
+  "SEARCH_FOR_PRODUCTS": "ابحث عن منتجات..."
 }

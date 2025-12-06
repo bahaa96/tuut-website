@@ -10,7 +10,7 @@ import { generateProductsPageMetadata } from "@/utils/metadata";
 import {
   ProductCollectionStructuredData,
   BreadcrumbStructuredData,
-  WebsiteStructuredData
+  WebsiteStructuredData,
 } from "@/components/StructuredData";
 import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
 
@@ -64,19 +64,29 @@ export async function generateMetadata({
   const baseUrl = `https://tuut.shop/${localeCountry}/products`;
   const searchParamsWithoutPage = { ...resolvedSearchParams };
   delete searchParamsWithoutPage.page;
-  const searchParamsString = new URLSearchParams(searchParamsWithoutPage).toString();
+  const searchParamsString = new URLSearchParams(
+    searchParamsWithoutPage
+  ).toString();
 
-  const baseUrlWithParams = searchParamsString ? `${baseUrl}?${searchParamsString}` : baseUrl;
+  const baseUrlWithParams = searchParamsString
+    ? `${baseUrl}?${searchParamsString}`
+    : baseUrl;
 
-  const prevPageUrl = currentPage > 1
-    ? currentPage === 2
-      ? baseUrlWithParams
-      : `${baseUrlWithParams}${searchParamsString ? "&" : "?"}page=${currentPage - 1}`
-    : undefined;
+  const prevPageUrl =
+    currentPage > 1
+      ? currentPage === 2
+        ? baseUrlWithParams
+        : `${baseUrlWithParams}${searchParamsString ? "&" : "?"}page=${
+            currentPage - 1
+          }`
+      : undefined;
 
-  const nextPageUrl = currentPage < totalPages
-    ? `${baseUrlWithParams}${searchParamsString ? "&" : "?"}page=${currentPage + 1}`
-    : undefined;
+  const nextPageUrl =
+    currentPage < totalPages
+      ? `${baseUrlWithParams}${searchParamsString ? "&" : "?"}page=${
+          currentPage + 1
+        }`
+      : undefined;
 
   return generateProductsPageMetadata({
     localeCountry,
@@ -91,7 +101,10 @@ export async function generateMetadata({
   });
 }
 
-export default async function ProductsPage({ params, searchParams }: ProductsPageProps) {
+export default async function ProductsPage({
+  params,
+  searchParams,
+}: ProductsPageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
 
@@ -107,6 +120,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
       countrySlug: country,
       currentPage: 1,
       pageSize: 50,
+      language,
     });
 
     products = allProducts;
@@ -116,34 +130,47 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
 
   // Build structured data
   const baseUrl = `https://tuut.shop/${resolvedParams.localeCountry}/products`;
-  const searchParamsString = new URLSearchParams(resolvedSearchParams).toString();
-  const currentUrl = searchParamsString ? `${baseUrl}?${searchParamsString}` : baseUrl;
+  const searchParamsString = new URLSearchParams(
+    resolvedSearchParams
+  ).toString();
+  const currentUrl = searchParamsString
+    ? `${baseUrl}?${searchParamsString}`
+    : baseUrl;
 
   const isArabic = language === "ar";
   const countryName = getCountryNameFromCode(country);
 
-  const pageName = isArabic ? `جميع المنتجات في ${countryName}` : `All Products in ${countryName}`;
+  const pageName = isArabic
+    ? `جميع المنتجات في ${countryName}`
+    : `All Products in ${countryName}`;
   const pageDescription = isArabic
     ? `استعرض أفضل المنتجات والعروض في ${countryName}`
     : `Browse the best products and deals in ${countryName}`;
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { name: isArabic ? "الرئيسية" : "Home", url: `https://tuut.shop/${resolvedParams.localeCountry}` },
+    {
+      name: isArabic ? "الرئيسية" : "Home",
+      url: `https://tuut.shop/${resolvedParams.localeCountry}`,
+    },
     { name: isArabic ? "المنتجات" : "Products", url: currentUrl },
   ];
 
   // Add filter-specific breadcrumbs
   if (resolvedSearchParams.search) {
     breadcrumbItems.push({
-      name: isArabic ? `بحث: ${resolvedSearchParams.search}` : `Search: ${resolvedSearchParams.search}`,
+      name: isArabic
+        ? `بحث: ${resolvedSearchParams.search}`
+        : `Search: ${resolvedSearchParams.search}`,
       url: currentUrl,
     });
   }
 
   if (resolvedSearchParams.category) {
     breadcrumbItems.push({
-      name: isArabic ? resolvedSearchParams.category : resolvedSearchParams.category,
+      name: isArabic
+        ? resolvedSearchParams.category
+        : resolvedSearchParams.category,
       url: currentUrl,
     });
   }
@@ -165,38 +192,42 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
       <WebsiteStructuredData
         url={`https://tuut.shop/${resolvedParams.localeCountry}`}
         name="Tuut"
-        description={isArabic ? "اكتشف أفضل المنتجات والعروض" : "Discover the best products and deals"}
+        description={
+          isArabic
+            ? "اكتشف أفضل المنتجات والعروض"
+            : "Discover the best products and deals"
+        }
       />
 
       <main className="min-h-screen">
         <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
           <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
-          {/* Header */}
-          <div className={`mb-8 ${isRTL ? "text-right" : "text-left"}`}>
-            <Link
-              href="/"
-              className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors"
-            >
-              <ArrowLeft
-                className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
-              />
-              {m.BACK_TO_HOME()}
-            </Link>
-            <h1
-              className="text-[#111827] mb-4"
-              style={{ fontSize: "36px", fontWeight: 700 }}
-            >
-              {m.ALL_PRODUCTS()}
-            </h1>
-          </div>
+            {/* Header */}
+            <div className={`mb-8 ${isRTL ? "text-right" : "text-left"}`}>
+              <Link
+                href="/"
+                className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors"
+              >
+                <ArrowLeft
+                  className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
+                />
+                {m.BACK_TO_HOME()}
+              </Link>
+              <h1
+                className="text-[#111827] mb-4"
+                style={{ fontSize: "36px", fontWeight: 700 }}
+              >
+                {m.ALL_PRODUCTS()}
+              </h1>
+            </div>
 
-          <ProductsClientPage
-            initialProducts={products}
-            initialSearchParams={resolvedSearchParams}
-          />
-        </div>
-      </section>
-    </main>
+            <ProductsClientPage
+              initialProducts={products}
+              initialSearchParams={resolvedSearchParams}
+            />
+          </div>
+        </section>
+      </main>
     </>
   );
 }

@@ -104,16 +104,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Rating */}
         {product.rating && (
-          <div
-            className={`flex items-center gap-2 mb-3 ${
-              isRTL ? "flex-row-reverse" : ""
-            }`}
-          >
-            <div
-              className={`flex items-center gap-1 ${
-                isRTL ? "flex-row-reverse" : ""
-              }`}
-            >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-1">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
               <span style={{ fontWeight: 600 }}>
                 {product.rating.toFixed(1)}
@@ -124,11 +116,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Price */}
         <div className={`mb-4 ${isRTL ? "text-right" : "text-left"}`}>
-          <div
-            className={`flex items-baseline gap-2 ${
-              isRTL ? "flex-row-reverse" : ""
-            }`}
-          >
+          <div className="flex items-baseline gap-2">
             <span
               className="text-[#5FB57A]"
               style={{ fontSize: "24px", fontWeight: 700 }}

@@ -110,6 +110,8 @@ function reducer(state: State = initialState, action: Action): State {
   return actionHandlers[action.type]?.(state, action as any) || state;
 }
 
+const INITIAL_PRODUCTS_COUNT = 50;
+
 const useAllProducts = (initialProducts: Product[]) => {
   const [
     { isLoading, data, error, currentPage, pageSize, filters, isLoadingMore },
@@ -124,7 +126,11 @@ const useAllProducts = (initialProducts: Product[]) => {
   const countrySlug = localeCountry?.split("-")[1];
   const locale = localeCountry?.split("-")[0];
 
+  console.log("locale", locale);
+
   useEffect(() => {
+    if (initialProducts.length === INITIAL_PRODUCTS_COUNT) return;
+
     const controller = new AbortController();
 
     dispatch({ type: "FETCH_ALL_START" });
@@ -135,6 +141,7 @@ const useAllProducts = (initialProducts: Product[]) => {
       pageSize,
       searchText: filters.searchText,
       categoryId: filters.categoryId,
+      language: locale,
     })
       .then(({ data }) => {
         dispatch({ type: "FETCH_ALL_SUCCESS", data });
