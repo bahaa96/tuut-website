@@ -34,8 +34,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       : 0;
   const hasDiscount = discountPercentage > 0;
 
-  console.log("foo:", product);
-
   return (
     <div className="group bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] transition-all overflow-hidden flex flex-col h-full">
       {/* Image */}

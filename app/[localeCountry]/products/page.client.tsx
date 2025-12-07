@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Product } from "../types";
 import ProductCard from "@/components/ProductCard";
 import FilterSection from "@/components/FilterSection";
@@ -40,6 +40,8 @@ export default function ProductsClientPage({
     initialSearchParams?.discount || "all"
   );
   const [sortBy, setSortBy] = useState(initialSearchParams?.sort || "newest");
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const params = useParams();
   const localeCountry = params?.localeCountry as string;
@@ -51,7 +53,6 @@ export default function ProductsClientPage({
     isLoadingAllProducts,
     errorLoadingAllProducts,
     allProductsCurrentPage,
-    allProductsPageSize,
     allProductsFilters,
     isAllProductsLoadingMore,
     allProductsChangePage,
@@ -75,6 +76,47 @@ export default function ProductsClientPage({
       }
     }
   }, [initialSearchParams]);
+
+  // Load more products
+  const loadMore = useCallback(() => {
+    // If we have initial products and current page is 1, go to page 2
+    // Otherwise, increment current page
+    const nextPage = allProductsCurrentPage === 1 && initialProducts?.length ? 2 : allProductsCurrentPage + 1;
+    console.log('loadMore called - Current page:', allProductsCurrentPage, 'Next page:', nextPage, 'Has initial:', !!initialProducts?.length);
+    allProductsChangePage(nextPage);
+  }, [allProductsCurrentPage, initialProducts]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          !isLoadingAllProducts &&
+          !isAllProductsLoadingMore
+        ) {
+          console.log("loadMore");
+          console.log("allProductsCurrentPage", allProductsCurrentPage);
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isLoadingAllProducts, isAllProductsLoadingMore, loadMore]);
 
   const clearFilters = () => {
     allProductsChangeFilters({
@@ -191,6 +233,13 @@ export default function ProductsClientPage({
             ))}
           </div>
         )}
+        {/* Load More Trigger */}
+
+        <div ref={loadMoreRef} className="mt-8 flex justify-center h-10">
+          {isAllProductsLoadingMore && (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5FB57A] mx-auto"></div>
+          )}
+        </div>
       </div>
     </div>
   );

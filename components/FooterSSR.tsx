@@ -67,6 +67,7 @@ const Footer = async ({ countrySlug }: FooterProps) => {
     countrySlug: countrySlug,
     currentPage: 1,
     pageSize: 10,
+    language: locale,
   });
 
   setLocale(locale);
@@ -106,11 +107,11 @@ const Footer = async ({ countrySlug }: FooterProps) => {
     <footer className="bg-white border-t-2 border-[#111827]">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
-        <div className={`mb-12 ${isRTL ? "text-right" : ""}`}>
+        <div className="mb-12">
           {/* Brand Section - Full Width */}
           <div className="flex flex-col lg:flex-row gap-8 mb-12">
             <div className="lg:w-1/4">
-              <div className={`mb-4 ${isRTL ? "flex justify-end" : ""}`}>
+              <div className={`mb-4`}>
                 {locale === "ar" ? (
                   <img
                     src="/assets/images/tuut-logo-ar-min.png"
@@ -131,11 +132,7 @@ const Footer = async ({ countrySlug }: FooterProps) => {
 
               {/* Contact Info */}
               <div className="space-y-3 text-sm text-[#6B7280]">
-                <div
-                  className={`flex items-center gap-2 ${
-                    isRTL ? "flex-row-reverse" : ""
-                  }`}
-                >
+                <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   <span>support@tuut.com</span>
                 </div>

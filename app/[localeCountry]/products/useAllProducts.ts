@@ -1,6 +1,6 @@
 import { Product } from "@/domain-models/Product";
 import { requestFetchAllProducts } from "@/network/products";
-import { useReducer, useEffect } from "react";
+import { useReducer, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 interface State {
@@ -10,6 +10,7 @@ interface State {
   currentPage: number;
   pageSize: number;
   isLoadingMore: boolean;
+  hasMore: boolean;
   filters: {
     searchText?: string;
     categoryId?: string;
@@ -23,6 +24,7 @@ const initialState: State = {
   currentPage: 1,
   pageSize: 10,
   isLoadingMore: false,
+  hasMore: true,
   filters: {},
 };
 
@@ -113,23 +115,30 @@ function reducer(state: State = initialState, action: Action): State {
 const INITIAL_PRODUCTS_COUNT = 50;
 
 const useAllProducts = (initialProducts: Product[]) => {
+  const hasInitialProducts = initialProducts && initialProducts.length > 0;
+  const initialPage = hasInitialProducts ? 1 : 0;
+
   const [
     { isLoading, data, error, currentPage, pageSize, filters, isLoadingMore },
     dispatch,
   ] = useReducer(reducer, {
     ...initialState,
-    data: initialProducts,
-    currentPage: initialProducts.length / initialState.pageSize,
+    data: initialProducts || [],
+    currentPage: initialPage,
+    pageSize: INITIAL_PRODUCTS_COUNT,
   });
 
   const localeCountry = usePathname()?.split("/")[1];
   const countrySlug = localeCountry?.split("-")[1];
   const locale = localeCountry?.split("-")[0];
 
-  console.log("locale", locale);
+  // Track if we've already loaded the first page
+  const isFirstPageLoadedRef = useRef(hasInitialProducts);
 
   useEffect(() => {
-    if (initialProducts.length === INITIAL_PRODUCTS_COUNT) return;
+    if (!filters.searchText && !filters.categoryId) {
+      return;
+    }
 
     const controller = new AbortController();
 
@@ -137,7 +146,7 @@ const useAllProducts = (initialProducts: Product[]) => {
 
     requestFetchAllProducts({
       countrySlug: countrySlug as string,
-      currentPage,
+      currentPage: 1, // Always start from page 1 when filters change
       pageSize,
       searchText: filters.searchText,
       categoryId: filters.categoryId,
@@ -148,7 +157,7 @@ const useAllProducts = (initialProducts: Product[]) => {
       })
       .catch((error) => {
         if (controller.signal.aborted) {
-          return false;
+          return; // Silently handle abort
         }
         dispatch({ type: "FETCH_ALL_ERROR", error });
       });
@@ -156,7 +165,45 @@ const useAllProducts = (initialProducts: Product[]) => {
     return () => {
       controller.abort();
     };
-  }, [currentPage, filters]);
+  }, [filters, countrySlug, locale]);
+
+  useEffect(() => {
+    // Don't fetch if:
+    // - We're on page 0 or 1 and already have initial products
+    // - currentPage is less than or equal to 1 when we have initial products
+    if ((hasInitialProducts && currentPage <= 1) || currentPage === 0) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    dispatch({ type: "LOADING_MORE_START" });
+
+    requestFetchAllProducts({
+      countrySlug: countrySlug as string,
+      currentPage,
+      pageSize,
+      searchText: filters.searchText,
+      categoryId: filters.categoryId,
+      language: locale,
+      options: {
+        abortSignal: controller.signal,
+      },
+    })
+      .then(({ data }) => {
+        dispatch({ type: "LOADING_MORE_SUCCESS", data });
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) {
+          return; // Silently handle abort
+        }
+        dispatch({ type: "LOADING_MORE_ERROR", error });
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [currentPage, hasInitialProducts]);
 
   const changePage = (page: number) => {
     dispatch({ type: "CHANGE_PAGE", page });
@@ -166,6 +213,8 @@ const useAllProducts = (initialProducts: Product[]) => {
     searchText?: string;
     categoryId?: string;
   }) => {
+    // Reset to page 1 when filters change
+    dispatch({ type: "CHANGE_PAGE", page: 1 });
     dispatch({ type: "CHANGE_FILTERS", filters });
   };
 

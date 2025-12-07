@@ -1,7 +1,6 @@
 import ProductsClientPage from "./page.client";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { fetchProducts } from "@/utils/api";
 import { Product } from "../types";
 import { requestFetchAllProducts } from "@/network";
 import * as m from "@/src/paraglide/messages";
@@ -44,11 +43,13 @@ export async function generateMetadata({
   let totalPages = 1;
   try {
     const country = localeCountry.split("-")[1];
+    const language = localeCountry.split("-")[0];
     const pageSize = 50;
     const { data: allProducts } = await requestFetchAllProducts({
       countrySlug: country,
       currentPage: 1,
       pageSize,
+      language,
     });
     productsCount = allProducts.length;
 

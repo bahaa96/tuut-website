@@ -8,6 +8,9 @@ interface RequestFetchAllProductsArgs {
   searchText?: string;
   categoryId?: string;
   language: string;
+  options?: {
+    abortSignal?: AbortSignal;
+  };
 }
 
 const requestFetchAllProducts = async ({
@@ -17,7 +20,10 @@ const requestFetchAllProducts = async ({
   searchText,
   categoryId,
   language,
-}: RequestFetchAllProductsArgs): Promise<{ data: Product[] }> => {
+  options,
+}: RequestFetchAllProductsArgs): Promise<{
+  data: Product[];
+}> => {
   const offset = (currentPage - 1) * pageSize;
   let query = supabase
     .from("products")
