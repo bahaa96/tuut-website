@@ -4,18 +4,22 @@ export function proxy(request) {
   const url = request.nextUrl;
   let pathname = url.pathname;
 
-  // Remove trailing slash for consistent matching, but preserve it for the redirect
-  const originalPathname = pathname;
-  if (pathname !== "/" && pathname.endsWith("/")) {
-    pathname = pathname.slice(0, -1);
-  }
-
-  // Exclude sitemap from locale country redirect
-  if (pathname === "/sitemap.xml" || pathname.startsWith("/sitemap.xml/")) {
+  // Exclude sitemap from locale country redirect - check early before any processing
+  if (
+    pathname === "/sitemap.xml" ||
+    pathname === "/sitemap.xml/" ||
+    pathname.startsWith("/sitemap.xml/")
+  ) {
     const response = NextResponse.next();
     response.headers.set("x-pathname", request.nextUrl.pathname);
     response.headers.set("x-paraglide-request-url", request.url);
     return response;
+  }
+
+  // Remove trailing slash for consistent matching, but preserve it for the redirect
+  const originalPathname = pathname;
+  if (pathname !== "/" && pathname.endsWith("/")) {
+    pathname = pathname.slice(0, -1);
   }
 
   // Check if pathname already has a localeCountry (format: /xx-XX/...)
@@ -76,5 +80,5 @@ export function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_static|favicon.ico).*)"],
+  matcher: ["/((?!api|_next|_static|favicon.ico|sitemap.xml).*)"],
 };
