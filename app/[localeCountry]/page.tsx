@@ -5,6 +5,12 @@ import {
   FAQStructuredData,
 } from "@/components/StructuredData";
 import HomePageClient from "./page.client";
+import {
+  requestFetchAllFeaturedDeals,
+  requestFetchAllCategories,
+  requestFetchAllStores,
+} from "@/network";
+import { FeaturedDeal, Category, Store } from "@/domain-models";
 
 interface HomePageProps {
   params: Promise<{
@@ -137,6 +143,37 @@ export default async function Home({ params }: HomePageProps) {
   const isArabic = language === "ar";
   const countryName = getCountryNameFromCode(country);
 
+  // Fetch featured deals, categories, and popular stores
+  let featuredDeals: FeaturedDeal[] = [];
+  let categories: Category[] = [];
+  let popularStores: Store[] = [];
+
+  try {
+    const [featuredDealsResult, categoriesResult, storesResult] =
+      await Promise.all([
+        requestFetchAllFeaturedDeals({
+          countrySlug: country,
+          currentPage: 1,
+          pageSize: 10,
+        }),
+        requestFetchAllCategories({
+          currentPage: 1,
+          pageSize: 10,
+        }),
+        requestFetchAllStores({
+          countrySlug: country,
+          currentPage: 1,
+          pageSize: 8,
+        }),
+      ]);
+
+    featuredDeals = featuredDealsResult.data;
+    categories = categoriesResult.data;
+    popularStores = storesResult.data;
+  } catch (error) {
+    console.error("Error fetching home page data:", error);
+  }
+
   // FAQ data for the home page
   const faqs = [
     {
@@ -228,7 +265,11 @@ export default async function Home({ params }: HomePageProps) {
           ),
         }}
       />
-      <HomePageClient />
+      <HomePageClient
+        initialFeaturedDeals={featuredDeals}
+        initialCategories={categories}
+        initialPopularStores={popularStores}
+      />
     </>
   );
 }

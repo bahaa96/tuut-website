@@ -1,68 +1,65 @@
 "use client";
 import { Heart, Copy, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { useCountry } from "@/contexts/CountryContext";
-import { getCountryValue } from "@/utils/countryHelpers";
-import { fetchFeaturedDeals } from "@/utils/api";
 import Link from "next/link";
 import { copyToClipboard } from "@/utils/clipboard";
 import { usePathname } from "next/navigation";
-import { requestFetchAllFeaturedDeals } from "@/network";
+import { FeaturedDeal } from "@/domain-models";
 import * as m from "@/src/paraglide/messages";
 
-interface Deal {
+interface DealDisplay {
   id: number;
   title: string;
   title_ar?: string;
-  store: string;
-  store_ar?: string;
-  discount: string;
   description: string;
   description_ar?: string;
   code?: string;
-  type: "coupon" | "sale";
   color: string;
   slug?: string;
 }
 
-export function FeaturedDeals() {
+interface FeaturedDealsProps {
+  initialFeaturedDeals: FeaturedDeal[];
+}
+
+const COLORS = [
+  "#7EC89A",
+  "#5FB57A",
+  "#9DD9B3",
+  "#BCF0CC",
+  "#A8E6CF",
+  "#88D8A3",
+];
+
+export function FeaturedDeals({ initialFeaturedDeals }: FeaturedDealsProps) {
   const pathname = usePathname();
   const localeCountry = pathname?.split("/")[1];
-  const countrySlug = localeCountry?.split("-")[1];
   const locale = localeCountry?.split("-")[0];
   const isRTL = locale === "ar";
   const [savedDeals, setSavedDeals] = useState<Set<number>>(new Set());
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // Fetch deals from server whenever country or language changes
-  useEffect(() => {
-    const fetchDealsData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch deals with country filter
-        const { data: allFeaturedDeals } = await requestFetchAllFeaturedDeals({
-          countrySlug: countrySlug || "",
-          currentPage: 1,
-          pageSize: 10,
-        });
-
-        console.log("Featured deals API result:", allFeaturedDeals);
-        console.log("First deal structure:", allFeaturedDeals?.[0]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDealsData();
-  }, [countrySlug]);
+  // Transform featured deals to display format
+  const deals = useMemo<DealDisplay[]>(() => {
+    return initialFeaturedDeals.map((featuredDeal, index) => {
+      const deal = featuredDeal.deal;
+      const language = locale === "ar" ? "ar" : "en";
+      return {
+        id: deal.id,
+        title: deal.title_en || "",
+        title_ar: deal.title_ar,
+        description: deal.description_en || "",
+        description_ar: deal.description_ar,
+        code: deal.code,
+        color: COLORS[index % COLORS.length],
+        slug: language === "ar" ? deal.slug_ar : deal.slug_en,
+      };
+    });
+  }, [initialFeaturedDeals, locale]);
 
   useEffect(() => {
     checkScrollButtons();
@@ -157,7 +154,7 @@ export function FeaturedDeals() {
           </Link>
         </div>
 
-        {loading ? (
+        {!initialFeaturedDeals || initialFeaturedDeals.length === 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <div
@@ -231,7 +228,7 @@ export function FeaturedDeals() {
                 {deals.map((deal) => (
                   <Link
                     key={deal.id}
-                    href={`/deal/${deal.slug || deal.id}`}
+                    href={`/${localeCountry}/deal/${deal.slug || deal.id}`}
                     className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all w-[320px] md:w-[360px] block"
                   >
                     {/* Left/Right Discount Bar with Perforated Edge */}

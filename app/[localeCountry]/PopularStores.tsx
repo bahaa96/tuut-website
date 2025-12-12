@@ -1,106 +1,42 @@
 "use client";
 import { Store as StoreIcon, ArrowRight, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCountry } from "@/contexts/CountryContext";
-import { getCountryValue } from "@/utils/countryHelpers";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { requestFetchAllStores } from "@/network/stores";
+import { Store } from "@/domain-models";
 
-interface Store {
-  id: string;
-  name?: string;
-  store_name?: string;
-  title?: string;
-  name_ar?: string;
-  store_name_ar?: string;
-  logo?: string;
-  logo_url?: string;
-  image_url?: string;
-  profile_image?: string;
-  profile_image_url?: string;
-  profile_picture_url?: string;
-  banner_image?: string;
-  cover_image?: string;
-  slug?: string;
-  deals_count?: number;
-  active_deals_count?: number;
-  total_offers?: number;
+interface PopularStoresProps {
+  initialPopularStores: Store[];
 }
 
-export function PopularStores() {
+export function PopularStores({ initialPopularStores }: PopularStoresProps) {
   const pathname = usePathname();
   const localeCountry = pathname?.split("/")[1];
-  const countrySlug = localeCountry?.split("-")[1];
   const locale = localeCountry?.split("-")[0];
   const isRTL = locale === "ar";
-  const { country } = useCountry();
-  const [stores, setStores] = useState<Store[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchStores();
-  }, [countrySlug]);
-
-  const fetchStores = async () => {
-    try {
-      setLoading(true);
-
-      const { data } = await requestFetchAllStores({
-        countrySlug: countrySlug || "",
-        currentPage: 1,
-        pageSize: 8,
-      });
-
-      setStores(data);
-    } catch (err) {
-      console.error("Error fetching stores:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   function getStoreName(store: Store): string {
     if (isRTL) {
-      return (
-        store.name_ar ||
-        store.store_name_ar ||
-        store.name ||
-        store.store_name ||
-        store.title ||
-        "Store"
-      );
+      return store.title_ar || store.title_en || "Store";
     }
-    return store.name || store.store_name || store.title || "Store";
+    return store.title_en || store.title_ar || "Store";
   }
 
   function getStoreLogo(store: Store): string {
-    return (
-      store.profile_picture_url ||
-      store.logo ||
-      store.logo_url ||
-      store.image_url ||
-      ""
-    );
+    return store.profile_picture_url || "";
   }
 
   function getStoreSlug(store: Store): string {
-    const name = store.name || store.store_name || store.title || "";
-    return (
-      store.slug ||
-      name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")
-    );
+    const slug = isRTL
+      ? store.slug_ar || store.slug_en
+      : store.slug_en || store.slug_ar;
+    return slug || store.id.toString();
   }
 
   function getDealsCount(store: Store): number {
-    return (
-      store.total_offers || store.active_deals_count || store.deals_count || 0
-    );
+    // Default to 0 since Store model doesn't have deals_count
+    return 0;
   }
 
   return (
@@ -139,7 +75,7 @@ export function PopularStores() {
           </Link>
         </div>
 
-        {loading ? (
+        {!initialPopularStores || initialPopularStores.length === 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {[...Array(8)].map((_, i) => (
               <div
@@ -148,17 +84,10 @@ export function PopularStores() {
               />
             ))}
           </div>
-        ) : stores.length === 0 ? (
-          <div className="text-center py-12">
-            <StoreIcon className="h-12 w-12 text-[#9CA3AF] mx-auto mb-4" />
-            <p className="text-[#6B7280]">
-              {locale === "en" ? "No stores available" : "لا توجد متاجر متاحة"}
-            </p>
-          </div>
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {stores.map((store) => {
+              {initialPopularStores.map((store) => {
                 const name = getStoreName(store);
                 const logo = getStoreLogo(store);
                 const slug = getStoreSlug(store);

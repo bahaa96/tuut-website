@@ -8,8 +8,19 @@ import { PopularStores } from "./PopularStores";
 import { WhyDifferent } from "./WhyDifferent";
 import { Testimonials } from "./Testimonials";
 import { Newsletter } from "./Newsletter";
+import { FeaturedDeal, Category, Store } from "@/domain-models";
 
-const HomePageClient = () => {
+interface HomePageClientProps {
+  initialFeaturedDeals: FeaturedDeal[];
+  initialCategories: Category[];
+  initialPopularStores: Store[];
+}
+
+const HomePageClient = ({
+  initialFeaturedDeals,
+  initialCategories,
+  initialPopularStores,
+}: HomePageClientProps) => {
   useEffect(() => {
     // Handle hash navigation on mount
     if (window.location.hash === "#featured-deals") {
@@ -28,10 +39,10 @@ const HomePageClient = () => {
   return (
     <>
       <Hero />
-      <FeaturedDeals />
-      <CategoryGrid />
+      <FeaturedDeals initialFeaturedDeals={initialFeaturedDeals} />
+      <CategoryGrid initialCategories={initialCategories} />
       <CommunityActivity />
-      <PopularStores />
+      <PopularStores initialPopularStores={initialPopularStores} />
       <WhyDifferent />
       <Testimonials />
       <Newsletter />

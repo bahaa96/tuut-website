@@ -59,23 +59,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { requestFetchAllCategories } from "@/network/categories";
+import { Category } from "@/domain-models";
 import * as m from "@/src/paraglide/messages";
 
-interface Category {
-  id: number;
-  name?: string;
-  label?: string;
-  title?: string;
-  slug?: string;
-  icon?: string;
-  icon_name?: string;
-  color?: string;
-  bg_color?: string;
-  count?: number;
-  deals_count?: string;
-  deal_count?: number;
-  active_deals_count?: number;
+interface CategoryGridProps {
+  initialCategories: Category[];
 }
 
 // Function to get icon based on category name
@@ -443,38 +431,23 @@ function getCategoryIcon(categoryName: string): LucideIcon {
   return ShoppingBag;
 }
 
-export function CategoryGrid() {
+export function CategoryGrid({ initialCategories }: CategoryGridProps) {
   const pathname = usePathname();
   const localeCountry = pathname?.split("/")[1];
-  const countrySlug = localeCountry?.split("-")[1];
   const locale = localeCountry?.split("-")[0];
   const isRTL = locale === "ar";
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        await requestFetchAllCategories({
-          currentPage: 1,
-          pageSize: 10,
-        });
-      } catch (error) {
-        console.error("Unexpected error fetching categories:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchCategories();
-  }, []);
+  const navigate = (url: string) => {
+    router.push(url);
+  };
 
   useEffect(() => {
     checkScrollButtons();
-  }, [scrollPosition, categories]);
+  }, [scrollPosition, initialCategories]);
 
   const checkScrollButtons = () => {
     const container = document.getElementById("category-scroll-container");
@@ -507,7 +480,7 @@ export function CategoryGrid() {
     }
   };
 
-  if (loading) {
+  if (!initialCategories || initialCategories.length === 0) {
     return (
       <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
@@ -584,49 +557,30 @@ export function CategoryGrid() {
           >
             {/* Two-row grid */}
             <div className="grid grid-rows-2 grid-flow-col gap-4 md:gap-6 pb-2">
-              {categories.map((category, index) => {
-                // Flexible field name handling
-                const categoryName =
-                  category.name ||
-                  category.label ||
-                  category.title ||
-                  "Uncategorized";
+              {initialCategories.map((category, index) => {
+                // Get category name based on language
+                const categoryName = isRTL
+                  ? category.title_ar || category.title_en || "Uncategorized"
+                  : category.title_en || category.title_ar || "Uncategorized";
 
                 // Get icon based on category name
                 const Icon = getCategoryIcon(categoryName);
 
-                const displayColor =
-                  category.color ||
-                  category.bg_color ||
-                  ["#7EC89A", "#5FB57A", "#9DD9B3", "#BCF0CC"][index % 4];
+                const displayColor = [
+                  "#7EC89A",
+                  "#5FB57A",
+                  "#9DD9B3",
+                  "#BCF0CC",
+                ][index % 4];
 
-                // Handle active_deals_count with proper formatting
-                let displayCount = isRTL ? "0 عروض" : "0 deals";
-                let count = 0;
-
-                if (category.active_deals_count !== undefined) {
-                  count = category.active_deals_count;
-                } else if (category.deal_count !== undefined) {
-                  count = category.deal_count;
-                } else if (category.count !== undefined) {
-                  count = category.count;
-                } else if (category.deals_count) {
-                  // If deals_count is already a formatted string, use it as is
-                  displayCount = category.deals_count;
-                  count = -1; // Skip formatting
-                }
-
-                // Format the count with proper pluralization
-                if (count >= 0) {
-                  if (isRTL) {
-                    displayCount = `${count} ${count === 1 ? "عرض" : "عروض"}`;
-                  } else {
-                    displayCount = `${count} ${count === 1 ? "deal" : "deals"}`;
-                  }
-                }
+                // Format deals count (default to 0 since we don't have count in Category model)
+                const displayCount = isRTL ? "0 عروض" : "0 deals";
 
                 // Determine the link URL - use slug if available, otherwise use id
-                const categoryUrl = `/category/${category.slug || category.id}`;
+                const slug = isRTL
+                  ? category.slug_ar || category.slug_en
+                  : category.slug_en || category.slug_ar;
+                const categoryUrl = `/category/${slug || category.id}`;
 
                 return (
                   <button
