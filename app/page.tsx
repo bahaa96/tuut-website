@@ -1,6 +1,6 @@
 "use client";
-import HomePage from "@/pages/HomePage";
+import HomePageClient from "./[localeCountry]/page.client";
 
 export default function Home() {
-  return <HomePage />;
+  return <HomePageClient />;
 }

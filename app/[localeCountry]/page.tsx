@@ -1,10 +1,10 @@
 import { Metadata } from "next";
-import HomePage from "@/pages/HomePage";
 import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
 import {
   WebsiteStructuredData,
-  FAQStructuredData
+  FAQStructuredData,
 } from "@/components/StructuredData";
+import HomePageClient from "./page.client";
 
 interface HomePageProps {
   params: Promise<{
@@ -118,7 +118,7 @@ function generateHreflangTags(localeCountry: string): Record<string, string> {
   const hreflangs: Record<string, string> = {};
 
   // Generate combinations for the current country
-  languages.forEach(lang => {
+  languages.forEach((lang) => {
     const locale = `${lang}-${country}`;
     hreflangs[locale] = `https://tuut.shop/${locale}`;
   });
@@ -140,20 +140,16 @@ export default async function Home({ params }: HomePageProps) {
   // FAQ data for the home page
   const faqs = [
     {
-      question: isArabic
-        ? "ما هو تطبيق Tuut؟"
-        : "What is the Tuut app?",
+      question: isArabic ? "ما هو تطبيق Tuut؟" : "What is the Tuut app?",
       answer: isArabic
         ? "Tuut هو تطبيق تسوق ذكي يساعدك على اكتشاف أفضل العروض والخصومات والكوبونات من آلاف المتاجر في منطقتك. يقارن الأسعار ويوفر لك عروضاً حصرية لتوفير المال."
-        : "Tuut is a smart shopping app that helps you discover the best deals, discounts, and coupons from thousands of stores in your area. It compares prices and provides exclusive offers to help you save money."
+        : "Tuut is a smart shopping app that helps you discover the best deals, discounts, and coupons from thousands of stores in your area. It compares prices and provides exclusive offers to help you save money.",
     },
     {
-      question: isArabic
-        ? "هل تطبيق Tuut مجاني؟"
-        : "Is the Tuut app free?",
+      question: isArabic ? "هل تطبيق Tuut مجاني؟" : "Is the Tuut app free?",
       answer: isArabic
         ? "نعم، تطبيق Tuut مجاني تماماً للتحميل والاستخدام. يمكنك الوصول إلى جميع العروض والخصومات دون أي رسوم."
-        : "Yes, the Tuut app is completely free to download and use. You can access all deals and discounts without any fees."
+        : "Yes, the Tuut app is completely free to download and use. You can access all deals and discounts without any fees.",
     },
     {
       question: isArabic
@@ -161,7 +157,7 @@ export default async function Home({ params }: HomePageProps) {
         : "In which cities is Tuut available?",
       answer: isArabic
         ? `Tuut متاح في مدن رئيسية في ${countryName} بما في ذلك القاهرة، الإسكندرية، الرياض، جدة، دبي، وأبو ظبي. نعمل باستمرار على التوسع لتغطية المزيد من المدن.`
-        : `Tuut is available in major cities across ${countryName} including Cairo, Alexandria, Riyadh, Jeddah, Dubai, and Abu Dhabi. We're constantly expanding to cover more cities.`
+        : `Tuut is available in major cities across ${countryName} including Cairo, Alexandria, Riyadh, Jeddah, Dubai, and Abu Dhabi. We're constantly expanding to cover more cities.`,
     },
     {
       question: isArabic
@@ -169,7 +165,7 @@ export default async function Home({ params }: HomePageProps) {
         : "How do I save money using Tuut?",
       answer: isArabic
         ? "مع Tuut، يمكنك الوصول إلى عروض حصرية وكوبونات خصم، مقارنة الأسعار بين المتاجر المختلفة، وتلقي إشعارات عن أحدث الصفقات. يوفر مستخدمونا في المتوسط 30% على مشترياتهم."
-        : "With Tuut, you get access to exclusive deals and discount coupons, compare prices across different stores, and receive notifications about the latest bargains. Our users save an average of 30% on their purchases."
+        : "With Tuut, you get access to exclusive deals and discount coupons, compare prices across different stores, and receive notifications about the latest bargains. Our users save an average of 30% on their purchases.",
     },
   ];
 
@@ -179,9 +175,10 @@ export default async function Home({ params }: HomePageProps) {
       <WebsiteStructuredData
         url={`https://tuut.shop/${localeCountry}`}
         name="Tuut"
-        description={isArabic
-          ? `اكتشف أفضل العروض والخصومات في ${countryName}`
-          : `Discover the best deals and discounts in ${countryName}`
+        description={
+          isArabic
+            ? `اكتشف أفضل العروض والخصومات في ${countryName}`
+            : `Discover the best deals and discounts in ${countryName}`
         }
       />
 
@@ -191,45 +188,47 @@ export default async function Home({ params }: HomePageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            name: "Tuut",
-            description: isArabic
-              ? "تطبيق تسوق ذكي لاكتشاف أفضل العروض والخصومات"
-              : "Smart shopping app to discover the best deals and discounts",
-            url: `https://tuut.shop/${localeCountry}`,
-            applicationCategory: "Shopping",
-            operatingSystem: "iOS, Android",
-            offers: {
-              "@type": "Offer",
-              price: "0",
-              priceCurrency: "USD",
-              availability: "https://schema.org/InStock",
-            },
-            author: {
-              "@type": "Organization",
+          __html: JSON.stringify(
+            {
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
               name: "Tuut",
-              url: "https://tuut.shop",
+              description: isArabic
+                ? "تطبيق تسوق ذكي لاكتشاف أفضل العروض والخصومات"
+                : "Smart shopping app to discover the best deals and discounts",
+              url: `https://tuut.shop/${localeCountry}`,
+              applicationCategory: "Shopping",
+              operatingSystem: "iOS, Android",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+                availability: "https://schema.org/InStock",
+              },
+              author: {
+                "@type": "Organization",
+                name: "Tuut",
+                url: "https://tuut.shop",
+              },
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: "4.7",
+                reviewCount: "10000",
+                bestRating: "5",
+                worstRating: "1",
+              },
+              inLanguage: language,
+              contentLocation: {
+                "@type": "Place",
+                name: countryName,
+              },
             },
-            aggregateRating: {
-              "@type": "AggregateRating",
-              ratingValue: "4.7",
-              reviewCount: "10000",
-              bestRating: "5",
-              worstRating: "1",
-            },
-            inLanguage: language,
-            contentLocation: {
-              "@type": "Place",
-              name: countryName,
-            },
-          }, null, 2),
+            null,
+            2
+          ),
         }}
       />
-
-      {/* HomePage Component */}
-      <HomePage />
+      <HomePageClient />
     </>
   );
 }
