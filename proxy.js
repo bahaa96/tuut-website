@@ -10,35 +10,60 @@ export function proxy(request) {
     pathname = pathname.slice(0, -1);
   }
 
-  // Define paths that need localeCountry
-  const localizedPaths = ["/deals", "/stores", "/products", "/guides"];
+  // Check if pathname already has a localeCountry (format: /xx-XX/...)
+  const localeCountryMatch = pathname.match(/^\/([a-z]{2}-[A-Z]{2})(\/.*)?$/);
+  const localeCountryFromUrl = localeCountryMatch
+    ? localeCountryMatch[1]
+    : null;
 
-  // Check if the path matches a localized route but doesn't have localeCountry
-  const needsLocale = localizedPaths.some(
-    (path) => pathname === path || pathname.startsWith(path + "/")
-  );
+  // Get localeCountry from cookie
+  const localeCountryFromCookie = request.cookies.get("localeCountry")?.value;
 
-  if (needsLocale && !pathname.match(/^\/[a-z]{2}-[A-Z]{2}/)) {
-    // Default to Arabic Saudi Arabia
-    const defaultLocaleCountry = "ar-SA";
+  // If URL has a localeCountry, save it to cookie and continue
+  if (localeCountryFromUrl) {
+    const response = NextResponse.next();
+    response.headers.set("x-pathname", request.nextUrl.pathname);
 
-    // Redirect to the same path with localeCountry prefix (preserve original path with trailing slash)
-    const newUrl = new URL(
-      `/${defaultLocaleCountry}${originalPathname}`,
-      request.url
-    );
-    if (url.search) {
-      newUrl.search = url.search;
+    const locale = localeCountryFromUrl.split("-")[0];
+    response.headers.set("x-paraglide-locale", locale);
+    response.headers.set("x-paraglide-request-url", request.url);
+
+    // Save localeCountry to cookie if it's different from the one in cookie
+    if (localeCountryFromCookie !== localeCountryFromUrl) {
+      response.cookies.set("localeCountry", localeCountryFromUrl, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        sameSite: "lax",
+      });
     }
+
+    return response;
   }
 
-  const localeCountry = request.nextUrl.pathname.split("/")[1];
-  const locale = localeCountry?.split("-")[0];
+  // No localeCountry in URL - need to redirect
+  let targetLocaleCountry = localeCountryFromCookie || "ar-SA";
 
-  const response = NextResponse.next();
-  response.headers.set("x-pathname", request.nextUrl.pathname);
-  response.headers.set("x-paraglide-locale", locale);
-  response.headers.set("x-paraglide-request-url", request.url);
+  // Build redirect URL
+  const redirectPath = `/${targetLocaleCountry}${
+    originalPathname === "/" ? "" : originalPathname
+  }`;
+  const newUrl = new URL(redirectPath, request.url);
+  if (url.search) {
+    newUrl.search = url.search;
+  }
+
+  // Create redirect response
+  const response = NextResponse.redirect(newUrl);
+
+  // Save localeCountry to cookie if it wasn't already set
+  if (!localeCountryFromCookie) {
+    response.cookies.set("localeCountry", targetLocaleCountry, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      sameSite: "lax",
+    });
+  }
+
   return response;
 }
 
