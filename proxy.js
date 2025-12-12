@@ -10,6 +10,14 @@ export function proxy(request) {
     pathname = pathname.slice(0, -1);
   }
 
+  // Exclude sitemap from locale country redirect
+  if (pathname === "/sitemap.xml" || pathname.startsWith("/sitemap.xml/")) {
+    const response = NextResponse.next();
+    response.headers.set("x-pathname", request.nextUrl.pathname);
+    response.headers.set("x-paraglide-request-url", request.url);
+    return response;
+  }
+
   // Check if pathname already has a localeCountry (format: /xx-XX/...)
   const localeCountryMatch = pathname.match(/^\/([a-z]{2}-[A-Z]{2})(\/.*)?$/);
   const localeCountryFromUrl = localeCountryMatch
