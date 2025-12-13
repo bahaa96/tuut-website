@@ -28,7 +28,8 @@ interface Article {
   title?: string;
   slug?: string;
   excerpt?: string;
-  content?: string;
+  content_markdown?: string;
+  content_html?: string;
   featured_image_url?: string;
   author_name?: string;
   author_avatar_url?: string;
@@ -228,7 +229,7 @@ export default async function GuidesPage({
         const query = search.toLowerCase();
         const title = (article.title || "").toLowerCase();
         const excerpt = (article.excerpt || "").toLowerCase();
-        const content = (article.content || "").toLowerCase();
+        const content = (article.content_markdown || "").toLowerCase();
         return (
           title.includes(query) ||
           excerpt.includes(query) ||
@@ -642,7 +643,7 @@ function ArticleCard({
   isRTL: boolean;
 }) {
   const title = getArticleTitle(article);
-  const excerpt = getArticleExcerpt(article);
+  const description = getArticleDescription(article);
   const author = getArticleAuthor(article);
   const image = getArticleImage(article);
   const slug = article.slug || article.id;
@@ -653,8 +654,8 @@ function ArticleCard({
     return article.title || "Article";
   }
 
-  function getArticleExcerpt(article: Article): string {
-    return article.excerpt || "";
+  function getArticleDescription(article: Article): string {
+    return article.description || "";
   }
 
   function getArticleAuthor(article: Article): string {
@@ -715,9 +716,9 @@ function ArticleCard({
           >
             {title}
           </h3>
-          {excerpt && (
+          {description && (
             <p className="text-[#6B7280] text-sm mb-4 line-clamp-3 flex-1">
-              {excerpt}
+              {description}
             </p>
           )}
 
