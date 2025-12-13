@@ -6,13 +6,10 @@ import {
   X,
   ChevronRight,
   BookOpen,
-  Tag as TagIcon,
 } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Badge } from "../../../components/ui/badge";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { getCountryValue } from "../../../utils/countryHelpers";
-import { fetchArticles } from "../../../lib/supabase-fetch";
 import { ImageWithFallback } from "../../../components/figma/ImageWithFallback";
 import Link from "next/link";
 import { Metadata } from "next";
@@ -22,6 +19,7 @@ import {
   BreadcrumbStructuredData,
   WebsiteStructuredData,
 } from "@/components/StructuredData";
+import { requestFetchAllArticles } from "@/network";
 
 interface Article {
   id: string;
@@ -183,25 +181,6 @@ function generateHreflangTags(
   return hreflangs;
 }
 
-async function getArticles(
-  countryValue: string,
-  searchQuery?: string
-): Promise<Article[]> {
-  try {
-    const { data, error } = await fetchArticles(countryValue, searchQuery);
-
-    if (error) {
-      console.error("Error fetching articles:", error);
-      return [];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error("Error fetching articles:", error);
-    return [];
-  }
-}
-
 export default async function GuidesPage({
   params,
   searchParams,
@@ -221,40 +200,11 @@ export default async function GuidesPage({
   // Convert to uppercase for API call - same pattern as deals/stores pages
   const countrySlug = country.toUpperCase();
 
-  const articles = await getArticles(countrySlug, search);
-
-  // Filter articles client-side for search (as fallback)
-  const filteredArticles = search
-    ? articles.filter((article) => {
-        const query = search.toLowerCase();
-        const title = (article.title || "").toLowerCase();
-        const excerpt = (article.excerpt || "").toLowerCase();
-        const content = (article.content_markdown || "").toLowerCase();
-        return (
-          title.includes(query) ||
-          excerpt.includes(query) ||
-          content.includes(query)
-        );
-      })
-    : articles;
-
-  function getArticleTitle(article: Article): string {
-    return article.title || "Article";
-  }
-
-  function getArticleExcerpt(article: Article): string {
-    return article.excerpt || "";
-  }
-
-  function getArticleAuthor(article: Article): string {
-    return (
-      article.author_name || (language === "en" ? "Tuut Team" : "فريق توت")
-    );
-  }
-
-  function getArticleImage(article: Article): string {
-    return article.featured_image_url || "";
-  }
+  const { data: allArticles } = await requestFetchAllArticles({
+    countrySlug,
+    currentPage: 1,
+    pageSize: 100,
+  });
 
   function formatDate(dateString?: string): string {
     if (!dateString) return "";
@@ -308,7 +258,7 @@ export default async function GuidesPage({
     <>
       {/* Structured Data */}
       <CollectionStructuredData
-        items={filteredArticles.map((article) => ({
+        items={allArticles.map((article) => ({
           name: article.title || "Article",
           description: article.excerpt || "",
           url: `https://tuut.shop/${localeCountry}/guides/${
@@ -419,7 +369,7 @@ export default async function GuidesPage({
           </form>
 
           {/* Loading State - Only show for initial load without articles */}
-          {!articles && (
+          {!allArticles && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-96 rounded-2xl" />
@@ -428,7 +378,7 @@ export default async function GuidesPage({
           )}
 
           {/* Articles Content */}
-          {filteredArticles.length === 0 ? (
+          {allArticles.length === 0 ? (
             /* Empty State */
             <div className="text-center py-16">
               <BookOpen className="h-16 w-16 text-[#9CA3AF] mx-auto mb-4" />
@@ -449,21 +399,20 @@ export default async function GuidesPage({
           ) : (
             <>
               {/* Featured Article (First one) */}
-              {filteredArticles.length > 0 &&
-                filteredArticles[0].is_featured && (
-                  <div className="mb-8">
-                    <ArticleCardFeatured
-                      article={filteredArticles[0]}
-                      language={language}
-                      isRTL={isRTL}
-                    />
-                  </div>
-                )}
+              {allArticles.length > 0 && allArticles[0].is_featured && (
+                <div className="mb-8">
+                  <ArticleCardFeatured
+                    article={allArticles[0]}
+                    language={language}
+                    isRTL={isRTL}
+                  />
+                </div>
+              )}
 
               {/* Articles Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredArticles
-                  .slice(filteredArticles[0]?.is_featured ? 1 : 0)
+                {allArticles
+                  .slice(allArticles[0]?.is_featured ? 1 : 0)
                   .map((article) => (
                     <ArticleCard
                       key={article.id}
@@ -491,31 +440,13 @@ function ArticleCardFeatured({
   language: string;
   isRTL: boolean;
 }) {
-  const title = getArticleTitle(article);
-  const excerpt = getArticleExcerpt(article);
-  const author = getArticleAuthor(article);
-  const image = getArticleImage(article);
+  const title = article.title;
+  const description = article.description;
+  const author = article.author_name;
+  const image = article.featured_image_url;
   const slug = article.slug || article.id;
   const date = article.published_at || article.created_at;
-  const readingTime = article.read_time_minutes || 5;
-
-  function getArticleTitle(article: Article): string {
-    return article.title || "Article";
-  }
-
-  function getArticleExcerpt(article: Article): string {
-    return article.excerpt || "";
-  }
-
-  function getArticleAuthor(article: Article): string {
-    return (
-      article.author_name || (language === "en" ? "Tuut Team" : "فريق توت")
-    );
-  }
-
-  function getArticleImage(article: Article): string {
-    return article.featured_image_url || "";
-  }
+  const readingTime = article.read_time_minutes;
 
   const formatDate = (dateString?: string): string => {
     if (!dateString) return "";
@@ -583,12 +514,12 @@ function ArticleCardFeatured({
             >
               {title}
             </h2>
-            {excerpt && (
+            {description && (
               <p
                 className="text-[#6B7280] mb-6 line-clamp-3"
                 style={{ fontSize: "18px" }}
               >
-                {excerpt}
+                {description}
               </p>
             )}
 
@@ -642,31 +573,13 @@ function ArticleCard({
   language: string;
   isRTL: boolean;
 }) {
-  const title = getArticleTitle(article);
-  const description = getArticleDescription(article);
-  const author = getArticleAuthor(article);
-  const image = getArticleImage(article);
+  const title = article.title;
+  const description = article.description;
+  const author = article.author_name;
+  const image = article.featured_image_url;
   const slug = article.slug || article.id;
   const date = article.published_at || article.created_at;
   const readingTime = article.read_time_minutes || 5;
-
-  function getArticleTitle(article: Article): string {
-    return article.title || "Article";
-  }
-
-  function getArticleDescription(article: Article): string {
-    return article.description || "";
-  }
-
-  function getArticleAuthor(article: Article): string {
-    return (
-      article.author_name || (language === "en" ? "Tuut Team" : "فريق توت")
-    );
-  }
-
-  function getArticleImage(article: Article): string {
-    return article.featured_image_url || "";
-  }
 
   const formatDate = (dateString?: string): string => {
     if (!dateString) return "";

@@ -82,7 +82,6 @@
     "final-fix": "npx tsx scripts/final-fix-store-deal-connections.ts",
     "check-schema": "npx tsx scripts/check-deal-schema.ts",
     "corrected-fix": "npx tsx scripts/corrected-fix-store-deals.ts",
-    "generate-sitemap": "node scripts/generate-sitemap.js",
-    "generate-sitemap-docker": "node scripts/generate-sitemap-docker.js"
+    "generate-sitemap": "node scripts/generate-sitemap.js"
   }
 }

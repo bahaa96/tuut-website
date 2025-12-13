@@ -8,10 +8,7 @@ import {
 } from "lucide-react";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
-import {
-  fetchArticleBySlug,
-  fetchArticles,
-} from "../../../../lib/supabase-fetch";
+
 import { ImageWithFallback } from "../../../../components/figma/ImageWithFallback";
 import Link from "next/link";
 import { Metadata } from "next";
@@ -24,6 +21,7 @@ import {
   WebsiteStructuredData,
   FAQStructuredData,
 } from "@/components/StructuredData";
+import { requestFetchAllArticles, requestFetchSingleArticle } from "@/network";
 
 interface Article {
   id: string;
@@ -65,7 +63,7 @@ export async function generateMetadata({
   const countryName = getCountryNameFromCode(country);
 
   // Fetch article for metadata
-  const { data: article } = await fetchArticleBySlug(slug);
+  const { data: article } = await requestFetchSingleArticle({ slug });
 
   if (!article) {
     return {
@@ -211,155 +209,6 @@ function generateHreflangTagsForGuide(
   return hreflangs;
 }
 
-async function getArticle(slug: string): Promise<Article | null> {
-  try {
-    const { data, error } = await fetchArticleBySlug(slug);
-
-    if (error) {
-      console.error("Error fetching article:", error);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching article:", error);
-    return null;
-  }
-}
-
-async function getRelatedArticles(
-  currentSlug: string,
-  countrySlug?: string,
-  limit: number = 3
-): Promise<Article[]> {
-  try {
-    console.log("Fetching related articles for:", {
-      currentSlug,
-      countrySlug,
-      limit,
-    });
-
-    // First try to get country-specific articles
-    const { data: countryArticles, error: countryError } = await fetchArticles(
-      countrySlug,
-      "",
-      limit + 5
-    );
-
-    if (!countryError && countryArticles && countryArticles.length > 1) {
-      console.log("Found country articles:", countryArticles.length);
-      const filtered =
-        countryArticles
-          ?.filter((article) => article.slug !== currentSlug)
-          ?.slice(0, limit) || [];
-
-      if (filtered.length > 0) {
-        console.log("Using country-related articles:", filtered.length);
-        return filtered;
-      }
-    }
-
-    // If no country-specific articles, try global articles (no country filter)
-    console.log("Trying global articles...");
-    const { data: globalArticles, error: globalError } = await fetchArticles(
-      undefined,
-      "",
-      limit + 5
-    );
-
-    if (!globalError && globalArticles && globalArticles.length > 1) {
-      console.log("Found global articles:", globalArticles.length);
-      const filtered =
-        globalArticles
-          ?.filter((article) => article.slug !== currentSlug)
-          ?.slice(0, limit) || [];
-
-      if (filtered.length > 0) {
-        console.log("Using global articles:", filtered.length);
-        return filtered;
-      }
-    }
-
-    // If still no articles, try with a broader search or sample articles
-    console.log("No articles found, creating sample articles...");
-
-    // Return some sample/demo articles for testing
-    const sampleArticles: Article[] = [
-      {
-        id: "sample-1",
-        title: "Black Friday Shopping Tips",
-        slug: "black-friday-shopping-tips",
-        excerpt:
-          "Discover the best strategies to maximize your savings during Black Friday sales in Egypt.",
-        content_markdown: "",
-        content_html: "",
-        featured_image_url: "",
-        author_name: "Tuut Team",
-        author_avatar_url: "",
-        read_time_minutes: 5,
-        is_featured: true,
-        is_published: true,
-        published_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        view_count: 150,
-        like_count: 25,
-        country_slug: "EG",
-      },
-      {
-        id: "sample-2",
-        title: "How to Find the Best Deals Online",
-        slug: "best-online-deals-guide",
-        excerpt:
-          "Learn the secrets to finding the best online deals and discounts for your favorite products.",
-        content_markdown: "",
-        content_html: "",
-        featured_image_url: "",
-        author_name: "Shopping Expert",
-        author_avatar_url: "",
-        read_time_minutes: 7,
-        is_featured: false,
-        is_published: true,
-        published_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        view_count: 200,
-        like_count: 40,
-        country_slug: "EG",
-      },
-      {
-        id: "sample-3",
-        title: "Complete Guide to Holiday Shopping",
-        slug: "holiday-shopping-guide",
-        excerpt:
-          "Make your holiday shopping easier with our comprehensive guide to the best gifts and deals.",
-        content_markdown: "",
-        content_html: "",
-        featured_image_url: "",
-        author_name: "Tuut Team",
-        author_avatar_url: "",
-        read_time_minutes: 8,
-        is_featured: true,
-        is_published: true,
-        published_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        view_count: 300,
-        like_count: 60,
-        country_slug: "EG",
-      },
-    ];
-
-    // Filter out if current article matches any sample, and limit
-    const filteredSamples = sampleArticles
-      .filter((article) => article.slug !== currentSlug)
-      .slice(0, limit);
-
-    console.log("Using sample articles:", filteredSamples.length);
-    return filteredSamples;
-  } catch (error) {
-    console.error("Error fetching related articles:", error);
-    return [];
-  }
-}
-
 export default async function GuidePage({ params }: GuidePageProps) {
   const resolvedParams = await params;
   const { localeCountry, slug } = resolvedParams;
@@ -370,15 +219,12 @@ export default async function GuidePage({ params }: GuidePageProps) {
   const isArabic = language === "ar";
   const isRTL = isArabic;
 
-  const article = await getArticle(slug);
-  const relatedArticles = await getRelatedArticles(slug, country, 3);
-
-  console.log("Component relatedArticles:", relatedArticles);
-  console.log("Component article:", article);
-
-  if (!article) {
-    notFound();
-  }
+  const { data: article } = await requestFetchSingleArticle({ slug });
+  const { data: relatedArticles } = await requestFetchAllArticles({
+    countrySlug: country,
+    currentPage: 1,
+    pageSize: 3,
+  });
 
   const title = article.title || (language === "en" ? "Article" : "مقال");
   const excerpt = article.excerpt || "";
