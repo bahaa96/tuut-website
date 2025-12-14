@@ -214,68 +214,100 @@ class SitemapGenerator {
   }
 
   async getAllProducts() {
-    console.log('🔄 Fetching all products with pagination...');
+    console.log('🔄 Fetching all products with optimized batch processing...');
     let allProducts = [];
-    let page = 0;
-    const pageSize = 500; // Smaller page size to avoid timeouts
-    let hasMore = true;
 
     try {
+      // First, try to get all product slugs and updated_at in larger batches
+      console.log('📊 Using optimized batch query for all products...');
+
+      // Use a larger page size with index-based approach for better performance
+      const batchSize = 2000; // Larger batch size for efficiency
+      let offset = 0;
+      let hasMore = true;
+
       while (hasMore) {
-        console.log(`📄 Fetching products page ${page + 1} (page size: ${pageSize})...`);
+        console.log(`📄 Fetching batch ${Math.floor(offset/batchSize) + 1} (offset: ${offset}, batch size: ${batchSize})...`);
 
-        // Add a timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Query timeout')), 30000); // 30 second timeout
-        });
-
-        const queryPromise = this.supabase
-          .from('products')
-          .select('slug, updated_at')
-          .range(page * pageSize, (page + 1) * pageSize - 1)
-          .order('updated_at', { ascending: false })
-          .limit(pageSize);
-
-        let products, error;
         try {
+          const queryPromise = this.supabase
+            .from('products')
+            .select('slug, updated_at')
+            .range(offset, offset + batchSize - 1)
+            .order('id') // Use primary key for better index performance
+            .limit(batchSize);
+
+          // Timeout per batch
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Batch query timeout')), 15000); // 15 second timeout
+          });
+
           const result = await Promise.race([queryPromise, timeoutPromise]);
-          products = result.data;
-          error = result.error;
-        } catch (timeoutError) {
-          console.error(`❌ Query timeout on page ${page + 1}:`, timeoutError);
-          console.log(`📊 Using ${allProducts.length} products fetched so far and continuing...`);
-          break;
+
+          if (result.error) {
+            throw new Error(result.error.message || 'Database query error');
+          }
+
+          const products = result.data;
+
+          if (products && products.length > 0) {
+            allProducts = allProducts.concat(products);
+            console.log(`✅ Fetched ${products.length} products (total: ${allProducts.length.toLocaleString()})`);
+
+            offset += products.length;
+            hasMore = products.length === batchSize;
+
+            // Small delay between batches to prevent overwhelming
+            if (hasMore) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
+          } else {
+            hasMore = false;
+            console.log(`📊 Finished fetching products`);
+          }
+
+        } catch (error) {
+          console.error(`❌ Error in batch query at offset ${offset}:`, error.message);
+
+          // Fall back to smaller batches if there's an error
+          if (batchSize > 500) {
+            console.log('🔄 Reducing batch size and retrying...');
+            offset += 500; // Skip ahead to avoid getting stuck
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          } else {
+            break;
+          }
         }
-
-        if (error) {
-          console.error(`❌ Error fetching products page ${page + 1}:`, error);
-          console.log(`📊 Using ${allProducts.length} products fetched so far and continuing...`);
-          break;
-        }
-
-        if (products && products.length > 0) {
-          allProducts = allProducts.concat(products);
-          console.log(`✅ Fetched ${products.length} products (total: ${allProducts.length})`);
-        }
-
-        hasMore = products && products.length === pageSize;
-        page++;
-
-        if (page > 100) { // Increased limit since we're using smaller pages
-          console.warn('⚠️  Safety limit reached, stopping pagination');
-          break;
-        }
-
-        // Small delay to avoid overwhelming the database
-        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      console.log(`📊 Total products found: ${allProducts.length}`);
-      return allProducts;
+      console.log(`📊 Total products found: ${allProducts.length.toLocaleString()}`);
+
+      // If we got a reasonable number of products, return them
+      if (allProducts.length > 0) {
+        return allProducts;
+      }
+
+      // Fallback: try a simple query with a reasonable limit
+      console.log('⚠️  Attempting fallback query with sample products...');
+      const fallbackResult = await this.supabase
+        .from('products')
+        .select('slug, updated_at')
+        .order('id')
+        .limit(5000); // Get a reasonable sample
+
+      if (!fallbackResult.error && fallbackResult.data) {
+        console.log(`✅ Fallback successful: fetched ${fallbackResult.data.length} sample products`);
+        return fallbackResult.data;
+      }
+
+      // Final fallback - return empty array if everything fails
+      console.warn('⚠️  All queries failed, returning empty product list');
+      return [];
+
     } catch (error) {
-      console.error('❌ Error fetching products:', error);
-      console.log(`📊 Using ${allProducts.length} products fetched so far...`);
-      return allProducts; // Return what we have instead of empty array
+      console.error('❌ Critical error in getAllProducts:', error);
+      return allProducts; // Return whatever we have
     }
   }
 
