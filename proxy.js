@@ -4,11 +4,14 @@ export function proxy(request) {
   const url = request.nextUrl;
   let pathname = url.pathname;
 
-  // Exclude sitemap from locale country redirect - check early before any processing
+  // Exclude sitemap and robots.txt from locale country redirect - check early before any processing
   if (
     pathname === "/sitemap.xml" ||
     pathname === "/sitemap.xml/" ||
-    pathname.startsWith("/sitemap.xml/")
+    pathname.startsWith("/sitemap.xml/") ||
+    pathname === "/robots.txt" ||
+    pathname === "/robots.txt/" ||
+    pathname.startsWith("/robots.txt/")
   ) {
     const response = NextResponse.next();
     response.headers.set("x-pathname", request.nextUrl.pathname);
@@ -80,5 +83,5 @@ export function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_static|favicon.ico|sitemap.xml).*)"],
+  matcher: ["/((?!api|_next|_static|favicon.ico|sitemap.xml|robots.txt).*)"],
 };
