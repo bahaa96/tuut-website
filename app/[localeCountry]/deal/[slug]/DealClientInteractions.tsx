@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import * as m from "@/src/paraglide/messages";
+import { analytics } from "@/lib/analytics";
 
 interface DealClientInteractionsProps {
   deal: Deal;
@@ -93,6 +94,9 @@ export default function DealClientInteractions({
         setCopied(true);
         toast.success(m.CODE_COPIED());
         setTimeout(() => setCopied(false), 2000);
+
+        // Track coupon copy event
+        analytics.trackCouponCopy(deal.code, store?.store_name, deal.id);
       } else {
         toast.error(m.FAILED_TO_COPY_CODE());
       }
@@ -202,7 +206,19 @@ export default function DealClientInteractions({
       )}
 
       {/* CTA Button */}
-      <Link href={deal.store?.redirect_url || ""} target="_blank">
+      <Link
+        href={deal.store?.redirect_url || ""}
+        target="_blank"
+        onClick={() => {
+          // Track store link click event
+          analytics.trackStoreLinkClick(
+            deal.store?.store_name || "Unknown Store",
+            deal.store?.redirect_url || "",
+            "deal_detail_page",
+            deal.store?.id
+          );
+        }}
+      >
         <Button
           className="w-full bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-xl shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all py-6 mb-6"
           style={{ fontSize: "20px", fontWeight: 700 }}

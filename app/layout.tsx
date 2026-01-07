@@ -4,6 +4,7 @@ import "../index.css";
 import "./globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CountryProvider } from "../contexts/CountryContext";
+import { AnalyticsProvider } from "../components/AnalyticsProvider";
 import { headers } from "next/headers";
 import { cache } from "react";
 import {
@@ -42,9 +43,10 @@ export default async function RootLayout({
   ssrLocale().locale = locale;
 
   // @ts-expect-error - headers must be sync
-  ssrLocale().origin = new URL(
-    headersList?.get("x-paraglide-request-url") as string
-  ).origin;
+  const requestUrl = headersList?.get("x-paraglide-request-url");
+  if (requestUrl) {
+    ssrLocale().origin = new URL(requestUrl).origin;
+  }
 
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"}>
@@ -79,7 +81,11 @@ export default async function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <CountryProvider>{children}</CountryProvider>
+          <CountryProvider>
+            <AnalyticsProvider>
+              {children}
+            </AnalyticsProvider>
+          </CountryProvider>
         </AuthProvider>
       </body>
     </html>

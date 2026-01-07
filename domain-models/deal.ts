@@ -19,6 +19,7 @@ export interface Deal {
   featured?: boolean;
   created_at?: string;
   store_id?: string;
+  store_name?: string;
   store?: Store;
 }
 
