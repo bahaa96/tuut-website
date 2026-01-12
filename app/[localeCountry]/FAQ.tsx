@@ -147,7 +147,7 @@ export function FAQ() {
               <button
                 onClick={() => toggleQuestion(index)}
                 className={`
-                  w-full px-6 !py-5 flex items-center justify-between gap-4
+                  w-full px-6 py-4 flex items-center justify-between gap-4
                   text-left hover:bg-[#F9FAFB] transition-colors
                   ${isRTL ? "flex-row-reverse text-right" : ""}
                 `}
@@ -177,7 +177,7 @@ export function FAQ() {
                 <div className="overflow-hidden">
                   <div
                     className={`
-                        px-6 pb-5 pt-2 bg-gradient-to-br from-[#F9FAFB] to-[#F0F7F0]
+                        px-6 pb-4 pt-3 bg-gradient-to-br from-[#F9FAFB] to-[#F0F7F0]
                         border-t-2 border-[#E5E7EB]
                         ${isRTL ? "pr-14" : "pl-14"}
                       `}
