@@ -509,9 +509,7 @@ export function CategoryGrid({ initialCategories }: CategoryGridProps) {
   return (
     <section className="py-12 md:py-16 bg-white">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
-        <div
-          className={`mb-10 ${isRTL ? "text-right" : "text-left"}`}
-        >
+        <div className={`mb-10 ${isRTL ? "text-right" : "text-left"}`}>
           <h2
             className="mb-2 text-[#111827]"
             style={{ fontSize: "36px", fontWeight: 700 }}
@@ -588,7 +586,9 @@ export function CategoryGrid({ initialCategories }: CategoryGridProps) {
                 ][index % 4];
 
                 // Format deals count (default to 0 since we don't have count in Category model)
-                const displayCount = isRTL ? "0 عروض" : "0 deals";
+                const displayCount = isRTL
+                  ? `${category.active_deals_count} عروض`
+                  : `${category.active_deals_count} deals`;
 
                 // Determine the link URL - use slug if available, otherwise use id
                 const slug = isRTL
