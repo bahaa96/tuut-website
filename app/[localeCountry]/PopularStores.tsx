@@ -18,9 +18,9 @@ export function PopularStores({ initialPopularStores }: PopularStoresProps) {
 
   function getStoreName(store: Store): string {
     if (isRTL) {
-      return store.title_ar || store.title_en || "Store";
+      return store.title_ar ?? "Store";
     }
-    return store.title_en || store.title_ar || "Store";
+    return store.title_en ?? "Store";
   }
 
   function getStoreLogo(store: Store): string {
@@ -29,14 +29,14 @@ export function PopularStores({ initialPopularStores }: PopularStoresProps) {
 
   function getStoreSlug(store: Store): string {
     const slug = isRTL
-      ? store.slug_ar || store.slug_en
-      : store.slug_en || store.slug_ar;
+      ? store.slug_ar ?? store.slug_en
+      : store.slug_en ?? store.slug_ar;
     return slug || store.id.toString();
   }
 
   function getDealsCount(store: Store): number {
     // Default to 0 since Store model doesn't have deals_count
-    return 0;
+    return store.total_offers ?? 0;
   }
 
   return (

@@ -509,7 +509,9 @@ export function CategoryGrid({ initialCategories }: CategoryGridProps) {
   return (
     <section className="py-12 md:py-16 bg-white">
       <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
-        <div className="text-center mb-10">
+        <div
+          className={`mb-10 ${isRTL ? "text-right" : "text-left"}`}
+        >
           <h2
             className="mb-2 text-[#111827]"
             style={{ fontSize: "36px", fontWeight: 700 }}
@@ -523,22 +525,34 @@ export function CategoryGrid({ initialCategories }: CategoryGridProps) {
           {/* Left Arrow */}
           {canScrollLeft && (
             <Button
-              onClick={() => scroll("left")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 hidden md:flex items-center justify-center"
-              style={{ marginLeft: "-24px" }}
+              onClick={() => scroll(isRTL ? "right" : "left")}
+              className={`absolute ${
+                isRTL ? "right-0" : "left-0"
+              } top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 flex items-center justify-center`}
+              style={isRTL ? { marginRight: "-24px" } : { marginLeft: "-24px" }}
             >
-              <ChevronLeft className="h-6 w-6 text-[#111827]" />
+              {isRTL ? (
+                <ChevronRight className="h-6 w-6 text-[#111827]" />
+              ) : (
+                <ChevronLeft className="h-6 w-6 text-[#111827]" />
+              )}
             </Button>
           )}
 
           {/* Right Arrow */}
           {canScrollRight && (
             <Button
-              onClick={() => scroll("right")}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 hidden md:flex items-center justify-center"
-              style={{ marginRight: "-24px" }}
+              onClick={() => scroll(isRTL ? "left" : "right")}
+              className={`absolute ${
+                isRTL ? "left-0" : "right-0"
+              } top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 flex items-center justify-center`}
+              style={isRTL ? { marginLeft: "-24px" } : { marginRight: "-24px" }}
             >
-              <ChevronRight className="h-6 w-6 text-[#111827]" />
+              {isRTL ? (
+                <ChevronLeft className="h-6 w-6 text-[#111827]" />
+              ) : (
+                <ChevronRight className="h-6 w-6 text-[#111827]" />
+              )}
             </Button>
           )}
 
