@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CountryProvider } from "../contexts/CountryContext";
 import { AnalyticsProvider } from "../components/AnalyticsProvider";
+import ConsentManager from "../components/ConsentManager";
 import { headers } from "next/headers";
 import { cache } from "react";
 import {
@@ -84,6 +85,7 @@ export default async function RootLayout({
           <CountryProvider>
             <AnalyticsProvider>
               {children}
+              <ConsentManager />
             </AnalyticsProvider>
           </CountryProvider>
         </AuthProvider>

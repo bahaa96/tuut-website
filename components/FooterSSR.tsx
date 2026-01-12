@@ -80,6 +80,7 @@ const Footer = async ({ countrySlug }: FooterProps) => {
       { label: m.BLOG(), href: "/guides" },
       { label: m.PRIVACY_POLICY(), href: "/privacy" },
       { label: m.TERMS_OF_USE(), href: "/terms" },
+      { label: "Privacy Settings", href: "/privacy-settings" },
     ],
     browse: [
       { label: m.ALL_COUPONS(), href: "/deals" },
