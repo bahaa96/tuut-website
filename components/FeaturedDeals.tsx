@@ -520,7 +520,7 @@ const language = 'en'; // TODO: Replace with proper locale detection
           {canScrollLeft && (
             <Button
               onClick={() => scroll(isRTL ? 'right' : 'left')}
-              className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 hidden md:flex items-center justify-center`}
+              className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 flex items-center justify-center`}
               style={isRTL ? { marginRight: '-24px' } : { marginLeft: '-24px' }}
             >
               {isRTL ? <ChevronRight className="h-6 w-6 text-[#111827]" /> : <ChevronLeft className="h-6 w-6 text-[#111827]" />}
@@ -531,7 +531,7 @@ const language = 'en'; // TODO: Replace with proper locale detection
           {canScrollRight && (
             <Button
               onClick={() => scroll(isRTL ? 'left' : 'right')}
-              className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 hidden md:flex items-center justify-center`}
+              className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all p-0 flex items-center justify-center`}
               style={isRTL ? { marginLeft: '-24px' } : { marginRight: '-24px' }}
             >
               {isRTL ? <ChevronLeft className="h-6 w-6 text-[#111827]" /> : <ChevronRight className="h-6 w-6 text-[#111827]" />}
@@ -552,13 +552,13 @@ const language = 'en'; // TODO: Replace with proper locale detection
             }}
             dir={isRTL ? 'rtl' : 'ltr'}
           >
-            {/* Two-row grid */}
-            <div className="grid grid-rows-2 grid-flow-col gap-6 pb-2">
+            {/* Single-row horizontal scroll */}
+            <div className="flex gap-6 pb-2">
               {deals.map((deal) => (
             <Link
               key={deal.id}
               to={`/deal/${isRTL && deal.slug_ar ? deal.slug_ar : deal.slug_en || deal.id}`}
-              className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all w-[320px] md:w-[360px] block"
+              className="group relative bg-white rounded-2xl overflow-hidden border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all w-[320px] md:w-[360px] block flex-shrink-0"
             >
               {/* Left/Right Discount Bar with Perforated Edge */}
               <div className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-[100px] flex items-center justify-center`} style={{ backgroundColor: deal.color }}>
