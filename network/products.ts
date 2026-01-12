@@ -1,4 +1,4 @@
-import { Product } from "@/domain-models";
+import { FeaturedDeal, Product } from "@/domain-models";
 import { supabase } from "./instance";
 
 interface RequestFetchAllProductsArgs {
@@ -68,4 +68,32 @@ const requestFetchSingleProduct = async ({
   return { data };
 };
 
-export { requestFetchAllProducts, requestFetchSingleProduct };
+interface RequestFetchAllFeaturedProductsArgs {
+  countrySlug: string;
+  currentPage: number;
+  pageSize: number;
+}
+const requestFetchAllFeaturedProducts = async ({
+  countrySlug,
+  currentPage,
+  pageSize,
+}: RequestFetchAllFeaturedProductsArgs): Promise<{ data: Product[] }> => {
+  const offset = (currentPage - 1) * pageSize;
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("country_slug", countrySlug)
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+};
+
+export {
+  requestFetchAllProducts,
+  requestFetchSingleProduct,
+  requestFetchAllFeaturedProducts,
+};

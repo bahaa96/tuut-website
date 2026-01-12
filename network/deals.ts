@@ -88,8 +88,30 @@ const requestFetchSingleDeal = async ({
   return { data };
 };
 
+interface RequestFetchRandomDealsArgs {
+  countrySlug: string;
+  count: number;
+}
+const requestFetchRandomDeals = async ({
+  countrySlug,
+  count,
+}: RequestFetchRandomDealsArgs): Promise<{ data: Deal[] }> => {
+  const randomOffset = Math.floor(Math.random() * 50);
+  const { data, error } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("country_slug", countrySlug)
+    .range(randomOffset, randomOffset + count - 1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return { data };
+};
+
 export {
   requestFetchAllDeals,
   requestFetchAllFeaturedDeals,
   requestFetchSingleDeal,
+  requestFetchRandomDeals,
 };

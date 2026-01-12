@@ -1,9 +1,9 @@
 "use client";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 
 export function Hero() {
   const pathname = usePathname();
@@ -11,24 +11,61 @@ export function Hero() {
   const locale = localeCountry?.split("-")[0];
   const isRTL = locale === "ar";
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  const checkScrollButtons = () => {
+    const container = document.getElementById("tags-scroll-container");
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft <
+          container.scrollWidth - container.clientWidth - 10
+      );
+    }
+  };
+
+  const scroll = (direction: "left" | "right") => {
+    const container = document.getElementById("tags-scroll-container");
+    if (container) {
+      const scrollAmount = 200;
+      const newPosition =
+        direction === "left"
+          ? container.scrollLeft - scrollAmount
+          : container.scrollLeft + scrollAmount;
+
+      container.scrollTo({
+        left: newPosition,
+        behavior: "smooth",
+      });
+
+      setTimeout(() => {
+        checkScrollButtons();
+      }, 300);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+  }, []);
 
   return (
     <section className="relative bg-background pt-8 pb-4 md:pt-12 md:pb-6 overflow-hidden flex items-center">
       <div className="container mx-auto max-w-[800px] px-4 md:px-6 lg:px-8">
         {/* Centered Content */}
         <div className="text-center">
-          {/* Title */}
+          {/* Title - smaller on mobile */}
           <h1
-            className="text-[#111827] mb-2"
+            className="text-[#111827] mb-2 text-[32px] md:text-[64px]"
             style={{
-              fontSize: "48px",
               fontWeight: 700,
               lineHeight: 1.2,
             }}
@@ -75,59 +112,124 @@ export function Hero() {
             </form>
           </div>
 
-          {/* Quick Links */}
-          <div
-            className={`mt-3 flex flex-wrap items-center justify-center gap-3 ${
-              isRTL ? "flex-row-reverse" : ""
-            }`}
-          >
-            <span className="text-[#6B7280] text-sm">
-              {isRTL ? "شائع:" : "Popular:"}
-            </span>
-            <button
-              onClick={() =>
-                navigate(
-                  "/search?q=" + encodeURIComponent(isRTL ? "أمازون" : "Amazon")
-                )
-              }
-              className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
+          {/* Quick Links - Carousel */}
+          <div className="mt-3">
+            <div
+              className={`flex items-center justify-center gap-3 ${
+                isRTL ? "flex-row-reverse" : ""
+              }`}
             >
-              {isRTL ? "أمازون" : "Amazon"}
-            </button>
-            <button
-              onClick={() =>
-                navigate(
-                  "/search?q=" + encodeURIComponent(isRTL ? "نون" : "Noon")
-                )
-              }
-              className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
-            >
-              {isRTL ? "نون" : "Noon"}
-            </button>
-            <button
-              onClick={() =>
-                navigate(
-                  "/search?q=" +
-                    encodeURIComponent(isRTL ? "إلكترونيات" : "Electronics")
-                )
-              }
-              className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
-            >
-              {isRTL ? "إلكترونيات" : "Electronics"}
-            </button>
-            <button
-              onClick={() =>
-                navigate(
-                  "/search?q=" + encodeURIComponent(isRTL ? "أزياء" : "Fashion")
-                )
-              }
-              className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors"
-            >
-              {isRTL ? "أزياء" : "Fashion"}
-            </button>
+              <span className="text-[#6B7280] text-sm flex-shrink-0">
+                {isRTL ? "شائع:" : "Popular:"}
+              </span>
+
+              <div className="relative w-full md:w-auto overflow-hidden">
+                {/* Scrollable container */}
+                <div
+                  id="tags-scroll-container"
+                  className="overflow-x-auto scrollbar-hide"
+                  onScroll={checkScrollButtons}
+                  style={{
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                  }}
+                >
+                  <div
+                    className={`flex gap-3 md:justify-center ${
+                      isRTL ? "flex-row-reverse" : ""
+                    }`}
+                  >
+                    <button
+                      onClick={() =>
+                        router.push(
+                          "/search?q=" +
+                            encodeURIComponent(isRTL ? "أمازون" : "Amazon")
+                        )
+                      }
+                      className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors flex-shrink-0"
+                    >
+                      {isRTL ? "أمازون" : "Amazon"}
+                    </button>
+                    <button
+                      onClick={() =>
+                        router.push(
+                          "/search?q=" +
+                            encodeURIComponent(isRTL ? "نون" : "Noon")
+                        )
+                      }
+                      className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors flex-shrink-0"
+                    >
+                      {isRTL ? "نون" : "Noon"}
+                    </button>
+                    <button
+                      onClick={() =>
+                        router.push(
+                          "/search?q=" +
+                            encodeURIComponent(
+                              isRTL ? "إلكترونيات" : "Electronics"
+                            )
+                        )
+                      }
+                      className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors flex-shrink-0"
+                    >
+                      {isRTL ? "إلكترونيات" : "Electronics"}
+                    </button>
+                    <button
+                      onClick={() =>
+                        router.push(
+                          "/search?q=" +
+                            encodeURIComponent(isRTL ? "أزياء" : "Fashion")
+                        )
+                      }
+                      className="text-[#111827] text-sm bg-white px-4 py-2 rounded-lg border-2 border-[#111827] hover:bg-[#E8F3E8] transition-colors flex-shrink-0"
+                    >
+                      {isRTL ? "أزياء" : "Fashion"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Left Arrow - small button - only on mobile */}
+                {canScrollLeft && (
+                  <Button
+                    onClick={() => scroll("left")}
+                    className={`md:hidden absolute ${
+                      isRTL ? "right-0" : "left-0"
+                    } top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border-2 border-[#111827] shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all p-0 flex items-center justify-center z-10`}
+                  >
+                    {isRTL ? (
+                      <ChevronRight className="h-4 w-4 text-[#111827]" />
+                    ) : (
+                      <ChevronLeft className="h-4 w-4 text-[#111827]" />
+                    )}
+                  </Button>
+                )}
+
+                {/* Right Arrow - small button - only on mobile */}
+                {canScrollRight && (
+                  <Button
+                    onClick={() => scroll("right")}
+                    className={`md:hidden absolute ${
+                      isRTL ? "left-0" : "right-0"
+                    } top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border-2 border-[#111827] shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all p-0 flex items-center justify-center z-10`}
+                  >
+                    {isRTL ? (
+                      <ChevronLeft className="h-4 w-4 text-[#111827]" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-[#111827]" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   );
 }

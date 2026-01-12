@@ -9,8 +9,10 @@ import {
   requestFetchAllFeaturedDeals,
   requestFetchAllCategories,
   requestFetchAllStores,
+  requestFetchAllFeaturedProducts,
+  requestFetchRandomDeals,
 } from "@/network";
-import { FeaturedDeal, Category, Store } from "@/domain-models";
+import { FeaturedDeal, Category, Store, Product, Deal } from "@/domain-models";
 
 interface HomePageProps {
   params: Promise<{
@@ -147,29 +149,48 @@ export default async function Home({ params }: HomePageProps) {
   let featuredDeals: FeaturedDeal[] = [];
   let categories: Category[] = [];
   let popularStores: Store[] = [];
+  let featuredProducts: Product[] = [];
+  let wheelDeals: Deal[] = [];
 
   try {
-    const [featuredDealsResult, categoriesResult, storesResult] =
-      await Promise.all([
-        requestFetchAllFeaturedDeals({
-          countrySlug: country,
-          currentPage: 1,
-          pageSize: 10,
-        }),
-        requestFetchAllCategories({
-          currentPage: 1,
-          pageSize: 10,
-        }),
-        requestFetchAllStores({
-          countrySlug: country,
-          currentPage: 1,
-          pageSize: 8,
-        }),
-      ]);
+    const [
+      featuredDealsResult,
+      categoriesResult,
+      storesResult,
+      featuredProductsResult,
+      wheelDealsResult,
+    ] = await Promise.all([
+      requestFetchAllFeaturedDeals({
+        countrySlug: country,
+        currentPage: 1,
+        pageSize: 10,
+      }),
+      requestFetchAllCategories({
+        currentPage: 1,
+        pageSize: 10,
+      }),
+      requestFetchAllStores({
+        countrySlug: country,
+        currentPage: 1,
+        pageSize: 8,
+      }),
+      requestFetchAllFeaturedProducts({
+        countrySlug: country,
+        currentPage: 1,
+        pageSize: 10,
+      }),
+      requestFetchRandomDeals({
+        countrySlug: country,
+        count: 10,
+        currentPage: 1,
+      }),
+    ]);
 
     featuredDeals = featuredDealsResult.data;
     categories = categoriesResult.data;
     popularStores = storesResult.data;
+    featuredProducts = featuredProductsResult.data;
+    wheelDeals = wheelDealsResult.data;
   } catch (error) {
     console.error("Error fetching home page data:", error);
   }
@@ -269,6 +290,8 @@ export default async function Home({ params }: HomePageProps) {
         initialFeaturedDeals={featuredDeals}
         initialCategories={categories}
         initialPopularStores={popularStores}
+        initialFeaturedProducts={featuredProducts}
+        initialWheelDeals={wheelDeals}
       />
     </>
   );
