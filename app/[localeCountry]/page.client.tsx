@@ -11,14 +11,14 @@ import { Newsletter } from "./Newsletter";
 import { FeaturedProducts } from "./FeaturedProducts";
 import { SpinToWin } from "./SpinToWin";
 import { FAQ } from "./FAQ";
-import { FeaturedDeal, Category, Store, Product } from "@/domain-models";
+import { FeaturedDeal, Category, Store, Product, Deal } from "@/domain-models";
 
 interface HomePageClientProps {
   initialFeaturedDeals: FeaturedDeal[];
   initialCategories: Category[];
   initialPopularStores: Store[];
   initialFeaturedProducts: Product[];
-  initialWheelDeals: Deal[];
+  initialWheelDeals?: Deal[];
 }
 
 const HomePageClient = ({
