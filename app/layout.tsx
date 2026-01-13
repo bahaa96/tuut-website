@@ -52,6 +52,26 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"}>
       <head>
+        {/* Favicons */}
+        <link rel="icon" href="/assets/favicon/favicon.ico" sizes="any" />
+        <link
+          rel="icon"
+          href="/assets/favicon/favicon-16x16.png"
+          type="image/png"
+          sizes="16x16"
+        />
+        <link
+          rel="icon"
+          href="/assets/favicon/favicon-32x32.png"
+          type="image/png"
+          sizes="32x32"
+        />
+        <link
+          rel="apple-touch-icon"
+          href="/assets/favicon/apple-touch-icon.png"
+        />
+        <link rel="manifest" href="/site.webmanifest" />
+
         {/* Font Preloading and Preconnect for Performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
