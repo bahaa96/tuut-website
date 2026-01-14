@@ -181,7 +181,7 @@ export default async function Home({ params }: HomePageProps) {
       }),
       requestFetchRandomDeals({
         countrySlug: country,
-        count: 10,
+        count: 8,
       }),
     ]);
 

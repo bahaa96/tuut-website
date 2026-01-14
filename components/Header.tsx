@@ -73,7 +73,7 @@ export function Header() {
   };
 
   const handleSignOut = async () => {
-    signOut();
+    // signOut(); // Commented out since auth is disabled
   };
 
   return (
@@ -238,7 +238,11 @@ export function Header() {
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden border-2 border-[#111827] rounded-lg hover:bg-[#E8F3E8]"
+                >
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
@@ -249,7 +253,7 @@ export function Header() {
                 <SheetHeader>
                   <SheetTitle>{m.MENU()}</SheetTitle>
                 </SheetHeader>
-                <nav className="flex flex-col gap-4 mt-8">
+                <nav className="flex flex-col gap-4 mt-8 px-4">
                   {navItems.map((item) => (
                     <Link
                       key={item.key}
@@ -261,35 +265,109 @@ export function Header() {
                     </Link>
                   ))}
 
-                  {/* Mobile Country Selector */}
+                  {/* Mobile Country Selector - Select Input Style */}
                   <div className="mt-2">
-                    <div
-                      className="text-[#111827] mb-2"
+                    <label
+                      className="text-[#111827] mb-2 block text-sm"
                       style={{ fontWeight: 500 }}
                     >
                       {m.COUNTRY()}
-                    </div>
-                    <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto border-2 border-[#111827] rounded-xl p-2">
-                      {countries.map((c) => (
-                        <button
-                          key={getCountryId(c)}
-                          onClick={() => setCountry(c)}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-[#E8F3E8] text-right ${
-                            getCountryId(country) === getCountryId(c)
-                              ? "bg-[#E8F3E8]"
-                              : ""
-                          } ${
-                            isRTL ? "flex-row-reverse text-right" : "text-left"
+                    </label>
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          const dropdown = document.getElementById(
+                            "mobile-country-dropdown"
+                          );
+                          if (dropdown) {
+                            dropdown.classList.toggle("hidden");
+                          }
+                        }}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-white border-2 border-[#111827] rounded-lg text-left transition-colors hover:bg-[#F9FAFB]"
+                        style={{ fontWeight: 500 }}
+                      >
+                        <div
+                          className={`flex items-center gap-2 ${
+                            isRTL ? "flex-row-reverse" : ""
                           }`}
                         >
-                          <ImageWithFallback
-                            src={getCountryImage(c)}
-                            alt={getCountryNameFromCode(c.slug)}
-                            className="w-6 h-6 rounded-full object-cover"
+                          {country ? (
+                            <>
+                              <ImageWithFallback
+                                src={getCountryImage(country)}
+                                alt={getCountryNameFromCode(country.slug)}
+                                className="w-6 h-6 rounded-full object-cover"
+                              />
+                              <span className="text-[#111827]">
+                                {getCountryNameFromCode(country.slug)}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Globe className="h-4 w-4" />
+                              <span className="text-[#111827]">
+                                {m.SELECT_COUNTRY()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <svg
+                          className="w-5 h-5 text-[#6B7280]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
                           />
-                          <span>{getCountryNameFromCode(c.slug)}</span>
-                        </button>
-                      ))}
+                        </svg>
+                      </button>
+
+                      {/* Dropdown Options */}
+                      <div
+                        id="mobile-country-dropdown"
+                        className="hidden absolute z-10 w-full mt-2 bg-white border-2 border-[#111827] rounded-lg shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] max-h-[240px] overflow-y-auto"
+                      >
+                        {countries.map((c) => (
+                          <button
+                            key={getCountryId(c)}
+                            onClick={() => {
+                              setCountry(c);
+                              const dropdown = document.getElementById(
+                                "mobile-country-dropdown"
+                              );
+                              if (dropdown) {
+                                dropdown.classList.add("hidden");
+                              }
+                            }}
+                            className={`w-full flex items-center gap-2 px-4 py-3 transition-colors hover:bg-[#E8F3E8] text-left border-b border-[#E5E7EB] last:border-b-0 ${
+                              country &&
+                              getCountryId(country) === getCountryId(c)
+                                ? "bg-[#E8F3E8]"
+                                : ""
+                            } ${
+                              isRTL
+                                ? "flex-row-reverse text-right"
+                                : "text-left"
+                            }`}
+                          >
+                            <ImageWithFallback
+                              src={getCountryImage(c)}
+                              alt={getCountryNameFromCode(c.slug)}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                            <span
+                              className="text-[#111827]"
+                              style={{ fontWeight: 500 }}
+                            >
+                              {getCountryNameFromCode(c.slug)}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
