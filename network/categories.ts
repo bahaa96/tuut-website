@@ -23,4 +23,23 @@ const requestFetchAllCategories = async ({
   return { data };
 };
 
-export { requestFetchAllCategories };
+interface RequestFetchSingleCategoryBySlugArgs {
+  slug: string;
+}
+const requestFetchSingleCategoryBySlug = async ({
+  slug,
+}: RequestFetchSingleCategoryBySlugArgs): Promise<{
+  data: Category | null;
+}> => {
+  const decodedSlug = decodeURIComponent(slug);
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .or(`slug_en.eq.${decodedSlug},slug_ar.eq.${decodedSlug}`)
+    .single();
+  if (error) {
+    throw new Error(error.message);
+  }
+  return { data };
+};
+export { requestFetchAllCategories, requestFetchSingleCategoryBySlug };

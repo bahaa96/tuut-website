@@ -3,10 +3,18 @@ export {
   requestFetchAllFeaturedDeals,
   requestFetchSingleDeal,
   requestFetchRandomDeals,
+  requestFetchAllDealsByCategoryId,
 } from "./deals";
-export { requestFetchAllStores, requestFetchSingleStore } from "./stores";
+export {
+  requestFetchAllStores,
+  requestFetchSingleStore,
+  requestFetchAllStoresByCategoryId,
+} from "./stores";
 export { requestFetchAllArticles, requestFetchSingleArticle } from "./articles";
-export { requestFetchAllCategories } from "./categories";
+export {
+  requestFetchAllCategories,
+  requestFetchSingleCategoryBySlug,
+} from "./categories";
 export {
   requestFetchAllProducts,
   requestFetchSingleProduct,

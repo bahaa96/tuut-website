@@ -594,7 +594,7 @@ export function CategoryGrid({ initialCategories }: CategoryGridProps) {
                 const slug = isRTL
                   ? category.slug_ar || category.slug_en
                   : category.slug_en || category.slug_ar;
-                const categoryUrl = `/category/${slug || category.id}`;
+                const categoryUrl = `/${localeCountry}/category/${slug || category.id}`;
 
                 return (
                   <button

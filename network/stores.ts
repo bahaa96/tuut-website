@@ -58,4 +58,35 @@ const requestFetchSingleStore = async ({
   }
   return { data };
 };
-export { requestFetchAllStores, requestFetchSingleStore };
+
+interface RequestFetchAllStoresByCategoryIdArgs {
+  categoryId: string;
+  countrySlug: string;
+  currentPage: number;
+  pageSize: number;
+}
+const requestFetchAllStoresByCategoryId = async ({
+  categoryId,
+  countrySlug,
+  currentPage,
+  pageSize,
+}: RequestFetchAllStoresByCategoryIdArgs): Promise<{ data: Store[] }> => {
+  const offset = (currentPage - 1) * pageSize;
+  const { data, error } = await supabase
+    .from("store_categories")
+    .select("* , stores:store_id(*)")
+    .eq("category_id", categoryId)
+    .eq("country_slug", countrySlug)
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return { data };
+};
+
+export {
+  requestFetchAllStores,
+  requestFetchSingleStore,
+  requestFetchAllStoresByCategoryId,
+};

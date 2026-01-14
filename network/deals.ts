@@ -109,9 +109,36 @@ const requestFetchRandomDeals = async ({
   return { data };
 };
 
+interface RequestFetchAllDealsByCategoryIdArgs {
+  categoryId: string;
+  countrySlug: string;
+  currentPage: number;
+  pageSize: number;
+}
+const requestFetchAllDealsByCategoryId = async ({
+  categoryId,
+  countrySlug,
+  currentPage,
+  pageSize,
+}: RequestFetchAllDealsByCategoryIdArgs): Promise<{ data: Deal[] }> => {
+  const offset = (currentPage - 1) * pageSize;
+  const { data, error } = await supabase
+    .from("deal_categories")
+    .select("* , deals:deal_id(*)")
+    .eq("category_id", categoryId)
+    .eq("country_slug", countrySlug)
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return { data };
+};
+
 export {
   requestFetchAllDeals,
   requestFetchAllFeaturedDeals,
   requestFetchSingleDeal,
   requestFetchRandomDeals,
+  requestFetchAllDealsByCategoryId,
 };
