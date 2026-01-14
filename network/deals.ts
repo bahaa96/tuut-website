@@ -96,7 +96,7 @@ const requestFetchRandomDeals = async ({
   countrySlug,
   count,
 }: RequestFetchRandomDealsArgs): Promise<{ data: Deal[] }> => {
-  const randomOffset = Math.floor(Math.random() * 50);
+  const randomOffset = Math.floor(Math.random() * 10);
   const { data, error } = await supabase
     .from("deals")
     .select("*")
