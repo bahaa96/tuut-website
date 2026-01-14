@@ -17,8 +17,8 @@ export function Hero() {
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    if (searchQuery.trim() && localeCountry) {
+      router.push(`/${localeCountry}/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
