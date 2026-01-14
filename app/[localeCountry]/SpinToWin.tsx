@@ -198,8 +198,12 @@ export function SpinToWin({ initialWheelDeals = [] }: SpinToWinProps) {
     // Random selection
     const winningIndex = Math.floor(Math.random() * wheelDeals.length);
     const degreesPerSegment = 360 / wheelDeals.length;
-    const winningRotation =
-      360 * 5 + winningIndex * degreesPerSegment + degreesPerSegment / 2;
+    // Calculate the initial angle of the winning segment's center
+    const segmentCenterAngle =
+      winningIndex * degreesPerSegment + degreesPerSegment / 2;
+    // Rotate so the segment's center ends up at the top (0°)
+    // We subtract because we want to rotate backwards to bring the segment to the top
+    const winningRotation = 360 * 5 + (360 - segmentCenterAngle);
 
     setRotation(winningRotation);
 
@@ -565,6 +569,7 @@ export function SpinToWin({ initialWheelDeals = [] }: SpinToWinProps) {
                     <div className="bg-white rounded-xl border-2 border-[#5FB57A] p-4">
                       <p className="text-5xl font-black text-[#5FB57A]">
                         {wonDeal.discount}
+                        {wonDeal.discount_unit}
                       </p>
                       <p className="text-xs text-[#6B7280] mt-1 uppercase tracking-wide">
                         {isRTL ? "خصم" : "DISCOUNT"}
