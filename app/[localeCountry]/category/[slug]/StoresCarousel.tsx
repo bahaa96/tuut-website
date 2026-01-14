@@ -93,7 +93,7 @@ export function StoresCarousel({
 
         <div
           id="stores-carousel"
-          className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
+          className="flex gap-4 pb-2 overflow-x-auto scrollbar-hide scroll-smooth"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {stores.map((store) => (
