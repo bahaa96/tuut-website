@@ -4,10 +4,11 @@ export {
   requestFetchSingleDeal,
   requestFetchRandomDeals,
   requestFetchAllDealsByCategoryId,
+  requestFetchAllDealsByStoreId,
 } from "./deals";
 export {
   requestFetchAllStores,
-  requestFetchSingleStore,
+  requestFetchSingleStoreBySlug,
   requestFetchAllStoresByCategoryId,
 } from "./stores";
 export { requestFetchAllArticles, requestFetchSingleArticle } from "./articles";

@@ -41,17 +41,17 @@ const requestFetchAllStores = async ({
   return { data };
 };
 
-interface RequestFetchSingleStoreArgs {
+interface RequestFetchSingleStoreBySlugArgs {
   slug: string;
 }
 
-const requestFetchSingleStore = async ({
+const requestFetchSingleStoreBySlug = async ({
   slug,
-}: RequestFetchSingleStoreArgs): Promise<{ data: Store }> => {
+}: RequestFetchSingleStoreBySlugArgs): Promise<{ data: Store }> => {
   const { data, error } = await supabase
     .from("stores")
     .select("*")
-    .eq("slug", slug)
+    .or(`slug_en.eq.${slug},slug_ar.eq.${slug}`)
     .single();
   if (error) {
     throw new Error(error.message);
@@ -87,6 +87,6 @@ const requestFetchAllStoresByCategoryId = async ({
 
 export {
   requestFetchAllStores,
-  requestFetchSingleStore,
+  requestFetchSingleStoreBySlug,
   requestFetchAllStoresByCategoryId,
 };

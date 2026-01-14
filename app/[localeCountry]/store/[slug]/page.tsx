@@ -2,6 +2,13 @@ import { ArrowLeft, Store, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { DealCard } from "@/components/DealCard";
 import { Metadata } from "next";
+import {
+  requestFetchAllDealsByStoreId,
+  requestFetchSingleStoreBySlug,
+} from "@/network";
+import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
+import getCurrencyFromCountryCode from "@/utils/getCurrencyFromCountryCode";
+import * as m from "@/src/paraglide/messages";
 
 interface Store {
   id: string;
@@ -69,11 +76,8 @@ export async function generateMetadata({
   const country = localeCountry.split("-")[1];
   const isArabic = language === "ar";
 
-  // Import fetch functions dynamically to avoid server-side issues
-  const { fetchStoreBySlug } = await import("../../../../lib/supabase-fetch");
-
   // Fetch store data for metadata
-  const { data: store } = await fetchStoreBySlug(slug);
+  const { data: store } = await requestFetchSingleStoreBySlug({ slug });
 
   if (!store) {
     return {
@@ -85,13 +89,11 @@ export async function generateMetadata({
   }
 
   const storeName =
-    isArabic && store.title_ar
-      ? store.title_ar
-      : store.title_en || store.store_name || store.name;
+    isArabic && store.title_ar ? store.title_ar : store.title_en;
   const storeDescription =
     isArabic && store.description_ar
       ? store.description_ar
-      : store.description_en || store.description;
+      : store.description_en;
 
   // Create SEO-optimized title
   const title = storeName
@@ -109,12 +111,20 @@ export async function generateMetadata({
         : storeDescription;
   } else if (storeName) {
     description = isArabic
-      ? `اكتشف أحدث العروض والخصومات من ${storeName}. أفضل الصفقات والعروض الحصرية في ${country}.`
-      : `Discover latest deals and discounts from ${storeName}. Best offers and exclusive deals in ${country}.`;
+      ? `اكتشف أحدث العروض والخصومات من ${storeName}. أفضل الصفقات والعروض الحصرية في ${getCountryNameFromCode(
+          country
+        )}.`
+      : `Discover latest deals and discounts from ${storeName}. Best offers and exclusive deals in ${getCountryNameFromCode(
+          country
+        )}.`;
   } else {
     description = isArabic
-      ? `استعرض أفضل العروض والخصومات من المتاجر الرائدة في ${country}.`
-      : `Browse best deals and discounts from leading stores in ${country}.`;
+      ? `استعرض أفضل العروض والخصومات من المتاجر الرائدة في ${getCountryNameFromCode(
+          country
+        )}.`
+      : `Browse best deals and discounts from leading stores in ${getCountryNameFromCode(
+          country
+        )}.`;
   }
 
   return {
@@ -140,27 +150,23 @@ export async function generateMetadata({
       type: "website",
       url: `https://tuut.shop/${localeCountry}/store/${slug}/`,
       siteName: "Tuut",
-      images:
-        store.logo_url || store.profile_picture_url
-          ? [
-              {
-                url: store.logo_url || store.profile_picture_url,
-                width: 1200,
-                height: 630,
-                alt: `${storeName} ${isArabic ? "شعار" : "logo"}`,
-              },
-            ]
-          : [],
+      images: store.profile_picture_url
+        ? [
+            {
+              url: store.profile_picture_url,
+              width: 1200,
+              height: 630,
+              alt: `${storeName} ${isArabic ? "شعار" : "logo"}`,
+            },
+          ]
+        : [],
       locale: localeCountry,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images:
-        store.logo_url || store.profile_picture_url
-          ? [store.logo_url || store.profile_picture_url]
-          : [],
+      images: store.profile_picture_url ? [store.profile_picture_url] : [],
     },
     alternates: {
       canonical: `https://tuut.shop/${localeCountry}/store/${slug}/`,
@@ -189,150 +195,27 @@ export default async function StoreDetailPage({
   const resolvedParams = await params;
 
   // Extract country from localeCountry (e.g., "en-EG" -> "EG")
-  const country = resolvedParams.localeCountry.split("-")[1];
+  const countrySlug = resolvedParams.localeCountry.split("-")[1];
   const language = resolvedParams.localeCountry.split("-")[0];
   const isRTL = language === "ar";
   const storeSlug = resolvedParams.slug;
 
-  // Fetch store data server-side
-  let store: Store | null = null;
-  let deals: Deal[] = [];
+  const { data: storeData } = await requestFetchSingleStoreBySlug({
+    slug: storeSlug,
+  });
 
-  try {
-    // Direct Supabase client queries following deal details page pattern
-    const { createClient } = await import("../../../../utils/supabase/client");
-    const supabase = createClient();
+  const { data: deals } = await requestFetchAllDealsByStoreId({
+    storeId: storeData.id,
+    countrySlug: countrySlug,
+    currentPage: 1,
+    pageSize: 10,
+  });
 
-    // Fetch store by slug (check multiple slug fields for compatibility)
-    const { data: storeData, error: storeError } = await supabase
-      .from("stores")
-      .select("*")
-      .or(`slug_en.eq.${storeSlug},slug_ar.eq.${storeSlug}`)
-      .single();
-
-    if (storeData) {
-      // Format store data to match expected interface, prioritizing localized fields
-      store = {
-        id: storeData.id,
-        name:
-          storeData.title_en ||
-          storeData.title ||
-          storeData.store_name ||
-          storeData.name ||
-          "Store",
-        name_ar: storeData.title_ar || storeData.name_ar || "",
-        store_name:
-          storeData.title_en ||
-          storeData.title ||
-          storeData.store_name ||
-          storeData.name ||
-          "Store",
-        store_name_ar: storeData.title_ar || storeData.name_ar || "",
-        title:
-          storeData.title_en ||
-          storeData.title ||
-          storeData.store_name ||
-          storeData.name ||
-          "Store",
-        title_ar: storeData.title_ar || storeData.name_ar || "",
-        title_en:
-          storeData.title_en ||
-          storeData.title ||
-          storeData.store_name ||
-          storeData.name ||
-          "Store",
-        description: storeData.description_en || storeData.description || "",
-        description_ar: storeData.description_ar || "",
-        description_en: storeData.description_en || storeData.description || "",
-        logo: storeData.profile_picture_url || "",
-        profile_picture_url: storeData.profile_picture_url || "",
-        website_url: storeData.website_url || "",
-        redirect_url: storeData.redirect_url || "",
-        category: storeData.category || "",
-        slug: storeData.slug_en || storeData.slug || "",
-        slug_en: storeData.slug_en || storeData.slug || "",
-        slug_ar: storeData.slug_ar || "",
-      };
-
-      // Fetch deals for this store
-      const { data: dealsData } = await supabase
-        .from("deals")
-        .select("*")
-        .eq("store_id", storeData.id);
-
-      if (dealsData) {
-        deals = dealsData.map((deal: any) => ({
-          id: deal.id,
-          title: deal.title_en || deal.title,
-          title_ar: deal.title_ar,
-          title_en: deal.title_en || deal.title,
-          description: deal.description_en || deal.description,
-          description_ar: deal.description_ar,
-          description_en: deal.description_en || deal.description,
-          discount_percentage: deal.discount_percentage,
-          discount_amount: deal.discount_amount,
-          original_price: deal.original_price,
-          discounted_price: deal.discounted_price,
-          code: deal.code,
-          store_id: deal.store_id,
-          store_slug: deal.slug_en || deal.store_slug,
-          store_name:
-            storeData.title_en ||
-            storeData.title ||
-            storeData.store_name ||
-            deal.store_name,
-          store_logo: storeData.profile_picture_url || deal.store_logo,
-          category_name: deal.category_name,
-          expires_at: deal.expires_at,
-          is_verified: deal.is_verified,
-          featured: deal.featured,
-          slug_en: deal.slug_en,
-          slug_ar: deal.slug_ar,
-        }));
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching store data:", error);
-  }
-
-  // If no store found, show 404
-  if (!store) {
-    return (
-      <section className="py-12 md:py-16 bg-[#E8F3E8] min-h-screen">
-        <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
-          <div className="text-center py-12">
-            <Store className="h-16 w-16 text-[#6B7280] mx-auto mb-4" />
-            <h2
-              className="text-[#111827] mb-4"
-              style={{ fontSize: "24px", fontWeight: 700 }}
-            >
-              {isRTL ? "المتجر غير موجود" : "Store not found"}
-            </h2>
-            <Link
-              href="/stores"
-              className="inline-flex items-center bg-white text-[#111827] border-2 border-[#111827] hover:bg-[#F0F7F0] px-6 py-3 rounded-xl font-medium transition-all shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)]"
-            >
-              {isRTL ? "العودة إلى المتاجر" : "Back to Stores"}
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const storeName = isRTL
-    ? store.title_ar ||
-      store.name_ar ||
-      store.store_name_ar ||
-      store.title_en ||
-      store.title ||
-      store.store_name ||
-      store.name
-    : store.title_en || store.title || store.store_name || store.name;
+  const storeName = isRTL ? storeData.title_ar : storeData.title_en;
   const storeDescription =
-    isRTL && store.description_ar
-      ? store.description_ar
-      : store.description_en || store.description;
+    isRTL && storeData.description_ar
+      ? storeData.description_ar
+      : storeData.description_en;
 
   // Generate JSON-LD structured data for SEO
   const jsonLd = {
@@ -341,12 +224,12 @@ export default async function StoreDetailPage({
     "@id": `https://tuut.shop/${resolvedParams.localeCountry}/store/${resolvedParams.slug}/`,
     name: storeName,
     description: storeDescription,
-    url: store.website_url || store.redirect_url,
-    image: store.profile_picture_url || store.logo_url,
-    category: store.category,
+    url: storeData.redirect_url,
+    image: storeData.profile_picture_url,
+    category: storeData.category,
     address: {
       "@type": "Country",
-      name: country,
+      name: getCountryNameFromCode(countrySlug),
     },
     offers: deals.map((deal) => ({
       "@type": "Offer",
@@ -356,8 +239,7 @@ export default async function StoreDetailPage({
         ? `${deal.discount_percentage}%`
         : undefined,
       price: deal.discounted_price,
-      priceCurrency:
-        country === "EG" ? "EGP" : country === "SA" ? "SAR" : "USD",
+      priceCurrency: getCurrencyFromCountryCode(countrySlug),
       availability: "https://schema.org/InStock",
       validThrough: deal.expires_at,
     })),
@@ -428,10 +310,10 @@ export default async function StoreDetailPage({
               }`}
             >
               {/* Store Logo */}
-              {store.profile_picture_url || store.logo_url ? (
+              {storeData.profile_picture_url ? (
                 <img
-                  src={store.profile_picture_url || store.logo_url}
-                  alt={`${storeName} ${store_logo()}`}
+                  src={storeData.profile_picture_url}
+                  alt={`${storeName} ${m.STORE_LOGO()}`}
                   className="h-24 w-24 object-contain rounded-xl bg-[#F9FAFB] p-4 border-2 border-[#E5E7EB]"
                 />
               ) : (
@@ -460,15 +342,15 @@ export default async function StoreDetailPage({
                 )}
 
                 <div className="flex flex-wrap gap-3">
-                  {store.category && (
+                  {storeData.category && (
                     <span className="inline-flex items-center px-3 py-1 rounded-lg bg-[#E8F3E8] text-[#5FB57A] text-sm border-2 border-[#5FB57A]">
-                      {store.category}
+                      {storeData.category}
                     </span>
                   )}
 
-                  {(store.redirect_url || store.website_url) && (
+                  {storeData.redirect_url && (
                     <a
-                      href={store.redirect_url || store.website_url}
+                      href={storeData.redirect_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-4 py-2 rounded-lg bg-[#5FB57A] text-white border-2 border-[#111827] shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"

@@ -135,10 +135,37 @@ const requestFetchAllDealsByCategoryId = async ({
   return { data };
 };
 
+interface RequestFetchAllDealsByStoreIdArgs {
+  storeId: string;
+  countrySlug: string;
+  currentPage: number;
+  pageSize: number;
+}
+const requestFetchAllDealsByStoreId = async ({
+  storeId,
+  countrySlug,
+  currentPage,
+  pageSize,
+}: RequestFetchAllDealsByStoreIdArgs): Promise<{ data: Deal[] }> => {
+  const offset = (currentPage - 1) * pageSize;
+  const { data, error } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("store_id", storeId)
+    .eq("country_slug", countrySlug)
+    .range(offset, offset + pageSize - 1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return { data };
+};
+
 export {
   requestFetchAllDeals,
   requestFetchAllFeaturedDeals,
   requestFetchSingleDeal,
   requestFetchRandomDeals,
   requestFetchAllDealsByCategoryId,
+  requestFetchAllDealsByStoreId,
 };
