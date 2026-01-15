@@ -281,7 +281,7 @@ export function generateProductPageMetadata({
     openGraph: {
       title,
       description: `${priceText} ${description}`,
-      type: "product",
+      type: "website",
       url: baseUrl,
       siteName: "Tuut",
       images: product.images?.map((img, index) => ({
@@ -310,7 +310,7 @@ export function generateProductPageMetadata({
       },
     },
     twitter: {
-      card: "product",
+      card: "summary_large_image",
       title,
       description: `${priceText} ${description}`,
       images: [imageUrl],
