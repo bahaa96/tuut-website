@@ -23,7 +23,7 @@ export function Testimonials() {
   const testimonials: Testimonial[] = [
     {
       id: 1,
-      name: "Sarah Johnson",
+      name: "Salma Osama",
       role: "Fashion Enthusiast",
       image:
         "https://images.unsplash.com/photo-1745434159123-4908d0b9df94?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHNtaWxpbmd8ZW58MXx8fHwxNzYyMjg5MjQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -33,7 +33,7 @@ export function Testimonials() {
     },
     {
       id: 2,
-      name: "Michael Chen",
+      name: "Ziad bahaadine",
       role: "Tech Buyer",
       image:
         "https://images.unsplash.com/photo-1712599982295-1ecff6059a57?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW4lMjBwb3J0cmFpdCUyMGhhcHB5fGVufDF8fHx8MTc2MjM1NzI0MXww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -43,10 +43,10 @@ export function Testimonials() {
     },
     {
       id: 3,
-      name: "Emily Rodriguez",
+      name: "Taher Adel",
       role: "Smart Shopper",
       image:
-        "https://images.unsplash.com/photo-1753161023962-665967602405?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGN1c3RvbWVyJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzYyMzE2NTI5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://instagram.faly2-2.fna.fbcdn.net/v/t51.2885-19/433449650_1550531708852537_5736079899286153721_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.faly2-2.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2QGsCKXOs9tY0xhVlQtuNEt66hkVnbEaSARsMO956XvA5LboeUz7YEIXNcEr1EuAfR0&_nc_ohc=xsCEoNUotocQ7kNvwHBYK2h&_nc_gid=UgH-FvE8ey93SO2OZ2yoYQ&edm=ALGbJPMBAAAA&ccb=7-5&oh=00_AfpYhlrXDKr5yD98a8-ME_nXQq9UDNkW8nv8wAmOpx8WrQ&oe=696ECFA1&_nc_sid=7d3ac5",
       rating: 5,
       text: "The newsletter keeps me updated on the best deals. I love how organized everything is by category. Never shopping without checking Tuut first!",
       savings: "$392",
