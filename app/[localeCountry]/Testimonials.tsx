@@ -33,10 +33,10 @@ export function Testimonials() {
     },
     {
       id: 2,
-      name: "Ziad bahaadine",
+      name: "Ahmed Khaled",
       role: "Tech Buyer",
       image:
-        "https://images.unsplash.com/photo-1712599982295-1ecff6059a57?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW4lMjBwb3J0cmFpdCUyMGhhcHB5fGVufDF8fHx8MTc2MjM1NzI0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://i.ibb.co/xt83FkJP/436120464-961593458911366-457812820982703478-n.jpg",
       rating: 5,
       text: "Amazing platform! I found a 60% off deal on a laptop I'd been eyeing for months. The price tracking feature is a game changer!",
       savings: "$820",
