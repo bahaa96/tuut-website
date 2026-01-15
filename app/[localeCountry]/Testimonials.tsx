@@ -25,11 +25,10 @@ export function Testimonials() {
       id: 1,
       name: "Salma Osama",
       role: "Fashion Enthusiast",
-      image:
-        "https://images.unsplash.com/photo-1745434159123-4908d0b9df94?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMHNtaWxpbmd8ZW58MXx8fHwxNzYyMjg5MjQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      image: "https://i.ibb.co/zvRFXfv/IMG-7700.png",
       rating: 5,
-      text: "I've saved over $500 in just 3 months using Tuut! The deals are always verified and the platform is so easy to use.",
-      savings: "$547",
+      text: "I've saved over 500 EGP in just 1 month using Tuut! The deals are always verified and the platform is so easy to use.",
+      savings: "547 EGP",
     },
     {
       id: 2,
@@ -39,7 +38,7 @@ export function Testimonials() {
         "https://i.ibb.co/xt83FkJP/436120464-961593458911366-457812820982703478-n.jpg",
       rating: 5,
       text: "Amazing platform! I found a 60% off deal on a laptop I'd been eyeing for months. The price tracking feature is a game changer!",
-      savings: "$820",
+      savings: "820 EGP",
     },
     {
       id: 3,
@@ -49,7 +48,7 @@ export function Testimonials() {
         "https://i.ibb.co/wrBFfq6C/433449650-1550531708852537-5736079899286153721-n.jpg",
       rating: 5,
       text: "The newsletter keeps me updated on the best deals. I love how organized everything is by category. Never shopping without checking Tuut first!",
-      savings: "$392",
+      savings: "392 EGP",
     },
   ];
 
