@@ -37,7 +37,7 @@ export function Testimonials() {
       image:
         "https://i.ibb.co/xt83FkJP/436120464-961593458911366-457812820982703478-n.jpg",
       rating: 5,
-      text: "Amazing platform! I found a 60% off deal on a laptop I'd been eyeing for months. The price tracking feature is a game changer!",
+      text: "Amazing platform! I found a 20% off deal on a laptop I'd been eyeing for months. The price tracking feature is a game changer!",
       savings: "820 EGP",
     },
     {
