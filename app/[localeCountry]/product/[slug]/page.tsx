@@ -9,7 +9,7 @@ import * as m from "@/src/paraglide/messages";
 import {
   ProductStructuredData,
   BreadcrumbStructuredData,
-  WebsiteStructuredData
+  WebsiteStructuredData,
 } from "@/components/StructuredData";
 import { generateProductPageMetadata } from "@/utils/metadata";
 
@@ -35,10 +35,14 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: language === "ar" ? "المنتج غير موجود | Tuut" : "Product Not Found | Tuut",
-      description: language === "ar"
-        ? "هذا المنتج غير متوفر حالياً"
-        : "This product is currently unavailable",
+      title:
+        language === "ar"
+          ? "المنتج غير موجود | Tuut"
+          : "Product Not Found | Tuut",
+      description:
+        language === "ar"
+          ? "هذا المنتج غير متوفر حالياً"
+          : "This product is currently unavailable",
     };
   }
 
@@ -48,7 +52,9 @@ export async function generateMetadata({
   });
 }
 
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+export default async function ProductDetailPage({
+  params,
+}: ProductDetailPageProps) {
   const resolvedParams = await params;
   const { localeCountry, slug } = resolvedParams;
 
@@ -65,7 +71,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h1 className={`text-2xl font-bold text-gray-900 mb-4 ${isRTL ? "text-right" : "text-left"}`}>
+          <h1
+            className={`text-2xl font-bold text-gray-900 mb-4 ${
+              isRTL ? "text-right" : "text-left"
+            }`}
+          >
             {isArabic ? "المنتج غير موجود" : "Product Not Found"}
           </h1>
           <p className="text-gray-600 mb-6">
@@ -77,7 +87,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             href="/"
             className="inline-flex items-center px-6 py-3 bg-[#5FB57A] text-white rounded-lg hover:bg-[#4FA669] transition-colors"
           >
-            <ArrowLeft className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`} />
+            <ArrowLeft
+              className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
+            />
             {isArabic ? "العودة للرئيسية" : "Back to Home"}
           </Link>
         </div>
@@ -86,12 +98,19 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   }
 
   // Calculate discount percentage
-  const discountPercentage = product.original_price && product.price
-    ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-    : 0;
+  const discountPercentage =
+    product.original_price && product.price
+      ? Math.round(
+          ((product.original_price - product.price) / product.original_price) *
+            100
+        )
+      : 0;
 
   // Format prices
-  const formatPrice = (price: number | undefined, currency: string | undefined) => {
+  const formatPrice = (
+    price: number | undefined,
+    currency: string | undefined
+  ) => {
     if (!price || !currency) return "";
     return new Intl.NumberFormat(language === "ar" ? "ar-EG" : "en-US", {
       style: "currency",
@@ -108,8 +127,14 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { name: isArabic ? "الرئيسية" : "Home", url: `https://tuut.shop/${localeCountry}` },
-    { name: isArabic ? "المنتجات" : "Products", url: `https://tuut.shop/${localeCountry}/products` },
+    {
+      name: isArabic ? "الرئيسية" : "Home",
+      url: `https://tuut.shop/${localeCountry}`,
+    },
+    {
+      name: isArabic ? "المنتجات" : "Products",
+      url: `https://tuut.shop/${localeCountry}/products`,
+    },
     { name: product.title || isArabic ? "المنتج" : "Product", url: productUrl },
   ];
 
@@ -128,7 +153,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <WebsiteStructuredData
         url={`https://tuut.shop/${localeCountry}`}
         name="Tuut"
-        description={isArabic ? "اكتشف أفضل المنتجات والعروض" : "Discover the best products and deals"}
+        description={
+          isArabic
+            ? "اكتشف أفضل المنتجات والعروض"
+            : "Discover the best products and deals"
+        }
       />
 
       <div className="min-h-screen bg-gray-50">
@@ -139,7 +168,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               href="/"
               className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors"
             >
-              <ArrowLeft className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`} />
+              <ArrowLeft
+                className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
+              />
               {m.BACK_TO_HOME()}
             </Link>
           </nav>
@@ -154,7 +185,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                   width={600}
                   height={600}
                   className="w-full h-auto rounded-lg object-cover"
-                  fallbackSrc="/placeholder-product.jpg"
                 />
               </div>
               {product.images && product.images.length > 1 && (
@@ -167,7 +197,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                       width={150}
                       height={150}
                       className="w-full h-auto rounded-lg object-cover cursor-pointer hover:opacity-75 transition-opacity"
-                      fallbackSrc="/placeholder-product.jpg"
                     />
                   ))}
                 </div>
@@ -190,20 +219,31 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               )}
 
               {/* Product Title */}
-              <h1 className={`text-3xl font-bold text-gray-900 ${isRTL ? "text-right" : "text-left"}`}>
+              <h1
+                className={`text-3xl font-bold text-gray-900 ${
+                  isRTL ? "text-right" : "text-left"
+                }`}
+              >
                 {product.title}
               </h1>
 
               {/* Product Description */}
               {product.description && (
-                <p className="text-gray-600 leading-relaxed" dir={isRTL ? "rtl" : "ltr"}>
+                <p
+                  className="text-gray-600 leading-relaxed"
+                  dir={isRTL ? "rtl" : "ltr"}
+                >
                   {product.description}
                 </p>
               )}
 
               {/* Rating */}
               {product.rating && (
-                <div className={`flex items-center space-x-2 ${isRTL ? "flex-row-reverse space-x-reverse" : ""}`}>
+                <div
+                  className={`flex items-center space-x-2 ${
+                    isRTL ? "flex-row-reverse space-x-reverse" : ""
+                  }`}
+                >
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -224,7 +264,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
               {/* Price Section */}
               <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <div className={`flex items-center justify-between mb-4 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <div
+                  className={`flex items-center justify-between mb-4 ${
+                    isRTL ? "flex-row-reverse" : ""
+                  }`}
+                >
                   <div>
                     <div className="flex items-center space-x-3">
                       <span className="text-3xl font-bold text-gray-900">
@@ -250,8 +294,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                         ? "متوفر"
                         : "In Stock"
                       : isArabic
-                        ? "غير متوفر"
-                        : "Out of Stock"}
+                      ? "غير متوفر"
+                      : "Out of Stock"}
                   </div>
                 </div>
 
@@ -260,14 +304,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                   href={product.url}
                   target="_blank"
                   rel="noopener noreferrer sponsored"
-                  className={`w-full flex items-center justify-center px-6 py-3 bg-[#5FB57A] text-white rounded-lg hover:bg-[#4FA669] transition-colors ${!product.available ? "opacity-50 cursor-not-allowed" : ""}`}
-                  onClick={(e) => {
-                    if (!product.available) {
-                      e.preventDefault();
-                    }
-                  }}
+                  className={`w-full flex items-center justify-center px-6 py-3 bg-[#5FB57A] text-white rounded-lg hover:bg-[#4FA669] transition-colors ${
+                    !product.available ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  <ExternalLink className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`} />
+                  <ExternalLink
+                    className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`}
+                  />
                   {isArabic ? "شراء المنتج" : "Buy Product"}
                 </a>
               </div>
@@ -275,10 +318,18 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               {/* Categories */}
               {product.categories && product.categories.length > 0 && (
                 <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <h3 className={`text-lg font-semibold mb-3 ${isRTL ? "text-right" : "text-left"}`}>
+                  <h3
+                    className={`text-lg font-semibold mb-3 ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                  >
                     {isArabic ? "الفئات" : "Categories"}
                   </h3>
-                  <div className={`flex flex-wrap gap-2 ${isRTL ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`flex flex-wrap gap-2 ${
+                      isRTL ? "justify-end" : "justify-start"
+                    }`}
+                  >
                     {product.categories.map((category, index) => (
                       <span
                         key={index}
@@ -293,19 +344,31 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
               {/* Additional Information */}
               <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
-                <h3 className={`text-lg font-semibold mb-3 text-blue-900 ${isRTL ? "text-right" : "text-left"}`}>
+                <h3
+                  className={`text-lg font-semibold mb-3 text-blue-900 ${
+                    isRTL ? "text-right" : "text-left"
+                  }`}
+                >
                   {isArabic ? "معلومات إضافية" : "Additional Information"}
                 </h3>
-                <ul className={`space-y-2 text-blue-800 ${isRTL ? "text-right" : "text-left"}`}>
+                <ul
+                  className={`space-y-2 text-blue-800 ${
+                    isRTL ? "text-right" : "text-left"
+                  }`}
+                >
                   <li>
-                    <strong>{isArabic ? "المتجر:" : "Store:"}</strong> {product.store || "-"}
+                    <strong>{isArabic ? "المتجر:" : "Store:"}</strong>{" "}
+                    {product.store || "-"}
                   </li>
                   <li>
-                    <strong>{isArabic ? "العملة:" : "Currency:"}</strong> {product.currency || "-"}
+                    <strong>{isArabic ? "العملة:" : "Currency:"}</strong>{" "}
+                    {product.currency || "-"}
                   </li>
                   {product.created_at && (
                     <li>
-                      <strong>{isArabic ? "تاريخ الإضافة:" : "Added on:"}</strong>{" "}
+                      <strong>
+                        {isArabic ? "تاريخ الإضافة:" : "Added on:"}
+                      </strong>{" "}
                       {new Date(product.created_at).toLocaleDateString(
                         language === "ar" ? "ar-EG" : "en-US"
                       )}
