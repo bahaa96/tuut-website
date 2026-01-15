@@ -6,6 +6,7 @@ export interface Product {
   original_price?: number;
   currency?: string;
   rating?: number;
+  ratings_count?: number;
   store?: string;
   store_id?: number;
   url?: string;
@@ -13,7 +14,10 @@ export interface Product {
   categories?: string[];
   available?: boolean;
   created_at?: string;
+  updated_at?: string;
   slug?: string;
+  feature_bullets?: string[];
+  specs?: Record<string, string>;
 }
 
 export interface ProductFilters {

@@ -1,8 +1,18 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Store, ExternalLink, Star } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Store as StoreIcon, 
+  ExternalLink, 
+  Star,
+  Tag as TagIcon,
+  Calendar,
+  CheckCircle,
+  ChevronLeft,
+  TrendingDown,
+  Package
+} from "lucide-react";
 import { Product } from "../../../../domain-models/Product";
-import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import { requestFetchSingleProduct } from "@/network";
 import { getCountryNameFromCode } from "@/utils/getCountryNameFromCode";
 import * as m from "@/src/paraglide/messages";
@@ -12,6 +22,11 @@ import {
   WebsiteStructuredData,
 } from "@/components/StructuredData";
 import { generateProductPageMetadata } from "@/utils/metadata";
+import { ProductImageGallery } from "@/components/ProductImageGallery";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -69,36 +84,25 @@ export default async function ProductDetailPage({
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1
-            className={`text-2xl font-bold text-gray-900 mb-4 ${
-              isRTL ? "text-right" : "text-left"
-            }`}
-          >
-            {isArabic ? "المنتج غير موجود" : "Product Not Found"}
-          </h1>
-          <p className="text-gray-600 mb-6">
-            {isArabic
-              ? "هذا المنتج غير متوفر حالياً"
-              : "This product is currently unavailable"}
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center px-6 py-3 bg-[#5FB57A] text-white rounded-lg hover:bg-[#4FA669] transition-colors"
-          >
-            <ArrowLeft
-              className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
-            />
-            {isArabic ? "العودة للرئيسية" : "Back to Home"}
-          </Link>
+      <div className={`min-h-screen bg-[#E8F3E8] ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Package className="h-16 w-16 text-[#9CA3AF] mx-auto mb-4" />
+            <h2 className="text-2xl mb-2">{isArabic ? 'المنتج غير موجود' : 'Product Not Found'}</h2>
+            <p className="text-[#6B7280] mb-6">{isArabic ? 'المنتج الذي تبحث عنه غير موجود.' : 'The product you are looking for does not exist.'}</p>
+            <Button asChild>
+              <Link href={`/${localeCountry}/products`}>
+                {isArabic ? 'تصفح المنتجات' : 'Browse Products'}
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   // Calculate discount percentage
-  const discountPercentage =
+  const discount =
     product.original_price && product.price
       ? Math.round(
           ((product.original_price - product.price) / product.original_price) *
@@ -106,20 +110,7 @@ export default async function ProductDetailPage({
         )
       : 0;
 
-  // Format prices
-  const formatPrice = (
-    price: number | undefined,
-    currency: string | undefined
-  ) => {
-    if (!price || !currency) return "";
-    return new Intl.NumberFormat(language === "ar" ? "ar-EG" : "en-US", {
-      style: "currency",
-      currency,
-    }).format(price);
-  };
-
-  const currentPrice = formatPrice(product.price, product.currency);
-  const originalPrice = formatPrice(product.original_price, product.currency);
+  const storeName = product.store ? product.store.charAt(0).toUpperCase() + product.store.slice(1) : '';
 
   // Build URLs
   const productUrl = `https://tuut.shop/${localeCountry}/product/${slug}`;
@@ -160,224 +151,242 @@ export default async function ProductDetailPage({
         }
       />
 
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto max-w-6xl px-4 py-8">
-          {/* Breadcrumb Navigation */}
-          <nav className={`mb-8 ${isRTL ? "text-right" : "text-left"}`}>
-            <Link
-              href="/"
-              className="inline-flex items-center text-[#5FB57A] hover:text-[#4FA669] mb-4 transition-colors"
-            >
-              <ArrowLeft
-                className={`h-5 w-5 ${isRTL ? "ml-2 rotate-180" : "mr-2"}`}
-              />
-              {m.BACK_TO_HOME()}
-            </Link>
-          </nav>
-
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Product Images */}
-            <div className="space-y-4">
-              <div className="bg-white rounded-2xl p-4 shadow-lg">
-                <ImageWithFallback
-                  src={product.images?.[0] || "/placeholder-product.jpg"}
-                  alt={product.title || "Product image"}
-                  width={600}
-                  height={600}
-                  className="w-full h-auto rounded-lg object-cover"
-                />
-              </div>
-              {product.images && product.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {product.images.slice(1, 5).map((image, index) => (
-                    <ImageWithFallback
-                      key={index}
-                      src={image}
-                      alt={`${product.title} ${index + 2}`}
-                      width={150}
-                      height={150}
-                      className="w-full h-auto rounded-lg object-cover cursor-pointer hover:opacity-75 transition-opacity"
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Product Details */}
-            <div className="space-y-6">
-              {/* Store Badge */}
-              {product.store && (
-                <div className="flex items-center space-x-2">
-                  <Store className="h-5 w-5 text-[#5FB57A]" />
-                  <Link
-                    href={storeUrl}
-                    className="text-sm font-medium text-[#5FB57A] hover:underline"
-                  >
-                    {product.store}
-                  </Link>
-                </div>
-              )}
-
-              {/* Product Title */}
-              <h1
-                className={`text-3xl font-bold text-gray-900 ${
-                  isRTL ? "text-right" : "text-left"
-                }`}
+      <div className={`min-h-screen bg-[#E8F3E8] ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Breadcrumb */}
+        <div className="bg-white border-b border-[#E5E7EB]">
+          <div className="max-w-[1200px] mx-auto px-4 py-4">
+            <div className={`flex items-center gap-2 text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Link
+                href={`/${localeCountry}`}
+                className="text-[#6B7280] hover:text-[#5FB57A] transition-colors"
               >
+                {isArabic ? 'الرئيسية' : 'Home'}
+              </Link>
+              <span className="text-[#9CA3AF]">/</span>
+              <Link
+                href={`/${localeCountry}/products`}
+                className="text-[#6B7280] hover:text-[#5FB57A] transition-colors"
+              >
+                {isArabic ? 'المنتجات' : 'Products'}
+              </Link>
+              <span className="text-[#9CA3AF]">/</span>
+              <span className="text-[#111827]">{product.title}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-[1200px] mx-auto px-4 py-8">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            asChild
+            className={`mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}
+          >
+            <Link href={`/${localeCountry}/products`}>
+              {isRTL ? <ChevronLeft className="h-4 w-4 rotate-180" /> : <ChevronLeft className="h-4 w-4" />}
+              {isArabic ? 'العودة للمنتجات' : 'Back to Products'}
+            </Link>
+          </Button>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* Product Images */}
+            <ProductImageGallery
+              images={product.images || []}
+              title={product.title || ''}
+              discount={discount}
+              rating={product.rating}
+              isRTL={isRTL}
+              language={language}
+            />
+
+            {/* Product Info */}
+            <div>
+              {/* Store & Category */}
+              <div className={`flex items-center gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                {storeName && (
+                  <div className={`flex items-center gap-2 text-[#6B7280] ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <StoreIcon className="h-4 w-4" />
+                    <span>{storeName}</span>
+                  </div>
+                )}
+                {product.categories && product.categories.length > 0 && (
+                  <div className={`flex items-center gap-2 text-[#6B7280] ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <TagIcon className="h-4 w-4" />
+                    <span className="capitalize">{product.categories[0].replace(/-/g, ' ')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Title */}
+              <h1 className={`text-3xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
                 {product.title}
               </h1>
 
-              {/* Product Description */}
-              {product.description && (
-                <p
-                  className="text-gray-600 leading-relaxed"
-                  dir={isRTL ? "rtl" : "ltr"}
-                >
-                  {product.description}
-                </p>
-              )}
-
               {/* Rating */}
               {product.rating && (
-                <div
-                  className={`flex items-center space-x-2 ${
-                    isRTL ? "flex-row-reverse space-x-reverse" : ""
-                  }`}
-                >
-                  <div className="flex items-center">
+                <div className={`flex items-center gap-3 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
                         className={`h-5 w-5 ${
-                          i < Math.floor(product.rating || 0)
-                            ? "text-yellow-400 fill-current"
-                            : "text-gray-300"
+                          i < Math.round(product.rating || 0)
+                            ? 'fill-[#FBBF24] text-[#FBBF24]'
+                            : 'text-[#E5E7EB]'
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="text-sm text-gray-600">
-                    {product.rating.toFixed(1)} {isArabic ? "نجوم" : "stars"}
-                  </span>
+                  <span style={{ fontWeight: 600 }}>{product.rating.toFixed(1)}</span>
+                  {product.ratings_count && (
+                    <span className="text-[#6B7280]">
+                      ({product.ratings_count} {isArabic ? 'تقييم' : 'reviews'})
+                    </span>
+                  )}
                 </div>
               )}
 
-              {/* Price Section */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <div
-                  className={`flex items-center justify-between mb-4 ${
-                    isRTL ? "flex-row-reverse" : ""
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center space-x-3">
-                      <span className="text-3xl font-bold text-gray-900">
-                        {currentPrice}
-                      </span>
-                      {originalPrice && (
-                        <span className="text-xl text-gray-400 line-through">
-                          {originalPrice}
-                        </span>
-                      )}
-                    </div>
-                    {discountPercentage > 0 && (
-                      <div className="mt-2">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                          {isArabic ? "خصم" : "Save"} {discountPercentage}%
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {product.available
-                      ? isArabic
-                        ? "متوفر"
-                        : "In Stock"
-                      : isArabic
-                      ? "غير متوفر"
-                      : "Out of Stock"}
-                  </div>
+              {/* Price */}
+              <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className={`flex items-baseline gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-[#5FB57A]" style={{ fontSize: '48px', fontWeight: 700 }}>
+                    {product.price?.toFixed(2)} {product.currency || 'SAR'}
+                  </span>
+                  {discount > 0 && product.original_price && (
+                    <span className="text-[#9CA3AF] line-through" style={{ fontSize: '24px' }}>
+                      {product.original_price.toFixed(2)}
+                    </span>
+                  )}
                 </div>
-
-                {/* CTA Button */}
-                <a
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className={`w-full flex items-center justify-center px-6 py-3 bg-[#5FB57A] text-white rounded-lg hover:bg-[#4FA669] transition-colors ${
-                    !product.available ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  <ExternalLink
-                    className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`}
-                  />
-                  {isArabic ? "شراء المنتج" : "Buy Product"}
-                </a>
+                {discount > 0 && (
+                  <p className="text-red-500" style={{ fontWeight: 600 }}>
+                    {isArabic ? 'توفر' : 'You save'}: {(product.original_price! - product.price!).toFixed(2)} {product.currency || 'SAR'} ({discount}%)
+                  </p>
+                )}
               </div>
 
-              {/* Categories */}
-              {product.categories && product.categories.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <h3
-                    className={`text-lg font-semibold mb-3 ${
-                      isRTL ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {isArabic ? "الفئات" : "Categories"}
-                  </h3>
-                  <div
-                    className={`flex flex-wrap gap-2 ${
-                      isRTL ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {product.categories.map((category, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                      >
-                        {category}
-                      </span>
-                    ))}
-                  </div>
+              {/* Availability */}
+              <div className={`flex items-center gap-2 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                {product.available ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <span className="text-green-600" style={{ fontWeight: 600 }}>
+                      {isArabic ? 'متوفر' : 'In Stock'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-red-500" />
+                    <span className="text-red-600" style={{ fontWeight: 600 }}>
+                      {isArabic ? 'غير متوفر' : 'Out of Stock'}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <Separator className="my-6" />
+
+              {/* Short Description */}
+              {product.description && (
+                <div className={`mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <p className="text-[#4B5563] leading-relaxed">
+                    {product.description.length > 300
+                      ? product.description.substring(0, 300) + '...'
+                      : product.description}
+                  </p>
                 </div>
               )}
 
-              {/* Additional Information */}
-              <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
-                <h3
-                  className={`text-lg font-semibold mb-3 text-blue-900 ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
+              {/* Action Buttons */}
+              <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button
+                  size="lg"
+                  asChild
+                  className="flex-1 bg-[#5FB57A] hover:bg-[#4FA569] text-white rounded-lg"
+                  disabled={!product.available}
                 >
-                  {isArabic ? "معلومات إضافية" : "Additional Information"}
-                </h3>
-                <ul
-                  className={`space-y-2 text-blue-800 ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
-                >
-                  <li>
-                    <strong>{isArabic ? "المتجر:" : "Store:"}</strong>{" "}
-                    {product.store || "-"}
-                  </li>
-                  <li>
-                    <strong>{isArabic ? "العملة:" : "Currency:"}</strong>{" "}
-                    {product.currency || "-"}
-                  </li>
-                  {product.created_at && (
-                    <li>
-                      <strong>
-                        {isArabic ? "تاريخ الإضافة:" : "Added on:"}
-                      </strong>{" "}
-                      {new Date(product.created_at).toLocaleDateString(
-                        language === "ar" ? "ar-EG" : "en-US"
+                  <a
+                    href={product.url}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                  >
+                    <ExternalLink className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {isArabic 
+                      ? (storeName ? `عرض في ${storeName}` : 'عرض في المتجر')
+                      : (storeName ? `View on ${storeName}` : 'View on Store')}
+                  </a>
+                </Button>
+              </div>
+
+              {/* Additional Info */}
+              <div className="mt-6 p-4 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
+                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                  <Calendar className="h-5 w-5 text-[#6B7280] mt-0.5" />
+                  <div>
+                    <p className="text-sm text-[#6B7280]">
+                      {isArabic ? 'آخر تحديث' : 'Last updated'}:{' '}
+                      {new Date(product.updated_at || product.created_at || '').toLocaleDateString(
+                        language === 'ar' ? 'ar-SA' : 'en-US',
+                        { year: 'numeric', month: 'long', day: 'numeric' }
                       )}
-                    </li>
-                  )}
-                </ul>
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Description Section */}
+          <Card className="border-2 border-[#E5E7EB] rounded-xl p-6 mb-6">
+            <h2 className={`text-2xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+              {isArabic ? 'الوصف' : 'Description'}
+            </h2>
+            <div className={isRTL ? 'text-right' : 'text-left'}>
+              <p className="text-[#4B5563] leading-relaxed whitespace-pre-line">
+                {product.description || (isArabic ? 'لا يوجد وصف متاح.' : 'No description available.')}
+              </p>
+            </div>
+          </Card>
+
+          {/* Features Section */}
+          {product.feature_bullets && product.feature_bullets.length > 0 && (
+            <Card className="border-2 border-[#E5E7EB] rounded-xl p-6 mb-6">
+              <h2 className={`text-2xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+                {isArabic ? 'المميزات' : 'Features'}
+              </h2>
+              <ul className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {product.feature_bullets.map((bullet, index) => (
+                  <li key={index} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <CheckCircle className="h-5 w-5 text-[#5FB57A] shrink-0 mt-0.5" />
+                    <span className="text-[#4B5563]">{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          {/* Specifications Section */}
+          {product.specs && Object.keys(product.specs).length > 0 && (
+            <Card className="border-2 border-[#E5E7EB] rounded-xl p-6 mb-6">
+              <h2 className={`text-2xl mb-4 ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontWeight: 700 }}>
+                {isArabic ? 'المواصفات' : 'Specifications'}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(product.specs).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className={`flex ${isRTL ? 'flex-row-reverse' : ''} p-3 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]`}
+                  >
+                    <span className={`text-[#6B7280] ${isRTL ? 'mr-auto' : 'mr-4'}`} style={{ fontWeight: 600 }}>
+                      {key}:
+                    </span>
+                    <span className="text-[#111827]">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </>
