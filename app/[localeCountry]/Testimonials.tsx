@@ -46,7 +46,7 @@ export function Testimonials() {
       name: "Taher Adel",
       role: "Smart Shopper",
       image:
-        "https://instagram.faly2-2.fna.fbcdn.net/v/t51.2885-19/433449650_1550531708852537_5736079899286153721_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.faly2-2.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2QGsCKXOs9tY0xhVlQtuNEt66hkVnbEaSARsMO956XvA5LboeUz7YEIXNcEr1EuAfR0&_nc_ohc=xsCEoNUotocQ7kNvwHBYK2h&_nc_gid=UgH-FvE8ey93SO2OZ2yoYQ&edm=ALGbJPMBAAAA&ccb=7-5&oh=00_AfpYhlrXDKr5yD98a8-ME_nXQq9UDNkW8nv8wAmOpx8WrQ&oe=696ECFA1&_nc_sid=7d3ac5",
+        "https://i.ibb.co/wrBFfq6C/433449650-1550531708852537-5736079899286153721-n.jpg",
       rating: 5,
       text: "The newsletter keeps me updated on the best deals. I love how organized everything is by category. Never shopping without checking Tuut first!",
       savings: "$392",
