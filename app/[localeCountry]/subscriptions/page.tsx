@@ -252,7 +252,7 @@ export default function SubscriptionsPage() {
                   return (
                     <div
                       key={subscription.id}
-                      className="bg-white border-2 border-[#111827] rounded-xl p-6 hover:shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] transition-all group"
+                      className="bg-white border-2 border-[#111827] rounded-xl p-6 hover:shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] transition-all group h-fit"
                     >
                       {/* Header */}
                       <div className={`flex items-start gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
