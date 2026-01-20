@@ -87,8 +87,8 @@ export default function SubscriptionOrderPage() {
   const { order, subscription, subscriptionType, subscriptionDuration, subscriptionPrice } = orderDetails;
   const serviceName = isRTL ? subscription.title_ar : subscription.title_en;
   const planName = isRTL 
-    ? `${subscriptionType.name_ar} - ${subscriptionDuration.name_ar}`
-    : `${subscriptionType.name_en} - ${subscriptionDuration.name_en}`;
+    ? subscriptionType.name_ar
+    : subscriptionType.name_en;
 
   return (
     <div className={`min-h-screen bg-[#E8F3E8] ${isRTL ? "rtl" : "ltr"} flex items-center justify-center p-4`}>
