@@ -62,6 +62,11 @@ export function Header() {
     { key: "stores", label: m.STORES(), href: `/${localeCountry}/stores` },
     { key: "shop", label: m.SHOP(), href: `/${localeCountry}/products` },
     {
+      key: "subscriptions",
+      label: locale === "en" ? "Subscriptions" : "الاشتراكات",
+      href: `/${localeCountry}/subscriptions`,
+    },
+    {
       key: "guides",
       label: m.SHOPPING_GUIDES(),
       href: `/${localeCountry}/guides`,

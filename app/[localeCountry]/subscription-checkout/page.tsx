@@ -1,0 +1,212 @@
+"use client";
+
+import { useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Phone, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+import { setLocale } from "@/src/paraglide/runtime";
+
+export default function SubscriptionCheckoutPage() {
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const localeCountry = params.localeCountry as string;
+  const locale = localeCountry?.split("-")[0] || "en";
+  const isRTL = locale === "ar";
+  
+  setLocale(locale as "ar" | "en");
+
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Extract plan info from URL query parameters
+  const planName = searchParams.get("plan") || "";
+  const planPrice = searchParams.get("price") || "";
+  const subscriptionTitle = searchParams.get("service") || "";
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate WhatsApp number
+    if (!whatsappNumber.trim()) {
+      toast.error(
+        locale === "en"
+          ? "Please enter your WhatsApp number"
+          : "الرجاء إدخال رقم الواتساب الخاص بك"
+      );
+      return;
+    }
+
+    // Basic phone number validation
+    const digitsOnly = whatsappNumber.replace(/\D/g, "");
+    if (digitsOnly.length < 8) {
+      toast.error(
+        locale === "en"
+          ? "Please enter a valid WhatsApp number"
+          : "الرجاء إدخال رقم واتساب صحيح"
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      const orderId = `SUB-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
+      router.push(`/${localeCountry}/subscription-success?orderId=${orderId}&whatsapp=${encodeURIComponent(whatsappNumber)}&plan=${encodeURIComponent(planName)}&service=${encodeURIComponent(subscriptionTitle)}`);
+      setIsSubmitting(false);
+    }, 1000);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9+\-() ]/g, "");
+    setWhatsappNumber(value);
+  };
+
+  return (
+    <div className={`min-h-screen bg-[#E8F3E8] ${isRTL ? "rtl" : "ltr"}`}>
+      <div className="container mx-auto max-w-[600px] px-4 py-8 md:py-12">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className={`mb-6 border-2 border-[#111827] rounded-xl hover:bg-white ${isRTL ? 'flex-row-reverse' : ''}`}
+        >
+          <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
+          {locale === "en" ? "Back" : "رجوع"}
+        </Button>
+
+        {/* Checkout Card */}
+        <div className="bg-white border-2 border-[#111827] rounded-2xl shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-br from-[#5FB57A] to-[#4FA569] p-6 md:p-8 border-b-2 border-[#111827]">
+            <h1 className={`text-2xl md:text-3xl font-bold text-white mb-2 ${isRTL ? 'text-right' : ''}`}>
+              {locale === "en" ? "Complete Your Order" : "أكمل طلبك"}
+            </h1>
+            <p className={`text-white/90 ${isRTL ? 'text-right' : ''}`}>
+              {locale === "en"
+                ? "We'll contact you via WhatsApp to finalize your subscription"
+                : "سنتواصل معك عبر الواتساب لإتمام اشتراكك"}
+            </p>
+          </div>
+
+          {/* Order Summary */}
+          {(subscriptionTitle || planName) && (
+            <div className="p-6 md:p-8 bg-[#E8F3E8] border-b-2 border-[#111827]">
+              <h2 className={`text-lg font-bold text-[#111827] mb-4 ${isRTL ? 'text-right' : ''}`}>
+                {locale === "en" ? "Order Summary" : "ملخص الطلب"}
+              </h2>
+              <div className={`space-y-2 ${isRTL ? 'text-right' : ''}`}>
+                {subscriptionTitle && (
+                  <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <span className="text-[#6B7280]">
+                      {locale === "en" ? "Service:" : "الخدمة:"}
+                    </span>
+                    <span className="font-semibold text-[#111827]">{subscriptionTitle}</span>
+                  </div>
+                )}
+                {planName && (
+                  <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <span className="text-[#6B7280]">
+                      {locale === "en" ? "Plan:" : "الخطة:"}
+                    </span>
+                    <span className="font-semibold text-[#111827]">{planName}</span>
+                  </div>
+                )}
+                {planPrice && (
+                  <div className={`flex justify-between items-center pt-2 border-t-2 border-[#111827] mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <span className="font-bold text-[#111827]">
+                      {locale === "en" ? "Price:" : "السعر:"}
+                    </span>
+                    <span className="font-bold text-[#5FB57A] text-xl">{planPrice}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 md:p-8">
+            <div className="mb-6">
+              <label 
+                htmlFor="whatsapp" 
+                className={`block text-[#111827] font-semibold mb-2 ${isRTL ? 'text-right' : ''}`}
+              >
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                  <Phone className="h-5 w-5 text-[#5FB57A]" />
+                  <span>
+                    {locale === "en" 
+                      ? "WhatsApp Number" 
+                      : "رقم الواتساب"}
+                  </span>
+                </div>
+              </label>
+              <input
+                id="whatsapp"
+                type="tel"
+                value={whatsappNumber}
+                onChange={handlePhoneChange}
+                placeholder={
+                  locale === "en"
+                    ? "+1 234 567 8900"
+                    : "٠٠٩٦٦ ٥٠٠ ١٢٣ ٤٥٦"
+                }
+                className={`w-full px-4 py-3 border-2 border-[#111827] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5FB57A] focus:border-[#5FB57A] transition-all ${
+                  isRTL ? 'text-right' : ''
+                }`}
+                disabled={isSubmitting}
+                autoFocus
+              />
+              <p className={`text-sm text-[#6B7280] mt-2 ${isRTL ? 'text-right' : ''}`}>
+                {locale === "en"
+                  ? "Include your country code (e.g., +1, +966, +971)"
+                  : "أدخل رقمك مع رمز الدولة (مثال: ٠٠٩٦٦+، ٠٠٩٧١+)"}
+              </p>
+            </div>
+
+            {/* Privacy Note */}
+            <div className="mb-6 p-4 bg-[#E8F3E8] border-2 border-[#5FB57A]/30 rounded-xl">
+              <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                <CheckCircle className="h-5 w-5 text-[#5FB57A] flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-[#6B7280]">
+                  {locale === "en"
+                    ? "Your WhatsApp number will only be used to contact you about this subscription. We respect your privacy and won't share your information with third parties."
+                    : "سيتم استخدام رقم الواتساب الخاص بك فقط للتواصل معك بشأن هذا الاشتراك. نحن نحترم خصوصيتك ولن نشارك معلوماتك مع أطراف ثالثة."}
+                </p>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[2px_2px_0px_0px_rgba(17,24,39,1)] transition-all py-6 text-lg ${
+                isRTL ? 'flex-row-reverse' : ''
+              }`}
+              style={{ fontWeight: 600 }}
+            >
+              {isSubmitting
+                ? locale === "en"
+                  ? "Processing..."
+                  : "جاري المعالجة..."
+                : locale === "en"
+                ? "Order Now"
+                : "اطلب الآن"}
+            </Button>
+          </form>
+        </div>
+
+        {/* Help Text */}
+        <div className={`mt-6 text-center ${isRTL ? 'text-right' : ''}`}>
+          <p className="text-sm text-[#6B7280]">
+            {locale === "en"
+              ? "Need help? Contact us at support@tuut.com"
+              : "تحتاج مساعدة؟ تواصل معنا على support@tuut.com"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
