@@ -260,7 +260,7 @@ export default function SubscriptionsPage() {
                           <ImageWithFallback
                             src={subscription.image_url_en}
                             alt={name || ""}
-                            className="w-16 h-16 object-contain rounded-lg border-2 border-[#111827] bg-white p-2"
+                            className="w-16 h-16 object-contain rounded-lg border-2 border-[#111827] bg-white  overflow-hidden"
                           />
                         ) : (
                           <div className="w-16 h-16 bg-[#E8F3E8] rounded-lg border-2 border-[#111827] flex items-center justify-center">
