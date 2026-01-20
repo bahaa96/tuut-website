@@ -1,4 +1,4 @@
-import { requestFetchSingleOnlineSubscriptionsPrice } from "@/network";
+import { requestFetchSingleOnlineSubscriptionPrice } from "@/network";
 import { useEffect, useReducer } from "react";
 import { OnlineSubscriptionPrice } from "@/domain-models";
 
@@ -68,7 +68,7 @@ const useSingleOnlineSubscriptionPrice = ({
 
     dispatch({ type: "FETCH_SINGLE_ONLINE_SUBSCRIPTIONS_PRICE_START" });
 
-    requestFetchSingleOnlineSubscriptionsPrice({
+    requestFetchSingleOnlineSubscriptionPrice({
       durationId,
       countrySlug,
     })

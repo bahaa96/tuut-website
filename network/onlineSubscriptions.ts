@@ -1,20 +1,21 @@
 import { supabase } from "./instance";
  import { OnlineSubscription, OnlineSubscriptionPrice, OnlineSubscriptionType, OnlineSubscriptionTypeDuration } from "@/domain-models";
 
-interface RequestFetchSingleOnlineSubscriptionsPriceArgs {
+interface requestFetchSingleOnlineSubscriptionPriceArgs {
   durationId: string;
   countrySlug: string;
 }
 
-const requestFetchSingleOnlineSubscriptionsPrice = async ({
+const requestFetchSingleOnlineSubscriptionPrice = async ({
   durationId,
   countrySlug,
-}: RequestFetchSingleOnlineSubscriptionsPriceArgs): Promise<{ data: OnlineSubscriptionPrice }> => {
+}: requestFetchSingleOnlineSubscriptionPriceArgs): Promise<{ data: OnlineSubscriptionPrice }> => {
   const { data, error } = await supabase
     .from("subscription_pricing")
     .select("*")
     .eq("duration_id", durationId)
     .eq("country_slug", countrySlug)
+    .single();
 
   if (error) {
     throw new Error(error.message);
@@ -137,12 +138,75 @@ const requestFetchRelatedOnlineSubscriptions = async ({
   return { data };
 }
 
+interface RequestFetchSingleOnlineSubscriptionDurationArgs {
+  subscriptionDurationId: string;
+}
+
+const requestFetchSingleOnlineSubscriptionDuration = async ({
+  subscriptionDurationId,
+}: RequestFetchSingleOnlineSubscriptionDurationArgs): Promise<{ data: OnlineSubscriptionTypeDuration }> => {
+  const { data, error } = await supabase
+    .from("subscription_type_durations")
+    .select("*")
+    .eq("id", subscriptionDurationId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+} 
+
+interface RequestFetchSingleOnlineSubscriptionTypeArgs {
+  subscriptionTypeId: string;
+}
+
+const requestFetchSingleOnlineSubscriptionType = async ({
+  subscriptionTypeId,
+}: RequestFetchSingleOnlineSubscriptionTypeArgs): Promise<{ data: OnlineSubscriptionType }> => {
+  const { data, error } = await supabase
+    .from("subscription_types")
+    .select("*")
+    .eq("id", subscriptionTypeId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+}
+
+interface RequestFetchSingleOnlineSubscriptionByIdArgs {
+  subscriptionId: string;
+}
+
+const requestFetchSingleOnlineSubscriptionById = async ({
+  subscriptionId,
+}: RequestFetchSingleOnlineSubscriptionByIdArgs): Promise<{ data: OnlineSubscription }> => {
+  const { data, error } = await supabase
+    .from("online_subscriptions")
+    .select("*")
+    .eq("id", subscriptionId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+}
+
 export { 
-    requestFetchSingleOnlineSubscriptionsPrice,
+    requestFetchSingleOnlineSubscriptionPrice,
     requestFetchSingleOnlineSubscriptionTypes,
     requestFetchSingleOnlineSubscriptionTypeDurations,
     requestFetchAllOnlineSubscriptions,
     requestFetchSingleOnlineSubscription,
     requestFetchRelatedOnlineSubscriptions,
+    requestFetchSingleOnlineSubscriptionDuration,
+    requestFetchSingleOnlineSubscriptionType,
+    requestFetchSingleOnlineSubscriptionById,
 };
 

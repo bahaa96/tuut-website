@@ -23,9 +23,11 @@ export {
 } from "./products";
 
 export {
-  requestFetchSingleOnlineSubscriptionsPrice,
+  requestFetchSingleOnlineSubscriptionPrice,
   requestFetchSingleOnlineSubscriptionTypes,
   requestFetchSingleOnlineSubscriptionTypeDurations,
   requestFetchAllOnlineSubscriptions,
   requestFetchSingleOnlineSubscription,
+  requestFetchSingleOnlineSubscriptionDuration,
+  requestFetchSingleOnlineSubscriptionType,
 } from "./onlineSubscriptions";

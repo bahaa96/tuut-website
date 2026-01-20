@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Phone, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { setLocale } from "@/src/paraglide/runtime";
+import { requestFetchSingleOnlineSubscription, requestFetchSingleOnlineSubscriptionById, requestFetchSingleOnlineSubscriptionDuration, requestFetchSingleOnlineSubscriptionPrice, requestFetchSingleOnlineSubscriptionType } from "@/network/onlineSubscriptions";
+import { OnlineSubscriptionTypeDuration } from "@/domain-models/OnlineSubscriptionTypeDuration";
+import { OnlineSubscriptionType } from "@/domain-models/OnlineSubscriptionType";
+import { OnlineSubscriptionPrice } from "@/domain-models/OnlineSubscriptionPrice";
 
 export default function SubscriptionCheckoutPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const localeCountry = params.localeCountry as string;
+  const countrySlug = localeCountry?.split("-")[1];
   const locale = localeCountry?.split("-")[0] || "en";
   const isRTL = locale === "ar";
   
@@ -20,10 +25,70 @@ export default function SubscriptionCheckoutPage() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Extract plan info from URL query parameters
-  const planName = searchParams.get("plan") || "";
-  const planPrice = searchParams.get("price") || "";
-  const subscriptionTitle = searchParams.get("service") || "";
+  const [subscriptionDuration, setSubscriptionDuration] = useState<OnlineSubscriptionTypeDuration | null>(null);
+  const [subscriptionType, setSubscriptionType] = useState<OnlineSubscriptionType | null>(null);
+  const [subscriptionPrice, setSubscriptionPrice] = useState<OnlineSubscriptionPrice | null>(null);
+  const [subscription, setSubscription] = useState<OnlineSubscription | null>(null);
+  const subscriptionDurationId = searchParams.get("subscriptionDurationId") || "";
+
+  useEffect(() => {
+    try {
+      const fetchSubscriptionDuration = async () => {
+        const { data: durationData } = await requestFetchSingleOnlineSubscriptionDuration({
+          subscriptionDurationId: subscriptionDurationId,
+        });
+        setSubscriptionDuration(durationData);
+      }
+      fetchSubscriptionDuration();
+    } catch (error) {
+      console.error(`Error fetching subscription duration ${subscriptionDurationId}:`, error);
+    }
+  }, [subscriptionDurationId]);
+
+  useEffect(() => {
+    try {
+      const fetchSubscriptionPrice = async () => {
+        const { data: priceData } = await requestFetchSingleOnlineSubscriptionPrice({
+          durationId: subscriptionDuration?.id || "",
+          countrySlug: countrySlug || "",
+        });
+        setSubscriptionPrice(priceData);
+      }
+      fetchSubscriptionPrice();
+    } catch (error) {
+      console.error(`Error fetching subscription price ${subscriptionDuration?.id}:`, error);
+    }
+  }, [subscriptionDuration?.id])
+
+  useEffect(() => {
+    try {
+      const fetchSubscriptionType = async () => {
+        const { data: typeData } = await requestFetchSingleOnlineSubscriptionType({
+          subscriptionTypeId: subscriptionDuration?.type_id || "",
+        });
+        setSubscriptionType(typeData);
+      }
+      fetchSubscriptionType();
+    } catch (error) {
+      console.error(`Error fetching subscription type ${subscriptionDuration?.type_id}:`, error);
+    }
+  }, [subscriptionDuration?.type_id]);
+
+  useEffect(() => {
+    try {
+      const fetchSubscription = async () => {
+        const { data: subscriptionData } = await requestFetchSingleOnlineSubscriptionById({
+          subscriptionId: subscriptionType?.subscription_id || "",
+        });
+        setSubscription(subscriptionData);
+      }
+      fetchSubscription();
+    } catch (error) {
+      console.error(`Error fetching subscription ${subscriptionType?.subscription_id}:`, error);
+    }
+  }, [subscriptionType?.id]);
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +120,7 @@ export default function SubscriptionCheckoutPage() {
     setTimeout(() => {
       const orderId = `SUB-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       
-      router.push(`/${localeCountry}/subscription-success?orderId=${orderId}&whatsapp=${encodeURIComponent(whatsappNumber)}&plan=${encodeURIComponent(planName)}&service=${encodeURIComponent(subscriptionTitle)}`);
+      router.push(`/${localeCountry}/subscription-success?orderId=${orderId}&whatsapp=${encodeURIComponent(whatsappNumber)}&plan=${encodeURIComponent(isRTL ? `${subscriptionType?.name_ar} - ${subscriptionDuration?.name_ar}` : `${subscriptionType?.name_en} - ${subscriptionDuration?.name_en}`)}&service=${encodeURIComponent(isRTL ? `${subscription?.title_ar}` : `${subscription?.title_en}`)}`);
       setIsSubmitting(false);
     }, 1000);
   };
@@ -64,6 +129,7 @@ export default function SubscriptionCheckoutPage() {
     const value = e.target.value.replace(/[^0-9+\-() ]/g, "");
     setWhatsappNumber(value);
   };
+
 
   return (
     <div className={`min-h-screen bg-[#E8F3E8] ${isRTL ? "rtl" : "ltr"}`}>
@@ -93,39 +159,37 @@ export default function SubscriptionCheckoutPage() {
           </div>
 
           {/* Order Summary */}
-          {(subscriptionTitle || planName) && (
             <div className="p-6 md:p-8 bg-[#E8F3E8] border-b-2 border-[#111827]">
               <h2 className={`text-lg font-bold text-[#111827] mb-4 ${isRTL ? 'text-right' : ''}`}>
                 {locale === "en" ? "Order Summary" : "ملخص الطلب"}
               </h2>
               <div className={`space-y-2 ${isRTL ? 'text-right' : ''}`}>
-                {subscriptionTitle && (
+                {subscription?.title_en || subscription?.title_ar ? (
                   <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <span className="text-[#6B7280]">
                       {locale === "en" ? "Service:" : "الخدمة:"}
                     </span>
-                    <span className="font-semibold text-[#111827]">{subscriptionTitle}</span>
+                    <span className="font-semibold text-[#111827]">{isRTL ? `${subscription?.title_ar}` : `${subscription?.title_en}`}</span>
                   </div>
-                )}
-                {planName && (
+                ) : null}
+                {isRTL ? subscriptionType?.name_ar : subscriptionType?.name_en && (
                   <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <span className="text-[#6B7280]">
                       {locale === "en" ? "Plan:" : "الخطة:"}
                     </span>
-                    <span className="font-semibold text-[#111827]">{planName}</span>
+                    <span className="font-semibold text-[#111827]">{isRTL ? `${subscriptionType?.name_ar}` : `${subscriptionType?.name_en}`}</span>
                   </div>
                 )}
-                {planPrice && (
+                {subscriptionPrice?.price && (
                   <div className={`flex justify-between items-center pt-2 border-t-2 border-[#111827] mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <span className="font-bold text-[#111827]">
                       {locale === "en" ? "Price:" : "السعر:"}
                     </span>
-                    <span className="font-bold text-[#5FB57A] text-xl">{planPrice}</span>
+                    <span className="font-bold text-[#5FB57A] text-xl">{subscriptionPrice?.currency || "$"}{subscriptionPrice?.price}</span>
                   </div>
                 )}
               </div>
             </div>
-          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 md:p-8">
@@ -150,7 +214,7 @@ export default function SubscriptionCheckoutPage() {
                 onChange={handlePhoneChange}
                 placeholder={
                   locale === "en"
-                    ? "+1 234 567 8900"
+                    ? "+966 234 567 8900"
                     : "٠٠٩٦٦ ٥٠٠ ١٢٣ ٤٥٦"
                 }
                 className={`w-full px-4 py-3 border-2 border-[#111827] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5FB57A] focus:border-[#5FB57A] transition-all ${
@@ -161,7 +225,7 @@ export default function SubscriptionCheckoutPage() {
               />
               <p className={`text-sm text-[#6B7280] mt-2 ${isRTL ? 'text-right' : ''}`}>
                 {locale === "en"
-                  ? "Include your country code (e.g., +1, +966, +971)"
+                  ? "Include your country code (e.g., +2, +966, +971)"
                   : "أدخل رقمك مع رمز الدولة (مثال: ٠٠٩٦٦+، ٠٠٩٧١+)"}
               </p>
             </div>

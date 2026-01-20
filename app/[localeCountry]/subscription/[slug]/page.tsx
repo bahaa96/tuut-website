@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { getCountryValue } from "@/utils/countryHelpers";
@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 import { setLocale } from "@/src/paraglide/runtime";
 import Link from "next/link";
-import { requestFetchRelatedOnlineSubscriptions, requestFetchSingleOnlineSubscription, requestFetchSingleOnlineSubscriptionsPrice, requestFetchSingleOnlineSubscriptionTypeDurations, requestFetchSingleOnlineSubscriptionTypes } from "@/network/onlineSubscriptions";
+import { requestFetchRelatedOnlineSubscriptions, requestFetchSingleOnlineSubscription, requestFetchSingleOnlineSubscriptionPrice, requestFetchSingleOnlineSubscriptionTypeDurations, requestFetchSingleOnlineSubscriptionTypes } from "@/network/onlineSubscriptions";
 import { OnlineSubscriptionType, OnlineSubscriptionTypeDuration, OnlineSubscriptionPrice } from "@/domain-models";
 import router from "next/router";
 
@@ -165,7 +165,7 @@ export default function SubscriptionDetailPage() {
 
       setSubscriptionDurations(durationsData);
 
-      const { data: pricingData } = await requestFetchSingleOnlineSubscriptionsPrice({
+      const { data: pricingData } = await requestFetchSingleOnlineSubscriptionPrice({
         durationId: durationsData[0].id,
         countrySlug: countrySlug,
       });
@@ -594,13 +594,15 @@ function SubscriptionTypesList({ subscriptionId, locale, isRTL }: {
   isRTL: boolean;
 }) {
   const [subscriptionTypes, setSubscriptionTypes] = useState<OnlineSubscriptionType[]>([]);
+  const [subscriptionDurations, setSubscriptionDurations] = useState<OnlineSubscriptionTypeDuration[]>([]);
 
+  const router = useRouter();
   const params = useParams();
   const localeCountry = params.localeCountry as string;
 
-  const onGetPlan = (subscriptionType: OnlineSubscriptionType) => {
+  const onGetPlan = (durationId: string) => {
     router.push(
-      `/${localeCountry}/subscription-checkout?subscriptionDurationId=${subscriptionType.durationId}`
+      `/${localeCountry}/subscription-checkout?subscriptionDurationId=${durationId}`
     );
   }
 
@@ -618,18 +620,39 @@ function SubscriptionTypesList({ subscriptionId, locale, isRTL }: {
     }
   }, [subscriptionId]);
 
+  useEffect(() => {
+    try {
+      const fetchSubscriptionDurations = async (typeId: string) => {
+        const { data: durationsData } = await requestFetchSingleOnlineSubscriptionTypeDurations({
+          typeId: typeId,
+        });
+        setSubscriptionDurations(durationsData);
+      }
+      subscriptionTypes.forEach((type) => {
+        fetchSubscriptionDurations(type.id);
+      });  
+    } catch (error) {
+      console.error(`Error fetching durations for subscription types:`, error);
+    }
+  }, [subscriptionTypes]);
 
-
-  return subscriptionTypes.map((type) => (
-    <SubscriptionTypeItem key={type.id} type={type} locale={locale} isRTL={isRTL} onGetPlan={onGetPlan} />
-  ));
+  return subscriptionTypes.map((type) => {
+    return subscriptionDurations.map((duration) => {
+      return (
+        <Fragment key={duration.id}>
+          <SubscriptionTypeItem type={type} duration={duration} locale={locale} isRTL={isRTL} onGetPlan={onGetPlan} />
+        </Fragment>
+      );
+    });
+  });
 }
 
 
-const SubscriptionTypeItem = ({ type, locale, isRTL, onGetPlan }: {
+const SubscriptionTypeItem = ({ type, duration, locale, isRTL, onGetPlan }: {
   type: OnlineSubscriptionType;
   locale: string;
   isRTL: boolean;
+  duration: OnlineSubscriptionTypeDuration;
   onGetPlan: (subscriptionType: OnlineSubscriptionType) => void;
 }) => {
   return (
@@ -653,10 +676,17 @@ const SubscriptionTypeItem = ({ type, locale, isRTL, onGetPlan }: {
         </h3>
       )}
 
-      <SubscriptionTypeDurationsList typeId={type.id} locale={locale} isRTL={isRTL} />
+      <div>
+        <div className={`flex items-center gap-2 text-[#6B7280] mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Clock className="h-4 w-4" />
+          <span>{duration.duration_value} {duration.duration_type}</span>
+        </div>
+
+        <SubscriptionTypePrice durationId={duration.id} locale={locale} isRTL={isRTL} />
+      </div>
 
       <Button
-        onClick={() => onGetPlan(type)}
+        onClick={() => onGetPlan(duration.id)}
         className={`w-full border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all ${
           type.is_recommended
             ? "bg-[#5FB57A] hover:bg-[#4FA569] text-white"
@@ -671,43 +701,6 @@ const SubscriptionTypeItem = ({ type, locale, isRTL, onGetPlan }: {
   );
 };
 
-function SubscriptionTypeDurationsList({ typeId, locale, isRTL }: {
-  typeId: number;
-  locale: string;
-  isRTL: boolean;
-}) {
-
-  const [subscriptionTypeDurations, setSubscriptionTypeDurations] = useState<OnlineSubscriptionTypeDuration[]>([]);
-
-  useEffect(() => {
-    try {
-      const fetchSubscriptionTypeDurations = async () => {
-        const { data: durationsData } = await requestFetchSingleOnlineSubscriptionTypeDurations({
-          typeId: typeId,
-        });
-        setSubscriptionTypeDurations(durationsData);
-      }
-      fetchSubscriptionTypeDurations();
-    } catch (error) {
-      console.error(`Error fetching durations for subscription type ${typeId}:`, error);
-    }
-  }, [typeId]);
-
-  return (
-    <div>
-      {subscriptionTypeDurations.map((duration) => (
-        <>
-        <div className={`flex items-center gap-2 text-[#6B7280] mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Clock className="h-4 w-4" />
-          <span>{duration.duration_value} {duration.duration_type}</span>
-        </div>
-
-        <SubscriptionTypePrice durationId={duration.id} locale={locale} isRTL={isRTL} />
-      </>
-    ))}
-    </div>
-  );
-}
 
 function SubscriptionTypePrice({ durationId, locale, isRTL }: {
   durationId: number;
@@ -721,7 +714,7 @@ function SubscriptionTypePrice({ durationId, locale, isRTL }: {
   useEffect(() => {
     try {
       const fetchSubscriptionTypePrices = async () => {
-        const { data: pricesData } = await requestFetchSingleOnlineSubscriptionsPrice({
+        const { data: pricesData } = await requestFetchSingleOnlineSubscriptionPrice({
           durationId: durationId,
           countrySlug: countrySlug,
         });

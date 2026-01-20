@@ -25,7 +25,7 @@ import {
   Crown,
 } from "lucide-react";
 import { setLocale, getLocale } from "@/src/paraglide/runtime";
-import { requestFetchAllOnlineSubscriptions, requestFetchSingleOnlineSubscriptionsPrice, requestFetchSingleOnlineSubscriptionTypeDurations, requestFetchSingleOnlineSubscriptionTypes } from "@/network";
+import { requestFetchAllOnlineSubscriptions, requestFetchSingleOnlineSubscriptionPrice, requestFetchSingleOnlineSubscriptionTypeDurations, requestFetchSingleOnlineSubscriptionTypes } from "@/network";
 import { OnlineSubscription, OnlineSubscriptionPrice, OnlineSubscriptionType, OnlineSubscriptionTypeDuration } from "@/domain-models";
 
 
@@ -114,7 +114,7 @@ export default function SubscriptionsPage() {
         console.log("durationsData",durationsData);
 
         // Fetch pricing for all durations filtered by country
-        const { data: pricingData } = await requestFetchSingleOnlineSubscriptionsPrice({
+        const { data: pricingData } = await requestFetchSingleOnlineSubscriptionPrice({
           durationId: durationsData[0].id,
           countrySlug: countrySlug,
         });
@@ -427,14 +427,14 @@ const SubscriptionTypeDurations = ({ subscriptionTypeId, countrySlug }: { subscr
 
 const SubscriptionTypePrice = ({ durationId, countrySlug }: { durationId: number, countrySlug: string }) => {
   const locale = getLocale();
-  const [subscriptionPrice, setSubscriptionPrice] = useState<OnlineSubscriptionPrice[]>([]);
+  const [subscriptionPrice, setSubscriptionPrice] = useState<OnlineSubscriptionPrice | null>(null);
   const isRTL = locale === "ar";
 
 
   useEffect(() => {
     try {
       const fetchSubscriptionPrice = async () => {
-        const { data: priceData } = await requestFetchSingleOnlineSubscriptionsPrice({
+        const { data: priceData } = await requestFetchSingleOnlineSubscriptionPrice({
           durationId: durationId, 
           countrySlug: countrySlug,
         });
@@ -446,16 +446,16 @@ const SubscriptionTypePrice = ({ durationId, countrySlug }: { durationId: number
     }
   }, [durationId]);
 
-  return subscriptionPrice.map((price: OnlineSubscriptionPrice) => (
+  return subscriptionPrice ? (
     <div className={`flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
     <span className="font-bold text-[#111827]">
-      {price.currency || "$"}{price.price}
+      {subscriptionPrice.currency || "$"}{subscriptionPrice.price}
     </span>
-    {price?.original_price && price.original_price > (price.discounted_price || 0) && (
+    {subscriptionPrice?.original_price && subscriptionPrice.original_price > (subscriptionPrice.discounted_price || 0) && (
       <span className="text-[10px] text-[#6B7280] line-through">
-        {price.currency || "$"}{price.original_price}
+        {subscriptionPrice.currency || "$"}{subscriptionPrice.original_price}
       </span>
     )}
   </div>
-  ));
+  ) : null;
 };  
