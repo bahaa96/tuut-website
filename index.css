@@ -4024,6 +4024,12 @@
   }
 
   @media (width >= 48rem) {
+    .md\:h-auto {
+      height: auto;
+    }
+  }
+
+  @media (width >= 48rem) {
     .md\:h-56 {
       height: calc(var(--spacing) * 56);
     }

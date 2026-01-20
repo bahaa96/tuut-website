@@ -26,6 +26,7 @@ import { setLocale } from "@/src/paraglide/runtime";
 import Link from "next/link";
 import { requestFetchRelatedOnlineSubscriptions, requestFetchSingleOnlineSubscription, requestFetchSingleOnlineSubscriptionsPrice, requestFetchSingleOnlineSubscriptionTypeDurations, requestFetchSingleOnlineSubscriptionTypes } from "@/network/onlineSubscriptions";
 import { OnlineSubscriptionType, OnlineSubscriptionTypeDuration, OnlineSubscriptionPrice } from "@/domain-models";
+import router from "next/router";
 
 
 interface PlanDisplay {
@@ -550,9 +551,9 @@ export default function SubscriptionDetailPage() {
                     <div className={`flex items-start gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       {sub.image_url_en || sub.logo_url ? (
                         <ImageWithFallback
-                          src={sub.image_url_en || sub.logo_url || ""}
+                          src={sub.image_url_en}
                           alt={subTitle || ""}
-                          className="w-12 h-12 object-contain rounded-lg border-2 border-[#111827] bg-white p-2"
+                          className="w-12 h-12 object-contain rounded-lg border-2 border-[#111827] bg-white "
                         />
                       ) : (
                         <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#111827] flex items-center justify-center">
@@ -594,15 +595,13 @@ function SubscriptionTypesList({ subscriptionId, locale, isRTL }: {
 }) {
   const [subscriptionTypes, setSubscriptionTypes] = useState<OnlineSubscriptionType[]>([]);
 
+  const params = useParams();
+  const localeCountry = params.localeCountry as string;
+
   const onGetPlan = (subscriptionType: OnlineSubscriptionType) => {
-    // const planName = locale === "ar" ? plan.typeNameAr : plan.typeName;
-    // const durationLabel = locale === "ar" ? plan.durationLabelAr : plan.durationLabel;
-    // const fullPlanName = `${planName} - ${durationLabel || `${plan.durationMonths} ${locale === "en" ? "Months" : "شهر"}`}`;
-    // const planPrice = `${plan.currency || "$"}${plan.discountedPrice}`;
-    
-    // router.push(
-    //   `/${localeCountry}/subscription-checkout?plan=${encodeURIComponent(fullPlanName)}&price=${encodeURIComponent(planPrice)}&service=${encodeURIComponent(title || "")}`
-    // );
+    router.push(
+      `/${localeCountry}/subscription-checkout?subscriptionDurationId=${subscriptionType.durationId}`
+    );
   }
 
   useEffect(() => {
@@ -622,7 +621,7 @@ function SubscriptionTypesList({ subscriptionId, locale, isRTL }: {
 
 
   return subscriptionTypes.map((type) => (
-    <SubscriptionTypeItem key={type.id} type={type} locale={locale} isRTL={isRTL} />
+    <SubscriptionTypeItem key={type.id} type={type} locale={locale} isRTL={isRTL} onGetPlan={onGetPlan} />
   ));
 }
 
