@@ -652,9 +652,9 @@ export default function SubscriptionDetailPage() {
                     className="bg-[#E8F3E8] border-2 border-[#111827] rounded-xl p-6 hover:shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] transition-all cursor-pointer group"
                   >
                     <div className={`flex items-start gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {sub.logo_url ? (
+                      {sub.image_url_en ? (
                         <ImageWithFallback
-                          src={sub.logo_url}
+                          src={sub.image_url_en}
                           alt={subTitle || ""}
                           className="w-12 h-12 object-contain rounded-lg border-2 border-[#111827] bg-white p-2"
                         />
