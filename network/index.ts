@@ -30,4 +30,10 @@ export {
   requestFetchSingleOnlineSubscription,
   requestFetchSingleOnlineSubscriptionDuration,
   requestFetchSingleOnlineSubscriptionType,
+  requestCreateSubscriptionOrder,
+  requestFetchSubscriptionOrder,
+  requestFetchSubscriptionOrderByNumber,
+  requestFetchOrderDetails,
 } from "./onlineSubscriptions";
+
+export type { OrderDetails } from "./onlineSubscriptions";

@@ -8,4 +8,5 @@ export type { OnlineSubscription } from "./OnlineSubscription";
 export type { OnlineSubscriptionPrice } from "./OnlineSubscriptionPrice";
 export type { OnlineSubscriptionType } from "./OnlineSubscriptionType";
 export type { OnlineSubscriptionTypeDuration } from "./OnlineSubscriptionTypeDuration";
+export type { SubscriptionOrder, OrderStatus, PaymentStatus } from "./SubscriptionOrder";
 export type { Article } from "./Article";

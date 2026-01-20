@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Phone, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { setLocale } from "@/src/paraglide/runtime";
-import { requestFetchSingleOnlineSubscription, requestFetchSingleOnlineSubscriptionById, requestFetchSingleOnlineSubscriptionDuration, requestFetchSingleOnlineSubscriptionPrice, requestFetchSingleOnlineSubscriptionType } from "@/network/onlineSubscriptions";
+import { requestFetchSingleOnlineSubscription, requestFetchSingleOnlineSubscriptionById, requestFetchSingleOnlineSubscriptionDuration, requestFetchSingleOnlineSubscriptionPrice, requestFetchSingleOnlineSubscriptionType, requestCreateSubscriptionOrder } from "@/network/onlineSubscriptions";
 import { OnlineSubscriptionTypeDuration } from "@/domain-models/OnlineSubscriptionTypeDuration";
 import { OnlineSubscriptionType } from "@/domain-models/OnlineSubscriptionType";
 import { OnlineSubscriptionPrice } from "@/domain-models/OnlineSubscriptionPrice";
+import { OnlineSubscription } from "@/domain-models/OnlineSubscription";
 
 export default function SubscriptionCheckoutPage() {
   const params = useParams();
@@ -90,7 +91,7 @@ export default function SubscriptionCheckoutPage() {
 
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate WhatsApp number
@@ -114,15 +115,50 @@ export default function SubscriptionCheckoutPage() {
       return;
     }
 
+    // Validate that all required data is present
+    if (!subscription?.id || !subscriptionType?.id || !subscriptionDuration?.id || !subscriptionPrice) {
+      toast.error(
+        locale === "en"
+          ? "Missing subscription information. Please try again."
+          : "معلومات الاشتراك مفقودة. الرجاء المحاولة مرة أخرى."
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const orderId = `SUB-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
-      router.push(`/${localeCountry}/subscription-success?orderId=${orderId}&whatsapp=${encodeURIComponent(whatsappNumber)}&plan=${encodeURIComponent(isRTL ? `${subscriptionType?.name_ar} - ${subscriptionDuration?.name_ar}` : `${subscriptionType?.name_en} - ${subscriptionDuration?.name_en}`)}&service=${encodeURIComponent(isRTL ? `${subscription?.title_ar}` : `${subscription?.title_en}`)}`);
+    try {
+      // Create the order in the database
+      const { data: order } = await requestCreateSubscriptionOrder({
+        subscription_id: subscription.id,
+        subscription_type_id: subscriptionType.id,
+        subscription_duration_id: subscriptionDuration.id,
+        customer_whatsapp: whatsappNumber,
+        price: subscriptionPrice.price,
+        currency: subscriptionPrice.currency,
+        country_slug: countrySlug || "",
+        notes: `Customer requested via website. Locale: ${locale}, Country: ${countrySlug}`,
+      });
+
+      // Show success message
+      toast.success(
+        locale === "en"
+          ? "Order created successfully!"
+          : "تم إنشاء الطلب بنجاح!"
+      );
+
+      // Redirect to order page with order ID in URL
+      router.push(`/${localeCountry}/subscription-order/${order.order_number}`);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error(
+        locale === "en"
+          ? "Failed to create order. Please try again."
+          : "فشل إنشاء الطلب. الرجاء المحاولة مرة أخرى."
+      );
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
