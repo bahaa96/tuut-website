@@ -17,8 +17,8 @@ import {
 } from "@/src/paraglide/runtime";
 
 export const metadata: Metadata = {
-  title: "Tuut - Mobile App Home Screen",
-  description: "Discover amazing products and deals",
+  title: "Tuut - Discover Amazing Deals and Discounts",
+  description: "Discover amazing products and deals with Tuut, the best deals and discounts app. Save money on your shopping with Tuut.",
 };
 
 const ssrLocale = cache(() => ({
