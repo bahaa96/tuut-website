@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "../index.css";
-import "./globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CountryProvider } from "../contexts/CountryContext";
 import { AnalyticsProvider } from "../components/AnalyticsProvider";
