@@ -25,34 +25,6 @@ import { toast } from "sonner";
 import { setLocale } from "@/src/paraglide/runtime";
 import Link from "next/link";
 
-interface SubscriptionType {
-  id: number;
-  subscription_id: number;
-  type_name?: string;
-  type_name_ar?: string;
-  max_users?: number;
-  is_recommended?: boolean;
-  display_order?: number;
-}
-
-interface TypeDuration {
-  id: number;
-  subscription_type_id: number;
-  duration_months?: number;
-  duration_label?: string;
-  duration_label_ar?: string;
-  is_popular?: boolean;
-}
-
-interface Pricing {
-  id: number;
-  duration_id: number;
-  country_slug?: string;
-  original_price?: number;
-  discounted_price?: number;
-  currency?: string;
-  savings_percentage?: number;
-}
 
 interface PlanDisplay {
   typeId: number;
@@ -73,11 +45,14 @@ interface PlanDisplay {
 
 interface Subscription {
   id: number;
+  slug_en?: string;
+  slug_ar?: string;
   title_en?: string;
   title_ar?: string;
   description_en?: string;
   description_ar?: string;
   logo_url?: string;
+  image_url_en?: string;
   service_url?: string;
   category?: string;
   category_ar?: string;
@@ -97,7 +72,7 @@ export default function SubscriptionDetailPage() {
   const router = useRouter();
   const { country } = useCountry();
   const localeCountry = params.localeCountry as string;
-  const subscriptionId = params.id as string;
+  const subscriptionSlug = params.slug as string;
   const locale = localeCountry?.split("-")[0] || "en";
   const isRTL = locale === "ar";
   
@@ -152,20 +127,21 @@ export default function SubscriptionDetailPage() {
   ];
 
   useEffect(() => {
-    if (subscriptionId && country) {
+    if (subscriptionSlug && country) {
       fetchSubscriptionDetails();
     }
-  }, [subscriptionId, country]);
+  }, [subscriptionSlug, country]);
 
   const fetchSubscriptionDetails = async () => {
     try {
       setLoading(true);
 
-      // Fetch subscription details
+      // Fetch subscription details by locale-specific slug
+      const slugField = locale === "ar" ? "slug_ar" : "slug_en";
       const { data: subData, error: subError } = await supabase
         .from("online_subscriptions")
         .select("*")
-        .eq("id", subscriptionId)
+        .eq(slugField, subscriptionSlug)
         .single();
 
       if (subError) {
@@ -180,7 +156,7 @@ export default function SubscriptionDetailPage() {
       const { data: otherSubs } = await supabase
         .from("online_subscriptions")
         .select("*")
-        .neq("id", subscriptionId)
+        .neq(slugField, subscriptionSlug)
         .limit(3);
 
       setOtherSubscriptions(otherSubs || []);
@@ -189,7 +165,7 @@ export default function SubscriptionDetailPage() {
       const { data: typesData, error: typesError } = await supabase
         .from("subscription_types")
         .select("*")
-        .eq("subscription_id", subscriptionId)
+        .eq("subscription_id", subData.id)
         .order("display_order", { ascending: true });
 
       if (typesError || !typesData || typesData.length === 0) {
@@ -379,13 +355,13 @@ export default function SubscriptionDetailPage() {
           <div className={`flex flex-col md:flex-row items-center md:items-start gap-8 pb-10 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
             {/* Logo */}
             <div className="flex-shrink-0">
-              {subscription.logo_url ? (
+              {subscription.image_url_en || subscription.logo_url ? (
                 <div className="relative">
                   <div className="absolute inset-0 bg-[#5FB57A] opacity-20 rounded-2xl blur-xl"></div>
                   <ImageWithFallback
-                    src={subscription.logo_url}
+                    src={subscription.image_url_en || subscription.logo_url || ""}
                     alt={title || ""}
-                    className="relative w-32 h-32 md:w-40 md:h-40 object-contain rounded-2xl border-4 border-[#111827] bg-white p-6 shadow-[6px_6px_0px_0px_rgba(17,24,39,1)]"
+                    className="relative w-32 h-32 md:w-40 md:h-40 object-contain rounded-2xl border-4 border-[#111827] bg-white p-4 shadow-[6px_6px_0px_0px_rgba(17,24,39,1)]"
                   />
                 </div>
               ) : (
@@ -644,17 +620,22 @@ export default function SubscriptionDetailPage() {
                 const subTitle = locale === "ar" ? sub.title_ar : sub.title_en;
                 const subDesc = locale === "ar" ? sub.description_ar : sub.description_en;
                 const subCategory = locale === "ar" ? sub.category_ar : sub.category;
+                const subSlug = locale === "ar" ? sub.slug_ar : sub.slug_en;
                 
                 return (
                   <div
                     key={sub.id}
-                    onClick={() => router.push(`/${localeCountry}/subscription/${sub.id}`)}
+                    onClick={() => {
+                      if (subSlug) {
+                        router.push(`/${localeCountry}/subscription/${subSlug}`);
+                      }
+                    }}
                     className="bg-[#E8F3E8] border-2 border-[#111827] rounded-xl p-6 hover:shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] transition-all cursor-pointer group"
                   >
                     <div className={`flex items-start gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {sub.image_url_en ? (
+                      {sub.image_url_en || sub.logo_url ? (
                         <ImageWithFallback
-                          src={sub.image_url_en}
+                          src={sub.image_url_en || sub.logo_url || ""}
                           alt={subTitle || ""}
                           className="w-12 h-12 object-contain rounded-lg border-2 border-[#111827] bg-white p-2"
                         />

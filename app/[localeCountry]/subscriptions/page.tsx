@@ -65,7 +65,12 @@ export default function SubscriptionsPage() {
   const [subscriptionPricing, setSubscriptionPricing] = useState<OnlineSubscriptionPrice[]>([]);
 
   const handleGetSubscription = (subscription: OnlineSubscription) => {
-    router.push(`/${localeCountry}/subscription/${subscription.id}`);
+    const slug = locale === "ar" ? subscription.slug_ar : subscription.slug_en;
+    if (!slug) {
+      console.error("Subscription slug not found for locale:", locale);
+      return;
+    }
+    router.push(`/${localeCountry}/subscription/${slug}`);
   };
 
   const isLoading = false;
@@ -252,7 +257,8 @@ export default function SubscriptionsPage() {
                   return (
                     <div
                       key={subscription.id}
-                      className="bg-white border-2 border-[#111827] rounded-xl p-6 hover:shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] transition-all group h-fit"
+                      onClick={() => handleGetSubscription(subscription)}
+                      className="bg-white border-2 border-[#111827] rounded-xl p-6 hover:shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] transition-all group h-fit cursor-pointer"
                     >
                       {/* Header */}
                       <div className={`flex items-start gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -298,7 +304,10 @@ export default function SubscriptionsPage() {
 
                       {/* Action Button */}
                       <Button
-                        onClick={() => handleGetSubscription(subscription)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGetSubscription(subscription);
+                        }}
                         className="w-full bg-[#5FB57A] hover:bg-[#4FA569] text-white border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all"
                         style={{ fontWeight: 600 }}
                       >
