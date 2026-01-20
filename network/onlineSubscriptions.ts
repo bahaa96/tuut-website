@@ -96,16 +96,17 @@ const requestFetchAllOnlineSubscriptions = async ({
 }
 
 interface RequestFetchSingleOnlineSubscriptionArgs {
-  subscriptionId: string;
+  subscriptionSlug: string;
 }
 
 const requestFetchSingleOnlineSubscription = async ({
-  subscriptionId,
+  subscriptionSlug,
 }: RequestFetchSingleOnlineSubscriptionArgs): Promise<{ data: OnlineSubscription }> => {
+  const decodedSlug = decodeURIComponent(subscriptionSlug);
   const { data, error } = await supabase
     .from("online_subscriptions")
     .select("*")
-    .eq("id", subscriptionId)
+    .or(`slug_en.eq.${decodedSlug},slug_ar.eq.${decodedSlug}`)
     .single();
 
   if (error) {
@@ -115,6 +116,26 @@ const requestFetchSingleOnlineSubscription = async ({
   return { data };
 }
 
+interface RequestFetchRelatedOnlineSubscriptionsArgs {
+  subscriptionSlug: string;
+}
+
+const requestFetchRelatedOnlineSubscriptions = async ({
+  subscriptionSlug,
+}: RequestFetchRelatedOnlineSubscriptionsArgs): Promise<{ data: OnlineSubscription[] }> => {
+  const decodedSlug = decodeURIComponent(subscriptionSlug);
+  const { data, error } = await supabase
+    .from("online_subscriptions")
+    .select("*")
+    .or(`slug_en.neq.${decodedSlug},slug_ar.neq.${decodedSlug}`)
+    .limit(3);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { data };
+}
 
 export { 
     requestFetchSingleOnlineSubscriptionsPrice,
@@ -122,5 +143,6 @@ export {
     requestFetchSingleOnlineSubscriptionTypeDurations,
     requestFetchAllOnlineSubscriptions,
     requestFetchSingleOnlineSubscription,
+    requestFetchRelatedOnlineSubscriptions,
 };
 

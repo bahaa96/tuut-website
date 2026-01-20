@@ -24,6 +24,8 @@ import {
 import { toast } from "sonner";
 import { setLocale } from "@/src/paraglide/runtime";
 import Link from "next/link";
+import { requestFetchRelatedOnlineSubscriptions, requestFetchSingleOnlineSubscription, requestFetchSingleOnlineSubscriptionsPrice, requestFetchSingleOnlineSubscriptionTypeDurations, requestFetchSingleOnlineSubscriptionTypes } from "@/network/onlineSubscriptions";
+import { OnlineSubscriptionType, OnlineSubscriptionTypeDuration, OnlineSubscriptionPrice } from "@/domain-models";
 
 
 interface PlanDisplay {
@@ -70,16 +72,18 @@ interface FAQ {
 export default function SubscriptionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { country } = useCountry();
   const localeCountry = params.localeCountry as string;
   const subscriptionSlug = params.slug as string;
   const locale = localeCountry?.split("-")[0] || "en";
+  const countrySlug = localeCountry.split("-")[1];
   const isRTL = locale === "ar";
   
   setLocale(locale as "ar" | "en");
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [plans, setPlans] = useState<PlanDisplay[]>([]);
+  const [subscriptionTypes, setSubscriptionTypes] = useState<OnlineSubscriptionType[]>([]);
+  const [subscriptionDurations, setSubscriptionDurations] = useState<OnlineSubscriptionTypeDuration[]>([]);
+  const [subscriptionPricing, setSubscriptionPricing] = useState<OnlineSubscriptionPrice[]>([]);
   const [otherSubscriptions, setOtherSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDuration, setSelectedDuration] = useState<number | "all">("all");
@@ -127,111 +131,49 @@ export default function SubscriptionDetailPage() {
   ];
 
   useEffect(() => {
-    if (subscriptionSlug && country) {
+    if (subscriptionSlug) {
       fetchSubscriptionDetails();
     }
-  }, [subscriptionSlug, country]);
+  }, [subscriptionSlug]);
 
   const fetchSubscriptionDetails = async () => {
     try {
       setLoading(true);
 
-      // Fetch subscription details by locale-specific slug
-      const slugField = locale === "ar" ? "slug_ar" : "slug_en";
-      const { data: subData, error: subError } = await supabase
-        .from("online_subscriptions")
-        .select("*")
-        .eq(slugField, subscriptionSlug)
-        .single();
+      const decodedSlug = decodeURIComponent(subscriptionSlug);
 
-      if (subError) {
-        console.error("Error fetching subscription:", subError);
-        setLoading(false);
-        return;
-      }
-      
+      const { data: subData } = await requestFetchSingleOnlineSubscription({subscriptionSlug: decodedSlug});
       setSubscription(subData);
+      console.log("subData", subData);
 
       // Fetch other subscriptions
-      const { data: otherSubs } = await supabase
-        .from("online_subscriptions")
-        .select("*")
-        .neq(slugField, subscriptionSlug)
-        .limit(3);
+      const { data: otherSubs } = await requestFetchRelatedOnlineSubscriptions({subscriptionSlug: decodedSlug});
 
-      setOtherSubscriptions(otherSubs || []);
+      setOtherSubscriptions(otherSubs);
 
       // Fetch subscription types
-      const { data: typesData, error: typesError } = await supabase
-        .from("subscription_types")
-        .select("*")
-        .eq("subscription_id", subData.id)
-        .order("display_order", { ascending: true });
-
-      if (typesError || !typesData || typesData.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // Fetch durations for all types
-      const typeIds = typesData.map(t => t.id);
-      const { data: durationsData, error: durationsError } = await supabase
-        .from("subscription_type_durations")
-        .select("*")
-        .in("subscription_type_id", typeIds)
-        .order("duration_months", { ascending: true });
-
-      if (durationsError || !durationsData || durationsData.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // Fetch pricing for all durations filtered by country
-      const durationIds = durationsData.map(d => d.id);
-      const countrySlug = getCountryValue(country);
-      
-      const { data: pricingData, error: pricingError } = await supabase
-        .from("subscription_pricing")
-        .select("*")
-        .in("duration_id", durationIds)
-        .eq("country_slug", countrySlug);
-
-      if (pricingError) {
-        setLoading(false);
-        return;
-      }
-
-      // Combine all data into PlanDisplay objects
-      const combinedPlans: PlanDisplay[] = [];
-
-      typesData.forEach((type: SubscriptionType) => {
-        const typeDurations = durationsData.filter((d: TypeDuration) => d.subscription_type_id === type.id);
-        
-        typeDurations.forEach((duration: TypeDuration) => {
-          const pricing = pricingData?.find((p: Pricing) => p.duration_id === duration.id);
-          
-          if (pricing) {
-            combinedPlans.push({
-              typeId: type.id,
-              typeName: type.type_name || "",
-              typeNameAr: type.type_name_ar || "",
-              maxUsers: type.max_users,
-              isRecommended: type.is_recommended,
-              durationId: duration.id,
-              durationMonths: duration.duration_months || 0,
-              durationLabel: duration.duration_label,
-              durationLabelAr: duration.duration_label_ar,
-              isPopular: duration.is_popular,
-              originalPrice: pricing.original_price,
-              discountedPrice: pricing.discounted_price,
-              currency: pricing.currency,
-              savingsPercentage: pricing.savings_percentage,
-            });
-          }
-        });
+      const { data: typesData } = await requestFetchSingleOnlineSubscriptionTypes({
+        subscriptionId: subData.id,
       });
 
-      setPlans(combinedPlans);
+      setSubscriptionTypes(typesData);
+
+      const { data: durationsData } = await requestFetchSingleOnlineSubscriptionTypeDurations({
+        typeId: typesData[0].id,
+      });
+
+      setSubscriptionDurations(durationsData);
+
+      const { data: pricingData } = await requestFetchSingleOnlineSubscriptionsPrice({
+        durationId: durationsData[0].id,
+        countrySlug: countrySlug,
+      });
+
+      setSubscriptionPricing(pricingData);
+
+      // Combine all data into PlanDisplay objects
+     
+
     } catch (error) {
       console.error("Error fetching subscription details:", error);
       toast.error(
@@ -242,17 +184,6 @@ export default function SubscriptionDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGetPlan = (plan: PlanDisplay) => {
-    const planName = locale === "ar" ? plan.typeNameAr : plan.typeName;
-    const durationLabel = locale === "ar" ? plan.durationLabelAr : plan.durationLabel;
-    const fullPlanName = `${planName} - ${durationLabel || `${plan.durationMonths} ${locale === "en" ? "Months" : "شهر"}`}`;
-    const planPrice = `${plan.currency || "$"}${plan.discountedPrice}`;
-    
-    router.push(
-      `/${localeCountry}/subscription-checkout?plan=${encodeURIComponent(fullPlanName)}&price=${encodeURIComponent(planPrice)}&service=${encodeURIComponent(title || "")}`
-    );
   };
 
   const handleShare = () => {
@@ -279,14 +210,6 @@ export default function SubscriptionDetailPage() {
       );
     }
   };
-
-  // Get unique durations
-  const durations = Array.from(new Set(plans.map((p) => p.durationMonths).filter(Boolean)));
-
-  // Filter plans by duration
-  const filteredPlans = selectedDuration === "all" 
-    ? plans 
-    : plans.filter(p => p.durationMonths === selectedDuration);
 
   const title = locale === "ar" ? subscription?.title_ar : subscription?.title_en;
   const description = locale === "ar" ? subscription?.description_ar : subscription?.description_en;
@@ -426,7 +349,7 @@ export default function SubscriptionDetailPage() {
             {locale === "en" ? "Choose Your Plan" : "اختر خطتك"}
           </h2>
 
-          {plans.length === 0 ? (
+          {subscriptionTypes.length === 0 ? (
             <div className="bg-white border-2 border-[#111827] rounded-xl p-12 text-center">
               <Sparkles className="h-16 w-16 text-[#5FB57A] mx-auto mb-4" />
               <h3 className="text-xl font-bold text-[#111827] mb-2">
@@ -451,7 +374,7 @@ export default function SubscriptionDetailPage() {
           ) : (
             <>
               {/* Duration Filter */}
-              {durations.length > 1 && (
+              {subscriptionDurations.length > 1 && (
                 <div className="mb-8">
                   <div className={`flex flex-wrap gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Button
@@ -465,18 +388,18 @@ export default function SubscriptionDetailPage() {
                     >
                       {locale === "en" ? "All Durations" : "كل المدد"}
                     </Button>
-                    {durations.sort((a, b) => (a || 0) - (b || 0)).map((duration) => (
+                    {subscriptionDurations.sort((a, b) => (a.duration_value || 0) - (b.duration_value || 0)).map((duration) => (
                       <Button
-                        key={duration}
-                        variant={selectedDuration === duration ? "default" : "outline"}
-                        onClick={() => setSelectedDuration(duration || "all")}
+                        key={duration.id}
+                        variant={selectedDuration === duration.duration_value ? "default" : "outline"}
+                        onClick={() => setSelectedDuration(duration.duration_value || "all")}
                         className={`border-2 border-[#111827] rounded-xl ${
-                          selectedDuration === duration
+                          selectedDuration === duration.duration_value
                             ? "bg-[#5FB57A] text-white hover:bg-[#4FA569]"
                             : "hover:bg-[#E8F3E8]"
                         }`}
                       >
-                        {duration} {locale === "en" ? "Months" : "شهر"}
+                        {duration.duration_value} {duration.duration_type}
                       </Button>
                     ))}
                   </div>
@@ -485,15 +408,7 @@ export default function SubscriptionDetailPage() {
 
               {/* Plans Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPlans.map((plan) => (
-                  <PlanCard
-                    key={`${plan.typeId}-${plan.durationId}`}
-                    plan={plan}
-                    locale={locale}
-                    isRTL={isRTL}
-                    onGetPlan={handleGetPlan}
-                  />
-                ))}
+              <SubscriptionTypesList subscriptionId={subscription.id} locale={locale} isRTL={isRTL} />
               </div>
             </>
           )}
@@ -671,27 +586,60 @@ export default function SubscriptionDetailPage() {
   );
 }
 
-// Plan Card Component
-interface PlanCardProps {
-  plan: PlanDisplay;
+
+function SubscriptionTypesList({ subscriptionId, locale, isRTL }: {
+  subscriptionId: string;
   locale: string;
   isRTL: boolean;
-  onGetPlan: (plan: PlanDisplay) => void;
+}) {
+  const [subscriptionTypes, setSubscriptionTypes] = useState<OnlineSubscriptionType[]>([]);
+
+  const onGetPlan = (subscriptionType: OnlineSubscriptionType) => {
+    // const planName = locale === "ar" ? plan.typeNameAr : plan.typeName;
+    // const durationLabel = locale === "ar" ? plan.durationLabelAr : plan.durationLabel;
+    // const fullPlanName = `${planName} - ${durationLabel || `${plan.durationMonths} ${locale === "en" ? "Months" : "شهر"}`}`;
+    // const planPrice = `${plan.currency || "$"}${plan.discountedPrice}`;
+    
+    // router.push(
+    //   `/${localeCountry}/subscription-checkout?plan=${encodeURIComponent(fullPlanName)}&price=${encodeURIComponent(planPrice)}&service=${encodeURIComponent(title || "")}`
+    // );
+  }
+
+  useEffect(() => {
+    try {
+      const fetchSubscriptionTypes = async () => {
+        const { data: typesData } = await requestFetchSingleOnlineSubscriptionTypes({
+          subscriptionId: subscriptionId,
+        });
+        setSubscriptionTypes(typesData);
+      }
+      fetchSubscriptionTypes();
+    } catch (error) {
+      console.error(`Error fetching types for subscription ${subscriptionId}:`, error);
+    }
+  }, [subscriptionId]);
+
+
+
+  return subscriptionTypes.map((type) => (
+    <SubscriptionTypeItem key={type.id} type={type} locale={locale} isRTL={isRTL} />
+  ));
 }
 
-function PlanCard({ plan, locale, isRTL, onGetPlan }: PlanCardProps) {
-  const planType = locale === "ar" ? plan.typeNameAr : plan.typeName;
-  const durationLabel = locale === "ar" ? plan.durationLabelAr : plan.durationLabel;
 
-  const isRecommended = plan.isRecommended || plan.isPopular;
-
+const SubscriptionTypeItem = ({ type, locale, isRTL, onGetPlan }: {
+  type: OnlineSubscriptionType;
+  locale: string;
+  isRTL: boolean;
+  onGetPlan: (subscriptionType: OnlineSubscriptionType) => void;
+}) => {
   return (
     <div
       className={`bg-white border-2 border-[#111827] rounded-xl p-6 hover:shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] transition-all relative ${
-        isRecommended ? "ring-4 ring-[#5FB57A] ring-offset-2" : ""
+        type.is_recommended ? "ring-4 ring-[#5FB57A] ring-offset-2" : ""
       }`}
     >
-      {isRecommended && (
+      {type.is_recommended && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <Badge className="bg-[#5FB57A] text-white border-2 border-[#111827] hover:bg-[#4FA569] px-4 py-1">
             <Crown className="h-3 w-3 mr-1" />
@@ -700,41 +648,18 @@ function PlanCard({ plan, locale, isRTL, onGetPlan }: PlanCardProps) {
         </div>
       )}
 
-      {planType && (
+      {type.name_en && (
         <h3 className={`text-xl font-bold text-[#111827] mb-2 mt-2 ${isRTL ? 'text-right' : ''}`}>
-          {planType}
+          {locale === "en" ? type.name_en : type.name_ar}
         </h3>
       )}
 
-      <div className={`flex items-center gap-2 text-[#6B7280] mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <Clock className="h-4 w-4" />
-        <span>
-          {durationLabel || `${plan.durationMonths} ${locale === "en" ? "Months" : "شهر"}`}
-        </span>
-      </div>
-
-      <div className={`mb-6 ${isRTL ? 'text-right' : ''}`}>
-        <div className={`flex items-baseline gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <span className="text-3xl font-bold text-[#111827]">
-            {plan.currency || "$"}{plan.discountedPrice}
-          </span>
-          {plan.originalPrice && plan.originalPrice > (plan.discountedPrice || 0) && (
-            <span className="text-lg text-[#6B7280] line-through">
-              {plan.currency || "$"}{plan.originalPrice}
-            </span>
-          )}
-        </div>
-        {plan.savingsPercentage && plan.savingsPercentage > 0 && (
-          <p className="text-sm text-[#5FB57A] font-semibold">
-            {locale === "en" ? "Save" : "وفر"} {plan.savingsPercentage}%
-          </p>
-        )}
-      </div>
+      <SubscriptionTypeDurationsList typeId={type.id} locale={locale} isRTL={isRTL} />
 
       <Button
-        onClick={() => onGetPlan(plan)}
+        onClick={() => onGetPlan(type)}
         className={`w-full border-2 border-[#111827] rounded-xl shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all ${
-          isRecommended
+          type.is_recommended
             ? "bg-[#5FB57A] hover:bg-[#4FA569] text-white"
             : "bg-white hover:bg-[#E8F3E8] text-[#111827]"
         }`}
@@ -744,5 +669,92 @@ function PlanCard({ plan, locale, isRTL, onGetPlan }: PlanCardProps) {
         <ExternalLink className={`h-4 w-4 ${isRTL ? "mr-2" : "ml-2"}`} />
       </Button>
     </div>
+  );
+};
+
+function SubscriptionTypeDurationsList({ typeId, locale, isRTL }: {
+  typeId: number;
+  locale: string;
+  isRTL: boolean;
+}) {
+
+  const [subscriptionTypeDurations, setSubscriptionTypeDurations] = useState<OnlineSubscriptionTypeDuration[]>([]);
+
+  useEffect(() => {
+    try {
+      const fetchSubscriptionTypeDurations = async () => {
+        const { data: durationsData } = await requestFetchSingleOnlineSubscriptionTypeDurations({
+          typeId: typeId,
+        });
+        setSubscriptionTypeDurations(durationsData);
+      }
+      fetchSubscriptionTypeDurations();
+    } catch (error) {
+      console.error(`Error fetching durations for subscription type ${typeId}:`, error);
+    }
+  }, [typeId]);
+
+  return (
+    <div>
+      {subscriptionTypeDurations.map((duration) => (
+        <>
+        <div className={`flex items-center gap-2 text-[#6B7280] mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Clock className="h-4 w-4" />
+          <span>{duration.duration_value} {duration.duration_type}</span>
+        </div>
+
+        <SubscriptionTypePrice durationId={duration.id} locale={locale} isRTL={isRTL} />
+      </>
+    ))}
+    </div>
+  );
+}
+
+function SubscriptionTypePrice({ durationId, locale, isRTL }: {
+  durationId: number;
+  locale: string;
+  isRTL: boolean; 
+}) {
+  const country = useCountry();
+  const countrySlug = getCountryValue(country);
+  const [subscriptionPrices, setSubscriptionPrices] = useState<OnlineSubscriptionPrice[]>([]);
+
+  useEffect(() => {
+    try {
+      const fetchSubscriptionTypePrices = async () => {
+        const { data: pricesData } = await requestFetchSingleOnlineSubscriptionsPrice({
+          durationId: durationId,
+          countrySlug: countrySlug,
+        });
+        setSubscriptionPrices(pricesData);
+      }
+      fetchSubscriptionTypePrices();
+    } catch (error) {
+      console.error(`Error fetching prices for duration ${durationId}:`, error);
+    }
+  }, [durationId, countrySlug]);
+
+  return (
+    <div>
+      {subscriptionPrices.map((price) => (
+        <div className={`mb-6 ${isRTL ? 'text-right' : ''}`}>
+          <div className={`flex items-baseline gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <span className="text-3xl font-bold text-[#111827]">
+              {price.currency || "$"}{price.price}
+            </span>
+            {price.original_price && price.original_price > (price.discounted_price || 0) && (
+              <span className="text-lg text-[#6B7280] line-through">
+                {price.currency || "$"}{price.original_price}
+              </span>
+            )}
+          </div>
+          {price.savings_percentage && price.savings_percentage > 0 && (
+            <p className="text-sm text-[#5FB57A] font-semibold">
+              {locale === "en" ? "Save" : "وفر"} {price.savings_percentage}%
+            </p>
+          )}
+        </div>   
+        ))}
+      </div>
   );
 }
