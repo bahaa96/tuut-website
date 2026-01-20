@@ -1113,6 +1113,10 @@
     height: 100%;
   }
 
+  .h-fit {
+    height: fit-content;
+  }
+
   .h-px {
     height: 1px;
   }
