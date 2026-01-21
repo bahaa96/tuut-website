@@ -56,6 +56,7 @@ export function Header() {
   // const { user, isAuthenticated, signOut } = useAuth();
   const isAuthenticated = false;
   const [showSignIn, setShowSignIn] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
     { key: "deals", label: m.DEALS(), href: `/${localeCountry}/deals` },
@@ -241,7 +242,7 @@ export function Header() {
             )}
 
             {/* Mobile Menu */}
-            <Sheet>
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
@@ -263,6 +264,7 @@ export function Header() {
                     <Link
                       key={item.key}
                       href={item.href}
+                      onClick={() => setIsMenuOpen(false)}
                       className="text-[#111827] py-2 transition-colors hover:opacity-60"
                       style={{ fontWeight: 500 }}
                     >
@@ -401,6 +403,7 @@ export function Header() {
                     <>
                       <Link
                         href="/tracked-products"
+                        onClick={() => setIsMenuOpen(false)}
                         className="mt-4 block w-full text-center border-2 border-[#111827] rounded-xl px-4 py-2 hover:bg-accent"
                       >
                         {m.TRACKED_PRODUCTS()}
