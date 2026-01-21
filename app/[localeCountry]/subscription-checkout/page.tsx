@@ -151,7 +151,7 @@ export default function SubscriptionCheckoutPage() {
       // Send WhatsApp message
       await requestSendWhatsappMessage({
         targetNumber: whatsappNumber.replace("+", ""),
-        text: `تم استلام طلبك بنجاح! \n عنوان الطلب: ${order.order_number} \n خدمة الطلب: ${subscription?.title_en || subscription?.title_ar} \n الخطة: ${subscriptionType?.name_en || subscriptionType?.name_ar} \n المدة المختارة: ${subscriptionDuration?.name_en || subscriptionDuration?.name_ar} \n السعر: ${subscriptionPrice?.price} ${subscriptionPrice?.currency} \n جاري العمل علي تنفيذ طلبك`,
+        text: `تم استلام طلبك بنجاح! \n رقم الطلب: ${order.order_number} \n خدمة الطلب: ${subscription?.title_en || subscription?.title_ar} \n الخطة: ${subscriptionType?.name_en || subscriptionType?.name_ar} \n المدة المختارة: ${subscriptionDuration?.duration_value} ${subscriptionDuration?.duration_type} \n السعر: ${subscriptionPrice?.price} ${subscriptionPrice?.currency} \n جاري العمل علي تنفيذ طلبك`,
       });
 
       // Redirect to order page with order ID in URL
