@@ -11,6 +11,7 @@ import { OnlineSubscriptionTypeDuration } from "@/domain-models/OnlineSubscripti
 import { OnlineSubscriptionType } from "@/domain-models/OnlineSubscriptionType";
 import { OnlineSubscriptionPrice } from "@/domain-models/OnlineSubscriptionPrice";
 import { OnlineSubscription } from "@/domain-models/OnlineSubscription";
+import { requestSendWhatsappMessage } from "@/network";
 
 export default function SubscriptionCheckoutPage() {
   const params = useParams();
@@ -146,6 +147,12 @@ export default function SubscriptionCheckoutPage() {
           ? "Order created successfully!"
           : "تم إنشاء الطلب بنجاح!"
       );
+
+      // Send WhatsApp message
+      await requestSendWhatsappMessage({
+        targetNumber: whatsappNumber.replace("+", ""),
+        text: `تم استلام طلبك بنجاح! \n عنوان الطلب: ${order.order_number} \n خدمة الطلب: ${subscription?.title_en || subscription?.title_ar} \n الخطة: ${subscriptionType?.name_en || subscriptionType?.name_ar} \n المدة المختارة: ${subscriptionDuration?.name_en || subscriptionDuration?.name_ar} \n السعر: ${subscriptionPrice?.price} ${subscriptionPrice?.currency} جاري العمل علي تنفيذ طلبك`,
+      });
 
       // Redirect to order page with order ID in URL
       router.push(`/${localeCountry}/subscription-order/${order.order_number}`);

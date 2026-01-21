@@ -37,3 +37,5 @@ export {
 } from "./onlineSubscriptions";
 
 export type { OrderDetails } from "./onlineSubscriptions";
+
+export { requestSendWhatsappMessage } from "./whatsapp";
