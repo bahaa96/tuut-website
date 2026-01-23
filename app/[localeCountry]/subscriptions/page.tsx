@@ -80,7 +80,7 @@ export default function SubscriptionsPage() {
       const { data: subscriptions } = await requestFetchAllOnlineSubscriptions({
         searchText: searchQuery,
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 20,
       });
       setSubscriptions(subscriptions);
       
