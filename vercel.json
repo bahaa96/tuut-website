@@ -13,37 +13,10 @@
           "value": "text/plain; charset=utf-8"
         },
         {
-          "key": "Content-Encoding",
-          "value": "gzip"
-        },
-        {
           "key": "Cache-Control",
           "value": "public, max-age=3600, s-maxage=86400"
         }
       ]
-    },
-    {
-      "source": "/sitemap.txt.gz",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/plain; charset=utf-8"
-        },
-        {
-          "key": "Content-Encoding",
-          "value": "gzip"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, s-maxage=86400"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/sitemap.txt",
-      "destination": "/sitemap.txt.gz"
     }
   ]
 }
