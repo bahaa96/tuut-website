@@ -6,11 +6,11 @@
   "framework": "nextjs",
   "headers": [
     {
-      "source": "/sitemap.xml",
+      "source": "/sitemap.txt",
       "headers": [
         {
           "key": "Content-Type",
-          "value": "application/xml; charset=utf-8"
+          "value": "text/plain; charset=utf-8"
         },
         {
           "key": "Content-Encoding",
@@ -23,11 +23,11 @@
       ]
     },
     {
-      "source": "/sitemap.xml.gz",
+      "source": "/sitemap.txt.gz",
       "headers": [
         {
           "key": "Content-Type",
-          "value": "application/xml; charset=utf-8"
+          "value": "text/plain; charset=utf-8"
         },
         {
           "key": "Content-Encoding",
@@ -42,8 +42,8 @@
   ],
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml.gz"
+      "source": "/sitemap.txt",
+      "destination": "/sitemap.txt.gz"
     }
   ]
 }

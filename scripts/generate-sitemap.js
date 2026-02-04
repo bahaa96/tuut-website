@@ -489,36 +489,9 @@ class SitemapGenerator {
     }
   }
 
-  formatEntry(entry) {
-    let xml = `  <url>\n`;
-    xml += `    <loc>${entry.url}</loc>\n`;
-
-    if (entry.lastModified) {
-      xml += `    <lastmod>${entry.lastModified}</lastmod>\n`;
-    }
-
-    if (entry.changeFrequency) {
-      xml += `    <changefreq>${entry.changeFrequency}</changefreq>\n`;
-    }
-
-    if (entry.priority !== undefined) {
-      xml += `    <priority>${entry.priority.toFixed(1)}</priority>\n`;
-    }
-
-    xml += `  </url>\n`;
-    return xml;
-  }
-
-  generateXML() {
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-
-    for (const entry of this.entries) {
-      xml += this.formatEntry(entry);
-    }
-
-    xml += `</urlset>\n`;
-    return xml;
+  generateTXT() {
+    // Generate plain text sitemap with one URL per line
+    return this.entries.map(entry => entry.url).join('\n') + '\n';
   }
 
   analyzeURLBreakdown() {
@@ -663,29 +636,29 @@ class SitemapGenerator {
     console.log('🔍 Fetching dynamic content from Supabase...');
     await this.addDynamicPages();
 
-    console.log('📄 Generating XML...');
-    const xml = this.generateXML();
+    console.log('📄 Generating TXT sitemap...');
+    const txt = this.generateTXT();
 
-    // Write to public directory (regular XML)
-    const outputPath = path.join(__dirname, '../public/sitemap.xml');
-    fs.writeFileSync(outputPath, xml);
+    // Write to public directory (plain text)
+    const outputPath = path.join(__dirname, '../public/sitemap.txt');
+    fs.writeFileSync(outputPath, txt);
 
     // Generate and write gzipped version
     console.log('🗜️  Generating gzipped sitemap...');
-    const gzippedXml = zlib.gzipSync(xml, { level: 9 });
-    const gzippedPath = path.join(__dirname, '../public/sitemap.xml.gz');
-    fs.writeFileSync(gzippedPath, gzippedXml);
+    const gzippedTxt = zlib.gzipSync(txt, { level: 9 });
+    const gzippedPath = path.join(__dirname, '../public/sitemap.txt.gz');
+    fs.writeFileSync(gzippedPath, gzippedTxt);
 
     // Get file sizes for comparison
-    const xmlStats = fs.statSync(outputPath);
+    const txtStats = fs.statSync(outputPath);
     const gzippedStats = fs.statSync(gzippedPath);
-    const compressionRatio = ((1 - gzippedStats.size / xmlStats.size) * 100).toFixed(1);
+    const compressionRatio = ((1 - gzippedStats.size / txtStats.size) * 100).toFixed(1);
 
     console.log(`✅ Sitemap generated successfully!`);
-    console.log(`📍 Local location (XML): ${outputPath}`);
+    console.log(`📍 Local location (TXT): ${outputPath}`);
     console.log(`📍 Local location (GZIP): ${gzippedPath}`);
     console.log(`🔢 Total URLs: ${this.entries.length}`);
-    console.log(`📊 File size (XML): ${(xmlStats.size / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`📊 File size (TXT): ${(txtStats.size / 1024 / 1024).toFixed(2)} MB`);
     console.log(`📊 File size (GZIP): ${(gzippedStats.size / 1024 / 1024).toFixed(2)} MB`);
     console.log(`🗜️  Compression: ${compressionRatio}% smaller`);
 
@@ -696,11 +669,11 @@ class SitemapGenerator {
     console.log('');
     console.log('✅ Sitemap generation complete!');
     console.log('🌐 The sitemap will be served directly from Vercel:');
-    console.log('   • Regular sitemap: https://tuut.shop/sitemap.xml (rewrites to .gz version)');
-    console.log('   • Direct gzipped: https://tuut.shop/sitemap.xml.gz');
+    console.log('   • Regular sitemap: https://tuut.shop/sitemap.txt (rewrites to .gz version)');
+    console.log('   • Direct gzipped: https://tuut.shop/sitemap.txt.gz');
     console.log('📦 Make sure to commit the .gz file to your repository');
 
-    return xml;
+    return txt;
   }
 }
 
