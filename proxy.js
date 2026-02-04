@@ -6,9 +6,9 @@ export function proxy(request) {
 
   // Exclude sitemap, robots.txt, site.webmanifest, and assets from locale country redirect
   if (
-    pathname === "/sitemap.xml" ||
-    pathname === "/sitemap.xml/" ||
-    pathname.startsWith("/sitemap.xml/") ||
+    pathname === "/sitemap.txt" ||
+    pathname === "/sitemap.txt/" ||
+    pathname.startsWith("/sitemap.txt/") ||
     pathname === "/robots.txt" ||
     pathname === "/robots.txt/" ||
     pathname.startsWith("/robots.txt/") ||
@@ -87,5 +87,5 @@ export function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_static|favicon.ico|sitemap.xml|robots.txt|site.webmanifest|assets).*)"],
+  matcher: ["/((?!api|_next|_static|favicon.ico|sitemap.txt|robots.txt|site.webmanifest|assets).*)"],
 };
