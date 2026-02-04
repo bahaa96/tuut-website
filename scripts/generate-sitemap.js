@@ -393,11 +393,6 @@ class SitemapGenerator {
         priority: 0.9
       });
 
-      this.addEntry(`${BASE_URL}/${locale}/shop/`, {
-        changeFrequency: 'daily',
-        priority: 0.9
-      });
-
       this.addEntry(`${BASE_URL}/${locale}/stores/`, {
         changeFrequency: 'daily',
         priority: 0.8

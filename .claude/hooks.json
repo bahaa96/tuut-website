@@ -1,3 +1,18 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e8437ddd1d33562a57d70a72d74313638ee57a9b8ac661ac5663a0558b1eeb19
-size 366
+{
+  "hooks": {
+    "tool-call": {
+      "after": [
+        {
+          "run": "if [[ \"$TOOL_NAME\" == \"TodoWrite\" && \"$STATUS\" == \"completed\" ]]; then afplay /System/Library/Sounds/Glass.aiff; fi"
+        }
+      ]
+    },
+    "user-prompt": {
+      "before": [
+        {
+          "run": "afplay /System/Library/Sounds/Ping.aiff"
+        }
+      ]
+    }
+  }
+}
