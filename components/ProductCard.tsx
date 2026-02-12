@@ -35,7 +35,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const hasDiscount = discountPercentage > 0;
 
   return (
-    <div className="group bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] transition-all overflow-hidden flex flex-col h-full">
+    <Link
+      href={`/${localeCountry}/product/${product.slug}`}
+      className="group bg-white rounded-2xl border-2 border-[#111827] shadow-[4px_4px_0px_0px_rgba(17,24,39,1)] hover:shadow-[6px_6px_0px_0px_rgba(17,24,39,1)] transition-all overflow-hidden flex flex-col h-full"
+    >
       {/* Image */}
       <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#F8FAFC] to-[#E2E8F0]">
         {imageUrl ? (
@@ -131,24 +134,22 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Action Button */}
         {product.url && (
-          <Link
-            href={product.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full"
+          <Button
+            className={`w-full bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all ${
+              isRTL ? "flex-row-reverse" : ""
+            }`}
+            style={{ fontWeight: 600 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.open(product.url, "_blank", "noopener,noreferrer");
+            }}
           >
-            <Button
-              className={`w-full bg-[#5FB57A] hover:bg-[#4FA669] text-white border-2 border-[#111827] rounded-lg shadow-[3px_3px_0px_0px_rgba(17,24,39,1)] hover:shadow-[1px_1px_0px_0px_rgba(17,24,39,1)] transition-all ${
-                isRTL ? "flex-row-reverse" : ""
-              }`}
-              style={{ fontWeight: 600 }}
-            >
-              <ExternalLink className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {m.VIEW_PRODUCT()}
-            </Button>
-          </Link>
+            <ExternalLink className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+            {m.VIEW_PRODUCT()}
+          </Button>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

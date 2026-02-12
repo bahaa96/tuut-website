@@ -55,10 +55,11 @@ interface RequestFetchSingleProductArgs {
 const requestFetchSingleProduct = async ({
   slug,
 }: RequestFetchSingleProductArgs): Promise<{ data: Product }> => {
+  const decodedSlug = decodeURIComponent(slug);
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .eq("slug", slug)
+    .eq("slug", decodedSlug)
     .single();
 
   if (error) {

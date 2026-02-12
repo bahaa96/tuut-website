@@ -234,10 +234,17 @@ export function generateProductPageMetadata({
       ? "اكتشف هذا المنتج الرائع على Tuut. استفد من أفضل الأسعار والعروض."
       : "Discover this amazing product on Tuut. Get the best prices and deals.";
 
-  const price = product.price && product.currency
+  const currencyMap: Record<string, string> = {
+    "ريال": "SAR",
+  };
+  const currencyCode = product.currency
+    ? currencyMap[product.currency] ?? product.currency
+    : null;
+
+  const price = product.price && currencyCode
     ? new Intl.NumberFormat(language === "ar" ? "ar-EG" : "en-US", {
         style: "currency",
-        currency: product.currency,
+        currency: currencyCode,
       }).format(product.price)
     : null;
 
