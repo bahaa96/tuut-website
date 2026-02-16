@@ -11,3 +11,5 @@ public/sitemap.xml
 
 # Sitemap CDN directory - has its own git repo
 sitemap-cdn/
+
+figma-make-project/
