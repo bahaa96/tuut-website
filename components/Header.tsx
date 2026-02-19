@@ -97,7 +97,7 @@ export function Header() {
                 />
               ) : (
                 <img
-                  src="https://i.ibb.co/XZV7bXh3/Tuut.png"
+                  src="/assets/images/asetuut-logo.webp"
                   alt={m.TUUT_LOGO()}
                   className="h-12 w-auto"
                 />
